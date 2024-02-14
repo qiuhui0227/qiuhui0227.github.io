@@ -39,6 +39,7 @@ li {
     float:right;
     /*background-color: green;*/
     height:100px;
+    padding-right: 50px;
 }
 
 .top_link{
