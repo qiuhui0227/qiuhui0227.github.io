@@ -3,8 +3,55 @@ body {
     padding: 0;
 }
 
+div {
+    margin: 0;
+    padding: 0;
+}
+
+ul {
+    margin: 0;
+    padding: 0;
+}
+
+
+li {
+    float:left;
+    list-style-type:none;
+    margin: 0;
+    padding: 0;
+}
+
+
+
 #top {
     background-color: aqua;
     width: auto;
     height: 100px;
+}
+
+#top_left{
+    float:left;
+    /*background-color: red;*/
+    height:100px;
+}
+
+#top_right{
+    float:right;
+    /*background-color: green;*/
+    height:100px;
+}
+
+.top_link{
+    height:100px;
+    line-height:100px;
+    margin-left:20px;
+    color:gray;
+}
+#top_logo_text{
+    height:100px;
+    line-height:100px;
+    margin-left:10px;
+    font-size:25px;
+    font-family: Arial;
+    color:pink;
 }
