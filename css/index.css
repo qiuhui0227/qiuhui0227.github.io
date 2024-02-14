@@ -5,6 +5,6 @@ body {
 
 #top {
     background-color: aqua;
-    width: 自动;
+    width: auto;
     height: 100px;
 }
