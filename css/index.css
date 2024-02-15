@@ -25,7 +25,9 @@ li {
     align-items: center;
 }
 
-
+a {
+    text-decoration: none;
+}
 
 #top {
     background-color: #E1F0DA;
@@ -64,10 +66,53 @@ a:link{
     color:gray;
 }
 
+.top_link a:hover{
+    color:aqua;
+}
 
+.top_link a:visited{
+    color:gray;
+}
 #top_logo_text{
     margin-left:10px;
     font-size:25px;
     font-family: Arial;
     color:pink;
+}
+
+
+#mid{
+    width: auto;
+    height: 600;
+    background-color: #D4E7C5;
+    padding-top: 20px;
+}
+
+#content{
+    display: flex;
+    justify-content: center;
+}
+
+#bottom {
+    width: auto;
+    height: 200;
+    background-color: #99BC85;
+}
+
+#bottom_content {
+    width: 1200px;
+    margin: 0 auto;
+    display: flex;
+}
+
+#bottom_content ul{
+    flex:1;
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+
+#bottom_content ul li{
+    margin-top: 15px;
 }
