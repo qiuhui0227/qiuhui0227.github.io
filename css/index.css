@@ -11,6 +11,8 @@ div {
 ul {
     margin: 0;
     padding: 0;
+    display: flex;
+    align-items: center;
 }
 
 
@@ -19,18 +21,21 @@ li {
     list-style-type:none;
     margin: 0;
     padding: 0;
+    display: flex;
+    align-items: center;
 }
 
 
 
 #top {
-    background-color: aqua;
+    background-color: #E1F0DA;
     width: auto;
     height: 100px;
 }
 
 #top_left{
     float:left;
+    margin-left: 50px;
     /*background-color: red;*/
     height:100px;
 }
@@ -42,15 +47,25 @@ li {
     padding-right: 50px;
 }
 
+#top_logo{
+    height: 66px;
+}
+
 .top_link{
-    height:100px;
-    line-height:100px;
     margin-left:20px;
     color:gray;
 }
+
+a:link{
+    color:aqua;
+}
+
+.top_link a:link{
+    color:gray;
+}
+
+
 #top_logo_text{
-    height:100px;
-    line-height:100px;
     margin-left:10px;
     font-size:25px;
     font-family: Arial;
