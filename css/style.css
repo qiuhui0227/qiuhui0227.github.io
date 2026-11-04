@@ -23,12 +23,12 @@
   --border-input: #dce5e9;
   --focus-ring: rgba(61, 154, 128, 0.18);
 
-  /* 参与者专属微调 (保持在 USV 色调规范内) */
+  /* 参与者专属色彩 (工整雅致的微饱和色调) */
   --part-yan-bg: #e6f1f8;
   --part-yan-text: #1d5573;
   --part-qiuhui-bg: #fbebee;
   --part-qiuhui-text: #963845;
-  --part-both-bg: #e8f5ec;
+  --part-both-bg: #e5f6ed;
   --part-both-text: #186e49;
 }
 
@@ -64,8 +64,7 @@ a { color: inherit; text-decoration: none; }
 .subhead { font-size: 12px; color: var(--text-muted); letter-spacing: .04em; text-transform: uppercase; }
 
 /* ==========================================================================
-   1. 门禁锁屏界面 (完全复刻 USV Lab 登录页面)
-   深色径向渐变底色 + 右上角三层同心轨道圆环光晕 + 白色圆角登录卡片
+   1. 门禁锁屏界面 (复刻 USV Lab 登录页面)
    ========================================================================== */
 
 .login-layout {
@@ -248,6 +247,19 @@ a { color: inherit; text-decoration: none; }
   padding: 4px 8px;
   min-height: 26px;
   font-size: 11px;
+}
+.btn-text {
+  background: none;
+  border: none;
+  color: #1b7659;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.btn-text:hover {
+  background: rgba(27, 118, 89, 0.08);
 }
 
 .login-foot {
@@ -481,30 +493,8 @@ a { color: inherit; text-decoration: none; }
   color: #8ca1aa;
 }
 
-.notice {
-  background: #ecf7f0;
-  color: #2b7253;
-  border-radius: 11px;
-  padding: 13px 15px;
-  font-size: 12px;
-  line-height: 1.65;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin: 0 0 17px;
-}
-.notice.warn {
-  color: #94682f;
-  background: #fff5e5;
-}
-.notice.alert {
-  color: #a7474d;
-  background: #fff0ef;
-}
-
 /* ==========================================================================
    3. 共享时刻表网格 (Schedule Grid)
-   复刻 USV Lab 的 schedule-heading, schedule-row, slot, slot-topic
    ========================================================================== */
 
 /* 日期切换器 (Pill Switcher) */
@@ -521,14 +511,6 @@ a { color: inherit; text-decoration: none; }
   border-radius: 14px;
 }
 .date-nav-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.current-date-title {
-  font-size: 13.5px;
-  font-weight: 780;
-  color: #183f56;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -579,87 +561,149 @@ a { color: inherit; text-decoration: none; }
   color: #96aab4;
 }
 
-/* 时段卡槽 (.slot) */
+/* 时段卡槽 (.slot) - 纯净交互容器 */
 .slot {
-  border: 1px solid transparent;
-  min-height: 100px;
+  border: 1px solid #eef2f5;
+  min-height: 90px;
   text-align: left;
-  border-radius: 11px;
-  padding: 12px 14px;
+  border-radius: 12px;
+  padding: 10px 12px;
   position: relative;
   display: flex;
   flex-direction: column;
   gap: 6px;
-  transition: box-shadow .16s, transform .16s;
-  background: #f8fafb;
-  border-color: #eaf0f3;
+  background: #f8fafc;
+  transition: all .16s ease;
+  cursor: pointer;
 }
 .slot:hover {
-  box-shadow: 0 3px 10px #1b43501d;
+  background: #ffffff;
+  border-color: #c9dde5;
+  box-shadow: 0 3px 12px rgba(24, 53, 74, 0.08);
   transform: translateY(-1px);
 }
 .slot-main {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 2px;
 }
 .slot-period-tag {
-  font-size: 11px;
+  font-size: 11.5px;
   font-weight: 750;
-  color: #557180;
+  color: #647d8c;
   display: flex;
   align-items: center;
   gap: 5px;
 }
-
-/* 事项胶囊 (.slot-topic) */
-.slot-topic {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
+.slot-count-badge {
+  font-size: 10.5px;
   font-weight: 700;
-  line-height: 1.3;
+  color: #1b7659;
+  background: #e3f4e8;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+/* 事项胶囊 (.slot-topic) - 极简工整卡片 */
+.slot-topic {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 650;
+  line-height: 1.35;
   color: #184257;
-  background: #ffffffcc;
-  border: 1px solid #ffffffed;
-  border-radius: 6px;
-  padding: 4px 7px;
-  margin: 2px 0;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+  background: #ffffff;
+  border: 1px solid #e2eaee;
+  border-radius: 8px;
+  padding: 5px 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: all .15s ease;
+}
+.slot-topic:hover {
+  border-color: #3d9a80;
+  box-shadow: 0 2px 8px rgba(61, 154, 128, 0.12);
 }
 .slot-topic.is-done {
-  text-decoration: line-through;
-  opacity: 0.65;
+  background: #f4f7f8;
+  border-color: #e5ecef;
+  color: #8c9ea7;
 }
-.slot-topic.empty {
-  font-size: 10.5px;
-  font-weight: 550;
-  color: #7a94a2;
-  background: #00000008;
-  border-color: transparent;
-  padding: 3px 6px;
-  border-style: dashed;
+.slot-topic.is-done .slot-topic-text {
+  text-decoration: line-through;
+  opacity: 0.75;
+}
+.slot-topic-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.slot-topic-actions {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  opacity: 0.7;
+  transition: opacity .15s;
+}
+.slot-topic:hover .slot-topic-actions {
+  opacity: 1;
+}
+.action-icon-btn {
+  background: none;
+  border: none;
+  padding: 2px;
+  cursor: pointer;
+  color: #718894;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+.action-icon-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  color: #1b3442;
+}
+.action-icon-btn.is-checked {
+  color: #207b54;
+}
+.action-icon-btn.btn-del:hover {
+  color: #a7464c;
+  background: #fee2e2;
 }
 
-/* 参加人徽标 */
+/* 空时段指引占位 */
+.slot-topic.empty {
+  font-size: 11px;
+  font-weight: 550;
+  color: #8fa2ad;
+  background: transparent;
+  border: 1px dashed #cfdbe1;
+  box-shadow: none;
+  justify-content: center;
+  padding: 6px;
+}
+.slot-topic.empty:hover {
+  border-color: #1b7659;
+  color: #1b7659;
+  background: #f0f7f4;
+}
+
+/* 参加人微型徽标 (清晰典雅) */
 .part-pill {
   display: inline-flex;
   align-items: center;
   gap: 3px;
   font-size: 10px;
-  font-weight: 700;
-  padding: 2px 5px;
+  font-weight: 750;
+  padding: 2px 6px;
   border-radius: 4px;
+  flex-shrink: 0;
 }
 .part-yan { background: var(--part-yan-bg); color: var(--part-yan-text); }
 .part-qiuhui { background: var(--part-qiuhui-bg); color: var(--part-qiuhui-text); }
 .part-both { background: var(--part-both-bg); color: var(--part-both-text); }
-
-/* 时段状态着色 */
-.heat-1 { background: #fbe9e8; color: #a34348; border-color: #f5d3d0; }
-.heat-4 { background: #e5f5e9; color: #207b54; border-color: #bfe4cc; }
-.heat-5 { background: #cbf0dc; color: #15623e; border-color: #a4ddbd; }
 
 /* ==========================================================================
    4. 岁月相簿 (Albums in USV Lab Admin Card Style)
@@ -829,7 +873,6 @@ a { color: inherit; text-decoration: none; }
 
 /* ==========================================================================
    5. 后台控制中心 (Settings)
-   复刻 USV Lab 的 .field, .field-help, .toggle, .toggle-line
    ========================================================================== */
 
 .field {
@@ -850,43 +893,6 @@ a { color: inherit; text-decoration: none; }
   margin: 6px 0 0;
 }
 
-.toggle-line {
-  display: flex;
-  gap: 12px;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px 0;
-}
-.toggle {
-  appearance: none;
-  width: 44px;
-  height: 25px;
-  background: #cbd6dc;
-  border-radius: 999px;
-  position: relative;
-  transition: background .2s;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-.toggle:before {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 19px;
-  height: 19px;
-  background: white;
-  border-radius: 50%;
-  box-shadow: 0 1px 4px #0002;
-  transition: transform .2s;
-}
-.toggle:checked {
-  background: #298960;
-}
-.toggle:checked:before {
-  transform: translateX(19px);
-}
-
 .pill {
   display: inline-flex;
   align-items: center;
@@ -902,7 +908,7 @@ a { color: inherit; text-decoration: none; }
 .pill.off { background: #eef0f2; color: #83949c; }
 
 /* ==========================================================================
-   6. 弹窗、底层面板与 Toast (Overlay, Sheet, Toast)
+   6. 弹窗与 Toast (Overlay, Sheet, Toast)
    ========================================================================== */
 
 .overlay {
