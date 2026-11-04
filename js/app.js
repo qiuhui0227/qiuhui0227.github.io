@@ -100,7 +100,7 @@ class SpaceApp {
       }
       if (heroTitle) heroTitle.innerText = '欢迎来到 Qiuhui & Yan 的客厅';
       if (heroMetaMode) heroMetaMode.innerHTML = `<svg class="ico" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> 🛋️ 客厅开放浏览`;
-      if (resumeTabBtn) resumeTabBtn.style.display = 'none';
+      if (resumeTabBtn) resumeTabBtn.style.display = 'flex';
       if (settingsTabBtn) settingsTabBtn.style.display = 'none';
       if (btnSwitchMaster) btnSwitchMaster.style.display = 'inline-flex';
     }
