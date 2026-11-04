@@ -1,61 +1,59 @@
 /* ==========================================================================
-   OASIS | 简历编辑器与标准 A4 预览打印排版系统
+   OASIS | 简历编辑器与标准 A4 导出引擎 (USV Lab 工整秩序排版)
    ========================================================================== */
 
 .resume-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 16px;
 }
 
-/* 顶部工具栏 */
 .resume-toolbar {
-  padding: 14px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 14px;
+  gap: 12px;
+  background: #f8fafb;
+  border: 1px solid #e3ebef;
+  border-radius: 14px;
+  padding: 14px 18px;
 }
 .toolbar-title-group h3 {
-  font-size: 1.125rem;
-  color: var(--text-main);
-  margin-bottom: 2px;
-}
-.mobile-resume-tabs {
-  display: none; /* 电脑端隐藏，移动端通过媒体查询显示 */
-  gap: 8px;
+  font-size: 15px;
+  font-weight: 780;
+  color: #18354a;
+  margin: 0 0 3px;
 }
 .toolbar-actions {
   display: flex;
   align-items: center;
   gap: 10px;
-  flex-wrap: wrap;
 }
 
-/* 主工作区分屏布局 (PC 宽屏默认分屏) */
+/* 分屏模式 (PC 默认) */
 .resume-workspace {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  gap: 20px;
   align-items: start;
 }
 
-/* 左侧表单编辑面板 */
 .resume-editor-panel {
-  padding: 20px;
-  max-height: calc(100vh - 180px);
+  max-height: calc(100vh - 220px);
   overflow-y: auto;
+  padding-right: 6px;
 }
 .resume-form-flow {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 14px;
 }
+
 .form-section-card {
   background: #ffffff;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
+  border: 1px solid #e3ebef;
+  border-radius: 13px;
   padding: 16px;
 }
 .section-header-row {
@@ -65,147 +63,130 @@
   margin-bottom: 12px;
 }
 .section-title {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--text-main);
+  font-size: 13.5px;
+  font-weight: 760;
+  color: #18354a;
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.section-title .icon {
-  font-size: 1rem;
-}
+
 .sub-form-item {
-  background: #f8fafc;
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  background: #f8fafb;
+  border: 1px solid #e5ecef;
+  border-radius: 9px;
   padding: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 .sub-item-header {
   display: flex;
   justify-content: space-between;
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 700;
+  color: #718894;
   margin-bottom: 8px;
 }
 .btn-text-del {
   background: none;
   border: none;
-  color: #ef4444;
-  font-size: 0.75rem;
+  color: #a7464c;
+  font-size: 11px;
+  font-weight: 600;
   cursor: pointer;
 }
 .btn-text-del:hover {
   text-decoration: underline;
 }
-.input-sm {
-  padding: 6px 10px;
-  font-size: 0.8125rem;
-}
 
-/* 右侧 A4 真实比例预览面板 */
+/* 右侧 A4 真实比例预览 */
 .resume-preview-panel {
   display: flex;
   justify-content: center;
+  max-height: calc(100vh - 220px);
   overflow-y: auto;
-  max-height: calc(100vh - 180px);
-  padding-bottom: 40px;
+  padding-bottom: 30px;
 }
 
-/* A4 纸张白板模型 */
 .a4-page-sheet {
   width: 100%;
   max-width: 210mm;
   min-height: 297mm;
   background: #ffffff;
-  padding: 22mm 20mm;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e2e8f0;
-  border-radius: 2px;
-  color: #1f2937;
+  padding: 20mm 18mm;
+  box-shadow: 0 4px 20px rgba(24, 53, 74, 0.08);
+  border: 1px solid #dce5e9;
+  border-radius: 4px;
+  color: #1b3442;
   font-size: 9.5pt;
   line-height: 1.55;
   box-sizing: border-box;
 }
 
-/* A4 内部高保真排版 */
+/* A4 内容内部排版 */
 .resume-paper {
   display: flex;
   flex-direction: column;
-  gap: 14pt;
+  gap: 13pt;
 }
 
 .rp-header {
   text-align: center;
-  border-bottom: 1.5pt solid #2563eb;
-  padding-bottom: 10pt;
+  border-bottom: 1.5pt solid #18354a;
+  padding-bottom: 8pt;
 }
 .rp-name {
   font-size: 19pt;
-  font-weight: 800;
-  color: #111827;
-  letter-spacing: 0.5px;
-  margin-bottom: 4pt;
+  font-weight: 820;
+  color: #15354a;
+  letter-spacing: -0.02em;
+  margin: 0 0 3pt;
 }
 .rp-title {
   font-size: 10.5pt;
-  font-weight: 600;
-  color: #2563eb;
-  margin-bottom: 6pt;
+  font-weight: 700;
+  color: #1b7659;
+  margin-bottom: 5pt;
 }
 .rp-contact-bar {
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 12pt;
+  gap: 10pt;
   font-size: 8.5pt;
-  color: #4b5563;
-}
-.rp-contact-bar a {
-  color: #2563eb;
-  text-decoration: underline;
+  color: #557180;
 }
 .rp-summary {
-  margin-top: 8pt;
+  margin-top: 7pt;
   font-size: 8.5pt;
-  color: #374151;
+  color: #203b49;
   text-align: justify;
   line-height: 1.5;
-  background: #f8fafc;
-  padding: 6pt 10pt;
+  background: #f4f7f8;
+  padding: 5pt 9pt;
   border-radius: 4px;
 }
 
-/* 栏目 Section */
 .rp-section {
   display: flex;
   flex-direction: column;
-  gap: 6pt;
+  gap: 5pt;
   page-break-inside: avoid;
 }
 .rp-section-title {
-  font-size: 11pt;
-  font-weight: 700;
-  color: #1e3a8a;
-  border-bottom: 1pt solid #cbd5e1;
-  padding-bottom: 3pt;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 10.5pt;
+  font-weight: 780;
+  color: #18354a;
+  border-bottom: 1pt solid #dce5e9;
+  padding-bottom: 2pt;
+  margin: 0;
+  letter-spacing: 0.03em;
 }
 .rp-section-content {
   display: flex;
   flex-direction: column;
-  gap: 8pt;
+  gap: 7pt;
 }
 
-/* 单条经历 Item */
-.rp-item {
-  display: flex;
-  flex-direction: column;
-  gap: 2pt;
-}
 .rp-item-row {
   display: flex;
   justify-content: space-between;
@@ -213,102 +194,76 @@
   font-size: 9.5pt;
 }
 .rp-item-bold {
-  font-weight: 700;
-  color: #111827;
+  font-weight: 750;
+  color: #15354a;
 }
 .rp-item-mid {
-  font-weight: 500;
-  color: #4b5563;
+  font-weight: 550;
+  color: #557180;
   margin-left: 6pt;
   margin-right: auto;
 }
 .rp-item-date {
   font-size: 8.5pt;
-  color: #6b7280;
-  white-space: nowrap;
-}
-.rp-item-sub {
-  font-size: 8.5pt;
-  color: #6b7280;
+  color: #718894;
 }
 .rp-item-desc {
   font-size: 8.5pt;
-  color: #374151;
+  color: #344c59;
   line-height: 1.45;
   text-align: justify;
-  white-space: pre-line;
 }
-
 .rp-skills-list {
   list-style-type: square;
   margin-left: 14pt;
+  margin-top: 2pt;
+  margin-bottom: 0;
   display: flex;
   flex-direction: column;
   gap: 3pt;
   font-size: 8.5pt;
-  color: #374151;
+  color: #344c59;
 }
 
-/* ==========================================================================
-   打印机矢量高保真输出 (Print Stylesheet for A4 PDF)
-   ========================================================================== */
-
+/* 打印 PDF 引擎 */
 @page {
   size: A4 portrait;
-  margin: 12mm 10mm;
+  margin: 10mm 10mm;
 }
-
 @media print {
-  /* 隐藏所有非简历页面元素 */
   body {
-    background: #ffffff !important;
-    color: #000000 !important;
+    background: #fff !important;
   }
-  #screen-lock,
-  .app-header,
+  .login-layout,
+  .topline,
+  .hero,
+  .tabs,
   .resume-toolbar,
   .resume-editor-panel,
-  .mobile-bottom-nav,
   .toast,
-  .modal-overlay,
-  .lightbox-overlay,
+  .footer,
   #content-timetable,
   #content-albums,
   #content-settings {
     display: none !important;
   }
-
-  .app-main-content {
+  .site, .content {
     padding: 0 !important;
     margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
     max-width: 100% !important;
   }
-
-  .resume-wrapper {
-    gap: 0 !important;
-  }
-
-  .resume-workspace {
+  .resume-workspace, .resume-preview-panel {
     display: block !important;
-  }
-
-  .resume-preview-panel {
-    display: block !important;
-    overflow: visible !important;
     max-height: none !important;
-    padding: 0 !important;
+    overflow: visible !important;
   }
-
   .a4-page-sheet {
     box-shadow: none !important;
     border: none !important;
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
-    min-height: auto !important;
-  }
-
-  .rp-header {
-    border-bottom: 2pt solid #2563eb !important;
   }
 }

@@ -1,215 +1,124 @@
 /* ==========================================================================
-   OASIS | 全设备响应式适配规范 (Mobile / Pad / PC)
+   USV LAB 经典响应式规则 (Mobile / Pad / PC 精确适配)
    ========================================================================== */
 
-/* 移动端底部悬浮导航栏 (默认在宽屏隐藏) */
-.mobile-bottom-nav {
-  display: none;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 60px;
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-top: 1px solid var(--border-color);
-  z-index: 900;
-  justify-content: space-around;
-  align-items: center;
-  padding: 0 10px;
-  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+@media (min-width: 780px) {
+  .site { padding-top: 31px; }
+  .hero { padding: 32px 36px; }
+  .hero h1 { font-size: 31px; }
+  .schedule-heading, .schedule-row { grid-template-columns: 84px 1fr 1fr 1fr; }
+  .schedule-row { padding: 12px 14px; }
+  .slot { min-height: 94px; padding: 12px 14px; }
 }
 
-.mobile-nav-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 3px;
-  flex: 1;
-  height: 100%;
-  color: var(--text-muted);
-  font-size: 0.6875rem;
-  font-weight: 500;
-  background: none;
-  border: none;
-  cursor: pointer;
-  transition: color 0.15s ease;
-}
-.mobile-nav-item .nav-icon {
-  font-size: 1.25rem;
-  line-height: 1;
-}
-.mobile-nav-item.active {
-  color: var(--color-primary);
-  font-weight: 600;
-}
-
-/* ==========================================================================
-   平板端适配 (Pad: 768px ~ 1024px)
-   ========================================================================== */
-@media screen and (max-width: 1024px) {
-  .app-main-content {
-    padding: 16px;
+@media (max-width: 767px) {
+  .site {
+    padding: 14px 12px 28px;
   }
-
-  /* 时刻表在平板上变为双列/流式 */
-  .tt-slots-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .topline {
+    margin: 0 4px 13px;
   }
-  .tt-slots-grid .tt-slot-card:last-child {
-    grid-column: span 2;
+  .hero {
+    padding: 21px 18px;
+    border-radius: 18px;
   }
-
-  /* 相册网格在平板上双列 */
-  .albums-books-grid {
-    grid-template-columns: repeat(2, 1fr);
+  .hero h1 {
+    font-size: 22px;
+    margin: 9px 0 10px;
   }
-
-  /* 设置后台网格单列 */
-  .settings-grid {
-    grid-template-columns: 1fr;
+  .hero-main {
+    display: block;
   }
-
-  /* 简历工作区分屏比例微调 */
-  .resume-workspace {
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-  }
-  .a4-page-sheet {
-    padding: 14mm 12mm;
-  }
-}
-
-/* ==========================================================================
-   手机端适配 (Mobile: < 768px)
-   ========================================================================== */
-@media screen and (max-width: 767px) {
-  /* 显示移动端底部导航，主内容底部预留 70px 防遮挡 */
-  .mobile-bottom-nav {
+  .hero-stats {
+    margin-top: 14px;
     display: flex;
+    gap: 8px;
   }
-  .app-main-content {
-    padding: 12px;
-    padding-bottom: 80px;
+  .stat {
+    flex: 1;
+    min-width: auto;
+    padding: 10px 12px;
+  }
+  .stat strong {
+    font-size: 24px;
   }
 
-  /* 顶部导航简化：隐藏文字导航链接，只保留 Logo 与右侧退出 */
-  .header-nav {
+  .content {
+    padding: 14px 12px;
+    border-radius: 17px;
+    margin-top: 12px;
+  }
+  .tabs {
+    margin-bottom: 16px;
+  }
+  .tab {
+    font-size: 12.5px;
+    min-height: 39px;
+    gap: 4px;
+  }
+
+  /* 手机端时刻表排布 */
+  .schedule-heading {
     display: none;
   }
-  .header-container {
-    padding: 8px 14px;
+  .schedule-row {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 10px;
   }
-  .header-brand-name {
-    font-size: 1rem;
+  .day-label {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #eef2f5;
   }
-  #header-role-badge {
-    font-size: 0.6875rem;
-    padding: 2px 6px;
+  .day-label strong {
+    font-size: 14px;
+  }
+  .slot {
+    min-height: 72px;
+    padding: 10px 12px;
   }
 
-  /* 门禁卡片全屏友好 */
-  .gate-card {
-    padding: 28px 18px;
-  }
-
-  /* 时刻表手机端单列排布 */
-  .tt-control-bar {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 12px;
+  /* 手机端相册 */
+  .albums-grid {
+    grid-template-columns: 1fr;
     gap: 12px;
   }
-  .tt-date-stepper {
-    justify-content: space-between;
-    flex-wrap: wrap;
-  }
-  .tt-date-stepper .input-date {
-    flex: 1;
-    min-width: 120px;
-  }
-  .tt-slots-grid {
-    grid-template-columns: 1fr;
-    gap: 14px;
-  }
-  .tt-slots-grid .tt-slot-card:last-child {
-    grid-column: span 1;
-  }
-  .tt-slot-card {
-    min-height: auto;
-    padding: 14px;
-  }
-
-  /* 相册在手机端 */
-  .albums-header-bar {
-    padding: 14px;
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .albums-books-grid {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
-  .album-book-cover-wrap {
-    height: 160px;
-  }
-  .photos-masonry-grid {
+  .photos-masonry {
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
+    gap: 8px;
   }
-  .photo-polaroid-card {
-    padding: 6px 6px 10px 6px;
-  }
-  .album-detail-top-nav {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .detail-nav-actions {
-    display: flex;
-  }
-  .btn-upload-wrap {
-    width: 100%;
-    justify-content: center;
+  .photo-bar {
+    padding: 6px 8px;
+    font-size: 10.5px;
   }
 
-  /* 灯箱在手机端触控优化 */
-  .lightbox-overlay {
-    padding: 12px;
+  /* 手机端登录卡片 */
+  .login-panel {
+    padding: 29px 24px 26px;
+    border-radius: 20px;
   }
-  .lightbox-arrow {
-    width: 38px;
-    height: 48px;
-    font-size: 1.8rem;
+  .login-panel h1 {
+    font-size: 28px;
+    margin: 20px 0 9px;
   }
-  .arrow-left { left: 8px; }
-  .arrow-right { right: 8px; }
+  .login-intro {
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
 
-  /* 简历编辑器手机端 Tab 切换模式 */
+  /* 手机端简历编辑器 Tab 切换 */
   .mobile-resume-tabs {
-    display: flex;
+    display: flex !important;
+    gap: 6px;
     width: 100%;
+    margin-bottom: 10px;
   }
   .mobile-resume-tabs .btn {
     flex: 1;
   }
-  .resume-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-    padding: 12px;
-  }
-  .toolbar-actions {
-    justify-content: space-between;
-    width: 100%;
-  }
-  .toolbar-actions .btn {
-    flex: 1;
-    padding: 6px 8px;
-    font-size: 0.75rem;
-  }
-
-  /* 切换模式：编辑与预览互斥 */
   .resume-workspace {
     display: block;
   }
@@ -225,8 +134,6 @@
   .resume-workspace.preview #resume-preview-pane {
     display: flex;
   }
-
-  /* 默认手机端若无模式，先看编辑 */
   .resume-workspace.split #resume-editor-pane {
     display: block;
   }
@@ -236,31 +143,26 @@
 
   .resume-editor-panel {
     max-height: none;
-    padding: 12px;
+    padding-right: 0;
   }
   .resume-preview-panel {
     max-height: none;
     overflow-x: auto;
-    padding: 0;
   }
   .a4-page-sheet {
     padding: 12mm 10mm;
-    min-height: auto;
     font-size: 8.5pt;
   }
   .rp-name {
     font-size: 16pt;
   }
-
-  /* 弹窗在手机端 */
-  .modal-overlay {
-    padding: 12px;
+  .toolbar-actions {
+    width: 100%;
+    justify-content: space-between;
   }
-  .modal-card {
-    max-width: 100%;
-  }
-  .form-row {
-    flex-direction: column;
-    gap: 0;
+  .toolbar-actions .btn {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 11.5px;
   }
 }

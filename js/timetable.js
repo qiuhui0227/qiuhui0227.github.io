@@ -1,331 +1,291 @@
 /**
  * OASIS | Qiuhui & Yan
- * 共享时刻表模块 (参考实验室预约系统秩序网格看板 + 情侣专属参与者)
+ * 共享时刻表模块 (完全采用 USV Lab 实验预约系统网格结构: schedule-heading, schedule-row, slot, slot-topic)
  */
 
 class TimetableModule {
   constructor() {
     this.selectedDate = new Date().toISOString().split('T')[0];
-    this.initEvents();
   }
 
-  initEvents() {
-    // 监听全局事件或按钮
-  }
-
-  // 获取当前查看日期的事项列表
-  getEventsForDate(dateStr) {
+  // 获取指定日期的早中晚事项
+  getEventsByDate(dateStr) {
     const all = window.spaceStore.getTimetables();
     const isMaster = window.spaceAuth.isMaster();
-    return all.filter(item => {
-      if (item.date !== dateStr) return false;
-      // 如果是来宾，只显示客厅开放的事项
-      if (!isMaster && item.visibility === 'bedroom') return false;
+    return all.filter(e => {
+      if (e.date !== dateStr) return false;
+      if (!isMaster && e.visibility === 'bedroom') return false;
       return true;
     });
   }
 
-  // 格式化日期标题
-  formatDateHeader(dateStr) {
+  // 格式化日期与星期
+  getDayMeta(dateStr) {
     const d = new Date(dateStr + 'T00:00:00');
-    const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
-    const week = weekdays[d.getDay()];
+    const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
     const today = new Date().toISOString().split('T')[0];
     const isToday = dateStr === today;
-    return `${dateStr} ${week} ${isToday ? '<span class="today-tag">今日</span>' : ''}`;
+    return {
+      weekday: weekdays[d.getDay()],
+      dateShort: `${d.getMonth() + 1}.${d.getDate()}`,
+      isToday
+    };
   }
 
-  // 渲染时刻表主界面
+  // 获取以选中日期为中心的 3 天视图（昨天、今天、明天），也可切换
+  getDateRange() {
+    const dates = [];
+    for (let offset = -1; offset <= 2; offset++) {
+      const d = new Date(this.selectedDate + 'T00:00:00');
+      d.setDate(d.getDate() + offset);
+      dates.push(d.toISOString().split('T')[0]);
+    }
+    return dates;
+  }
+
   render(container) {
     if (!container) return;
     const isMaster = window.spaceAuth.isMaster();
-    const events = this.getEventsForDate(this.selectedDate);
+    const dates = this.getDateRange();
+
+    container.innerHTML = `
+      <div class="timetable-wrap">
+        <!-- 顶部导引与日期切换 (复刻 USV Lab week-switcher) -->
+        <div class="week-switcher-wrap">
+          <div class="week-switcher">
+            <div class="date-nav-controls">
+              <button class="btn btn-outline btn-sm" id="tt-btn-prev">‹ 前一天</button>
+              <input type="date" id="tt-date-input" value="${this.selectedDate}" class="input sm" style="width: auto;">
+              <button class="btn btn-outline btn-sm" id="tt-btn-next">后一天 ›</button>
+              <button class="btn btn-outline btn-sm" id="tt-btn-today">回到今天</button>
+            </div>
+            ${isMaster ? `
+              <button class="btn btn-primary btn-sm" id="tt-btn-add">
+                <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                添加时刻事项
+              </button>
+            ` : `
+              <span class="pill good">🛋️ 客厅来宾模式 · 仅展示开放日程</span>
+            `}
+          </div>
+        </div>
+
+        <div class="section-heading">
+          <h2>时段预约看板与事项安排</h2>
+          <p>早中晚三级时段 · 参加人专属状态区分</p>
+        </div>
+
+        <!-- USV Lab 经典表头 -->
+        <div class="schedule-heading">
+          <div>日期</div>
+          <div>🌅 晨光 / 上午 (08:00 - 12:00)</div>
+          <div>☀️ 午后 / 专注 (12:00 - 18:00)</div>
+          <div>🌙 晚风 / 暮色 (18:00 - 24:00)</div>
+        </div>
+
+        <!-- USV Lab 经典行列表 -->
+        <div class="schedule-list">
+          ${dates.map(dateStr => this.renderScheduleRow(dateStr, isMaster)).join('')}
+        </div>
+      </div>
+    `;
+
+    this.bindEvents(container);
+  }
+
+  // 渲染单日行 (.schedule-row)
+  renderScheduleRow(dateStr, isMaster) {
+    const meta = this.getDayMeta(dateStr);
+    const events = this.getEventsByDate(dateStr);
 
     const morningEvents = events.filter(e => e.slot === 'morning');
     const afternoonEvents = events.filter(e => e.slot === 'afternoon');
     const eveningEvents = events.filter(e => e.slot === 'evening');
 
-    container.innerHTML = `
-      <div class="timetable-board">
-        <!-- 顶部预约日历式控制栏 -->
-        <div class="tt-control-bar card-glass">
-          <div class="tt-date-stepper">
-            <button class="btn btn-sm btn-outline" id="tt-btn-prev">‹ 前一天</button>
-            <input type="date" id="tt-date-picker" value="${this.selectedDate}" class="input-date">
-            <button class="btn btn-sm btn-outline" id="tt-btn-next">后一天 ›</button>
-            <button class="btn btn-sm btn-secondary" id="tt-btn-today">回到今天</button>
-          </div>
-          <div class="tt-header-title">
-            <h3 id="tt-date-display">${this.formatDateHeader(this.selectedDate)}</h3>
-            <span class="tt-sub-tip">时段预约看板 · 实验级精细度安排</span>
-          </div>
-          <div class="tt-actions">
-            ${isMaster ? `
-              <button class="btn btn-primary" id="tt-btn-add">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                添加时刻事项
-              </button>
-            ` : `
-              <span class="badge badge-guest">🛋️ 客厅浏览模式 (仅显示开放事项)</span>
-            `}
-          </div>
-        </div>
-
-        <!-- 三时段预约网格 -->
-        <div class="tt-slots-grid">
-          <!-- 1. 早晨时段 -->
-          ${this.renderSlotSection('morning', '🌅 晨光研磨 · 上午时段 (08:00 - 12:00)', morningEvents, isMaster)}
-
-          <!-- 2. 午后时段 -->
-          ${this.renderSlotSection('afternoon', '☀️ 专注实验 · 午后时光 (12:00 - 18:00)', afternoonEvents, isMaster)}
-
-          <!-- 3. 晚间时段 -->
-          ${this.renderSlotSection('evening', '🌙 晚风散步 · 暮色夜间 (18:00 - 24:00)', eveningEvents, isMaster)}
-        </div>
-      </div>
-    `;
-
-    this.bindDOMEvents(container);
-  }
-
-  // 渲染单个时段分组卡片
-  renderSlotSection(slotKey, title, slotEvents, isMaster) {
     return `
-      <div class="tt-slot-card card-glass" data-slot="${slotKey}">
-        <div class="tt-slot-header">
-          <div class="tt-slot-title-wrap">
-            <span class="tt-slot-dot tt-slot-dot-${slotKey}"></span>
-            <span class="tt-slot-title">${title}</span>
-          </div>
-          <span class="tt-slot-count">${slotEvents.length} 个预约事项</span>
+      <div class="schedule-row ${meta.isToday ? 'is-today-row' : ''}">
+        <div class="day-label">
+          <strong>${meta.weekday} ${meta.isToday ? '<span class="pill good" style="font-size:10px;padding:2px 5px;">今日</span>' : ''}</strong>
+          <small>${meta.dateShort}</small>
         </div>
-        <div class="tt-events-list">
-          ${slotEvents.length === 0 ? `
-            <div class="tt-empty-slot">
-              <span>当前时段暂无排期事项</span>
-              ${isMaster ? `<button class="btn btn-xs btn-outline btn-slot-quick-add" data-slot="${slotKey}">+ 快速添加</button>` : ''}
-            </div>
-          ` : slotEvents.map(evt => this.renderEventCard(evt, isMaster)).join('')}
-        </div>
+
+        <!-- 上午时段 -->
+        ${this.renderSlot(dateStr, 'morning', '🌅 上午', morningEvents, isMaster)}
+
+        <!-- 下午时段 -->
+        ${this.renderSlot(dateStr, 'afternoon', '☀️ 下午', afternoonEvents, isMaster)}
+
+        <!-- 晚间时段 -->
+        ${this.renderSlot(dateStr, 'evening', '🌙 晚间', eveningEvents, isMaster)}
       </div>
     `;
   }
 
-  // 渲染单个事项卡片
-  renderEventCard(evt, isMaster) {
-    const participantMap = {
-      yan: { label: 'Yan (王琰)', class: 'part-yan', avatar: '👦' },
-      qiuhui: { label: 'Qiuhui (秋慧)', class: 'part-qiuhui', avatar: '👧' },
-      both: { label: 'Both (共同参加)', class: 'part-both', avatar: '👫' }
-    };
-
-    const statusMap = {
-      pending: { label: '待进行', class: 'status-pending' },
-      ongoing: { label: '进行中', class: 'status-ongoing' },
-      completed: { label: '已打卡', class: 'status-completed' }
-    };
-
-    const part = participantMap[evt.participant] || participantMap.both;
-    const status = statusMap[evt.status] || statusMap.pending;
-
+  // 渲染单个时段槽位 (.slot)
+  renderSlot(dateStr, slotKey, slotLabel, slotEvents, isMaster) {
+    const count = slotEvents.length;
     return `
-      <div class="tt-event-item card-hover ${evt.status === 'completed' ? 'is-completed' : ''}" data-id="${evt.id}">
-        <div class="tt-event-left-bar ${part.class}-bar"></div>
-        <div class="tt-event-main">
-          <div class="tt-event-top">
-            <span class="badge ${part.class}">
-              <span class="badge-icon">${part.avatar}</span>
-              ${part.label}
-            </span>
-            <span class="badge ${status.class}">${status.label}</span>
-            ${isMaster && evt.visibility === 'bedroom' ? `
-              <span class="badge badge-private" title="仅卧室私密可见">🔒 私密</span>
-            ` : ''}
-          </div>
-          <h4 class="tt-event-title">${this.escapeHtml(evt.title)}</h4>
-          ${evt.location ? `
-            <div class="tt-event-meta">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-              <span>${this.escapeHtml(evt.location)}</span>
-            </div>
-          ` : ''}
-          ${evt.notes ? `
-            <p class="tt-event-notes">${this.escapeHtml(evt.notes)}</p>
+      <div class="slot ${count > 0 ? 'heat-4' : ''}" data-date="${dateStr}" data-slot="${slotKey}">
+        <div class="slot-main">
+          <span class="slot-period-tag">${slotLabel} (${count})</span>
+          ${isMaster ? `
+            <button class="btn-text btn-quick-add-slot" data-date="${dateStr}" data-slot="${slotKey}" title="在该时段快速添加">+添</button>
           ` : ''}
         </div>
+        ${count === 0 ? `
+          <div class="slot-topic empty"><span>暂无排期</span></div>
+        ` : slotEvents.map(evt => this.renderTopic(evt, isMaster)).join('')}
+      </div>
+    `;
+  }
+
+  // 渲染事项胶囊 (.slot-topic)
+  renderTopic(evt, isMaster) {
+    const partMap = {
+      yan: { label: 'Yan', class: 'part-yan', avatar: '👦' },
+      qiuhui: { label: 'Qiuhui', class: 'part-qiuhui', avatar: '👧' },
+      both: { label: 'Both', class: 'part-both', avatar: '👫' }
+    };
+    const part = partMap[evt.participant] || partMap.both;
+    const isDone = evt.status === 'completed';
+
+    return `
+      <div class="slot-topic ${isDone ? 'is-done' : ''}" data-id="${evt.id}" title="${this.escapeHtml(evt.notes || evt.title)}">
+        <span class="part-pill ${part.class}">${part.avatar} ${part.label}</span>
+        <span style="flex:1; overflow:hidden; text-overflow:ellipsis;">${this.escapeHtml(evt.title)}</span>
         ${isMaster ? `
-          <div class="tt-event-actions">
-            <button class="btn-icon btn-toggle-status" data-id="${evt.id}" title="${evt.status === 'completed' ? '恢复未打卡' : '打卡标记完成'}">
-              ${evt.status === 'completed' ? '↩️' : '✅'}
-            </button>
-            <button class="btn-icon btn-edit-event" data-id="${evt.id}" title="编辑事项">✏️</button>
-            <button class="btn-icon btn-delete-event" data-id="${evt.id}" title="删除事项">🗑️</button>
-          </div>
+          <span class="btn-toggle-done" data-id="${evt.id}" style="cursor:pointer; margin-left:4px;" title="${isDone ? '恢复未完成' : '打卡标记完成'}">
+            ${isDone ? '✅' : '○'}
+          </span>
+          <span class="btn-del-evt" data-id="${evt.id}" style="cursor:pointer; color:#a7464c; margin-left:4px;" title="删除">×</span>
         ` : ''}
       </div>
     `;
   }
 
-  // 绑定交互事件
-  bindDOMEvents(container) {
+  bindEvents(container) {
     // 切换日期
-    const datePicker = container.querySelector('#tt-date-picker');
-    if (datePicker) {
-      datePicker.addEventListener('change', (e) => {
-        this.selectedDate = e.target.value;
-        this.render(container);
-      });
-    }
+    const dateInput = container.querySelector('#tt-date-input');
+    dateInput?.addEventListener('change', (e) => {
+      this.selectedDate = e.target.value;
+      this.render(container);
+    });
 
-    const btnPrev = container.querySelector('#tt-btn-prev');
-    if (btnPrev) {
-      btnPrev.addEventListener('click', () => {
-        const d = new Date(this.selectedDate + 'T00:00:00');
-        d.setDate(d.getDate() - 1);
-        this.selectedDate = d.toISOString().split('T')[0];
-        this.render(container);
-      });
-    }
+    container.querySelector('#tt-btn-prev')?.addEventListener('click', () => {
+      const d = new Date(this.selectedDate + 'T00:00:00');
+      d.setDate(d.getDate() - 1);
+      this.selectedDate = d.toISOString().split('T')[0];
+      this.render(container);
+    });
 
-    const btnNext = container.querySelector('#tt-btn-next');
-    if (btnNext) {
-      btnNext.addEventListener('click', () => {
-        const d = new Date(this.selectedDate + 'T00:00:00');
-        d.setDate(d.getDate() + 1);
-        this.selectedDate = d.toISOString().split('T')[0];
-        this.render(container);
-      });
-    }
+    container.querySelector('#tt-btn-next')?.addEventListener('click', () => {
+      const d = new Date(this.selectedDate + 'T00:00:00');
+      d.setDate(d.getDate() + 1);
+      this.selectedDate = d.toISOString().split('T')[0];
+      this.render(container);
+    });
 
-    const btnToday = container.querySelector('#tt-btn-today');
-    if (btnToday) {
-      btnToday.addEventListener('click', () => {
-        this.selectedDate = new Date().toISOString().split('T')[0];
-        this.render(container);
-      });
-    }
+    container.querySelector('#tt-btn-today')?.addEventListener('click', () => {
+      this.selectedDate = new Date().toISOString().split('T')[0];
+      this.render(container);
+    });
 
-    // 添加事项按钮
-    const btnAdd = container.querySelector('#tt-btn-add');
-    if (btnAdd) {
-      btnAdd.addEventListener('click', () => {
-        this.openEventModal(null, 'morning');
-      });
-    }
+    // 添加事项
+    container.querySelector('#tt-btn-add')?.addEventListener('click', () => {
+      this.openEventModal(null, this.selectedDate, 'morning');
+    });
 
     // 快捷添加
-    container.querySelectorAll('.btn-slot-quick-add').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.openEventModal(null, btn.dataset.slot);
+    container.querySelectorAll('.btn-quick-add-slot').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.openEventModal(null, btn.dataset.date, btn.dataset.slot);
       });
     });
 
-    // 切换打卡完成状态
-    container.querySelectorAll('.btn-toggle-status').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.toggleEventStatus(btn.dataset.id);
-        this.render(container);
-      });
-    });
-
-    // 编辑事项
-    container.querySelectorAll('.btn-edit-event').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = btn.dataset.id;
+    // 切换打卡完成
+    container.querySelectorAll('.btn-toggle-done').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
         const all = window.spaceStore.getTimetables();
-        const found = all.find(e => e.id === id);
+        const found = all.find(x => x.id === btn.dataset.id);
         if (found) {
-          this.openEventModal(found, found.slot);
+          found.status = found.status === 'completed' ? 'pending' : 'completed';
+          window.spaceStore.saveTimetables(all);
+          this.render(container);
         }
       });
     });
 
     // 删除事项
-    container.querySelectorAll('.btn-delete-event').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (confirm('确认删除该时刻事项吗？')) {
-          this.deleteEvent(btn.dataset.id);
+    container.querySelectorAll('.btn-del-evt').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (confirm('确认删除该事项吗？')) {
+          let all = window.spaceStore.getTimetables();
+          all = all.filter(x => x.id !== btn.dataset.id);
+          window.spaceStore.saveTimetables(all);
           this.render(container);
         }
       });
     });
   }
 
-  toggleEventStatus(id) {
-    const all = window.spaceStore.getTimetables();
-    const found = all.find(e => e.id === id);
-    if (found) {
-      found.status = found.status === 'completed' ? 'ongoing' : 'completed';
-      window.spaceStore.saveTimetables(all);
-    }
-  }
-
-  deleteEvent(id) {
-    let all = window.spaceStore.getTimetables();
-    all = all.filter(e => e.id !== id);
-    window.spaceStore.saveTimetables(all);
-  }
-
-  // 打开事项添加/编辑模态弹窗
-  openEventModal(item = null, defaultSlot = 'morning') {
+  // 弹窗表单 (复刻 USV Lab 的 .overlay 和 .sheet 结构)
+  openEventModal(item = null, defaultDate = null, defaultSlot = 'morning') {
     const isEdit = !!item;
     const modalHtml = `
-      <div class="modal-overlay" id="tt-modal">
-        <div class="modal-card card-glass animate-pop">
-          <div class="modal-header">
-            <h3>${isEdit ? '编辑时刻事项' : '新增时刻预约事项'}</h3>
-            <button class="btn-close" id="tt-modal-close">×</button>
+      <div class="overlay" id="tt-modal">
+        <div class="sheet">
+          <div class="sheet-head">
+            <h3>${isEdit ? '编辑时刻事项' : '新增时刻事项'}</h3>
+            <button class="logout" id="tt-modal-close" style="font-size: 18px;">×</button>
           </div>
-          <form id="tt-event-form" class="modal-body">
+          <form id="tt-form" class="login-form">
             <div class="form-row">
-              <div class="form-group flex-1">
-                <label>日期</label>
-                <input type="date" name="date" class="input" value="${item ? item.date : this.selectedDate}" required>
+              <div>
+                <label class="form-label">日期</label>
+                <input type="date" name="date" class="input" value="${item ? item.date : (defaultDate || this.selectedDate)}" required>
               </div>
-              <div class="form-group flex-1">
-                <label>时段区间</label>
-                <select name="slot" class="input" required>
+              <div>
+                <label class="form-label">时段</label>
+                <select name="slot" class="select" required>
                   <option value="morning" ${(item?.slot || defaultSlot) === 'morning' ? 'selected' : ''}>🌅 晨光/上午 (08:00 - 12:00)</option>
                   <option value="afternoon" ${(item?.slot || defaultSlot) === 'afternoon' ? 'selected' : ''}>☀️ 午后时光 (12:00 - 18:00)</option>
-                  <option value="evening" ${(item?.slot || defaultSlot) === 'evening' ? 'selected' : ''}>🌙 晚风漫步 (18:00 - 24:00)</option>
+                  <option value="evening" ${(item?.slot || defaultSlot) === 'evening' ? 'selected' : ''}>🌙 晚风夜间 (18:00 - 24:00)</option>
                 </select>
               </div>
             </div>
 
-            <div class="form-group">
-              <label>事项主题 *</label>
-              <input type="text" name="title" class="input" placeholder="例如：周末徒步野餐、论文仿真数据跑批..." value="${item ? this.escapeHtml(item.title) : ''}" required>
+            <div>
+              <label class="form-label">事项名称 *</label>
+              <input type="text" name="title" class="input" placeholder="输入日程或活动内容" value="${item ? this.escapeHtml(item.title) : ''}" required>
             </div>
 
             <div class="form-row">
-              <div class="form-group flex-1">
-                <label>参加人</label>
-                <select name="participant" class="input">
+              <div>
+                <label class="form-label">参加人</label>
+                <select name="participant" class="select">
                   <option value="both" ${item?.participant === 'both' ? 'selected' : ''}>👫 共同参加 (Both)</option>
                   <option value="yan" ${item?.participant === 'yan' ? 'selected' : ''}>👦 Yan (王琰)</option>
                   <option value="qiuhui" ${item?.participant === 'qiuhui' ? 'selected' : ''}>👧 Qiuhui (秋慧)</option>
                 </select>
               </div>
-              <div class="form-group flex-1">
-                <label>空间开放权限</label>
-                <select name="visibility" class="input">
-                  <option value="living_room" ${item?.visibility === 'living_room' ? 'selected' : ''}>🛋️ 客厅开放 (来宾可看)</option>
+              <div>
+                <label class="form-label">开放权限</label>
+                <select name="visibility" class="select">
+                  <option value="living_room" ${item?.visibility === 'living_room' ? 'selected' : ''}>🛋️ 客厅开放 (来宾可见)</option>
                   <option value="bedroom" ${item?.visibility === 'bedroom' ? 'selected' : ''}>🛏️ 卧室私密 (仅主人可见)</option>
                 </select>
               </div>
             </div>
 
-            <div class="form-group">
-              <label>地点 / 关联空间</label>
-              <input type="text" name="location" class="input" placeholder="例如：长春净月潭 / 书房 / 咖啡馆" value="${item ? this.escapeHtml(item.location || '') : ''}">
+            <div>
+              <label class="form-label">地点 / 备注备忘</label>
+              <input type="text" name="location" class="input" placeholder="例如：实验室、长春净月潭、咖啡小馆..." value="${item ? this.escapeHtml(item.location || '') : ''}">
             </div>
 
-            <div class="form-group">
-              <label>备忘详情与心得</label>
-              <textarea name="notes" class="input textarea" rows="3" placeholder="写下一些细节安排、需要携带的物品或浪漫备忘...">${item ? this.escapeHtml(item.notes || '') : ''}</textarea>
-            </div>
-
-            <div class="modal-footer">
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
               <button type="button" class="btn btn-outline" id="tt-modal-cancel">取消</button>
               <button type="submit" class="btn btn-primary">保存事项</button>
             </div>
@@ -336,15 +296,12 @@ class TimetableModule {
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
     const modalEl = document.getElementById('tt-modal');
+    const close = () => modalEl && modalEl.remove();
 
-    const closeModal = () => {
-      if (modalEl) modalEl.remove();
-    };
+    modalEl.querySelector('#tt-modal-close').addEventListener('click', close);
+    modalEl.querySelector('#tt-modal-cancel').addEventListener('click', close);
 
-    modalEl.querySelector('#tt-modal-close').addEventListener('click', closeModal);
-    modalEl.querySelector('#tt-modal-cancel').addEventListener('click', closeModal);
-
-    modalEl.querySelector('#tt-event-form').addEventListener('submit', (e) => {
+    modalEl.querySelector('#tt-form').addEventListener('submit', (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
       const all = window.spaceStore.getTimetables();
@@ -358,10 +315,9 @@ class TimetableModule {
           found.participant = fd.get('participant');
           found.visibility = fd.get('visibility');
           found.location = fd.get('location');
-          found.notes = fd.get('notes');
         }
       } else {
-        const newEvent = {
+        const newEvt = {
           id: 'sched_' + Date.now(),
           date: fd.get('date'),
           slot: fd.get('slot'),
@@ -369,18 +325,15 @@ class TimetableModule {
           participant: fd.get('participant'),
           visibility: fd.get('visibility'),
           location: fd.get('location'),
-          notes: fd.get('notes'),
           status: 'pending'
         };
-        all.push(newEvent);
+        all.push(newEvt);
       }
 
       window.spaceStore.saveTimetables(all);
-      closeModal();
+      close();
       const container = document.getElementById('content-timetable');
-      if (container) {
-        this.render(container);
-      }
+      if (container) this.render(container);
     });
   }
 

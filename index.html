@@ -2,11 +2,12 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#18354a">
   <title>OASIS | Qiuhui & Yan 专属情侣空间</title>
   <link rel="icon" type="image/png" href="./images/logo.png">
 
-  <!-- 样式加载 -->
+  <!-- 加载完全复刻 USV Lab 经典美学的样式表 -->
   <link rel="stylesheet" href="./css/style.css">
   <link rel="stylesheet" href="./css/resume.css">
   <link rel="stylesheet" href="./css/responsive.css">
@@ -14,129 +15,147 @@
 <body>
 
   <!-- ==========================================================================
-       1. 门禁锁屏界面 (Entry Gate Lock Screen)
+       1. 门禁锁屏界面 (复刻 USV Lab 经典登录页面)
+       深蓝夜海径向渐变底色 + 右上角三层同心轨道几何光晕 + 白色大圆角浮升卡片
        ========================================================================== -->
-  <div id="screen-lock">
-    <div class="gate-card card-glass animate-pop">
-      <div class="gate-logo-badge">
-        <img src="./images/logo.png" alt="OASIS Logo" onerror="this.style.display='none';">
+  <div id="screen-lock" class="login-layout">
+    <section class="login-panel">
+      <div class="brand">
+        <span class="brand-mark">O</span>
+        <span>OASIS <span class="brand-light">/ SPACE</span></span>
       </div>
-      <h1>OASIS · 私属空间</h1>
-      <p class="gate-subtitle">Qiuhui & Yan 的双人星系 · 客厅与卧室双模门禁</p>
+      <h1>Qiuhui & Yan<br>专属情侣空间<span class="period">.</span></h1>
+      <p class="login-intro">私属星系 · 客厅与卧室双模门禁。<br>输入访问通行码，即可入座。</p>
 
-      <form id="gate-login-form">
-        <div class="gate-input-wrap">
+      <form id="gate-login-form" class="login-form" autocomplete="off">
+        <div>
+          <label class="form-label" for="gate-password-input">访问通行码</label>
           <input 
-            type="password" 
-            id="gate-password-input" 
             class="input" 
-            placeholder="请输入访问密码..." 
-            autocomplete="current-password" 
+            id="gate-password-input" 
+            name="password" 
+            type="password" 
             required 
+            placeholder="请输入主人密码或来宾密码" 
+            autocomplete="current-password" 
             autofocus
           >
-          <span class="form-error" id="gate-error-tip"></span>
         </div>
-        <button type="submit" class="btn btn-primary gate-btn-enter">
-          进入空间
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+        <button class="btn btn-primary block" id="gate-login-btn" type="submit">
+          进入专属空间
+          <svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
         </button>
+        <div id="gate-error-tip" class="fine" style="color: #a7464c; text-align: center; min-height: 18px;"></div>
       </form>
 
-      <div class="gate-info-box">
-        <p><strong>🚪 通行提示：</strong></p>
-        <p>• <strong>🛏️ 主人密码</strong> (初始: <code>admin</code>)：直达卧室，解锁所有私密相册、全量时刻表、简历编辑器与后台安全配置。</p>
-        <p>• <strong>🛋️ 来宾密码</strong> (初始: <code>guest888</code>)：入座客厅，仅翻阅开放相册与公开日常。支持有效次数与有效期保护。</p>
-      </div>
-    </div>
+      <p class="login-foot">
+        🛏️ 主人密码（初始 <code>admin</code>）：直达卧室，解锁所有特权与隐私管理<br>
+        🛋️ 来宾密码（初始 <code>guest888</code>）：入座客厅，仅翻阅开放相册与排期
+      </p>
+    </section>
   </div>
 
 
   <!-- ==========================================================================
-       2. 空间主应用界面 (Main Couple Space App)
+       2. 空间主界面 (复刻 USV Lab 的 .site, .topline, .hero, .content, .tabs)
        ========================================================================== -->
   <div id="screen-app" style="display: none;">
-    
-    <!-- 顶部导航栏 -->
-    <header class="app-header">
-      <div class="header-container">
-        <div class="header-left">
-          <a href="#" class="header-logo-link" onclick="location.reload(); return false;">
-            <img src="./images/logo.png" class="header-logo-img" alt="Logo" onerror="this.style.display='none';">
-            <span class="header-brand-name">OASIS | Qiuhui & Yan</span>
-          </a>
-          <span id="header-role-badge" class="badge"></span>
+    <div class="site">
+      
+      <!-- Topline 顶部状态栏 -->
+      <div class="topline">
+        <div class="wordmark">
+          <span class="sq">O</span>
+          <span>OASIS / QIUIHUI & YAN</span>
         </div>
-
-        <!-- 桌面端导航选项卡 -->
-        <nav class="header-nav" id="header-nav">
-          <a href="#timetable" class="nav-link active" data-tab="timetable">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-            共享时刻表
-          </a>
-          <a href="#albums" class="nav-link" data-tab="albums">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            时光相簿
-          </a>
-          <a href="#resume" class="nav-link" id="nav-tab-resume" data-tab="resume">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-            简历编辑器
-          </a>
-          <a href="#settings" class="nav-link" id="nav-tab-settings" data-tab="settings">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-            后台管理
-          </a>
-        </nav>
-
-        <div class="header-right">
-          <button class="btn btn-sm btn-outline" id="btn-switch-master" style="display:none;" title="验证主人密码以进入卧室">
-            🔑 进卧室
-          </button>
-          <button class="btn btn-sm btn-secondary" id="btn-logout" title="锁定并登出空间">
-            🚪 锁屏
+        <div class="top-actions">
+          <span class="name-tag" id="header-role-badge">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+            <span>卧室主人 (全特权)</span>
+          </span>
+          <button class="btn btn-outline btn-sm" id="btn-switch-master" style="display:none;">🔑 进卧室</button>
+          <button class="logout" id="btn-logout" title="锁定并退出空间">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+            锁屏
           </button>
         </div>
       </div>
-    </header>
 
-    <!-- 主体内容承载容器 -->
-    <main class="app-main-content">
-      <!-- 1. 时刻表板块容器 -->
-      <section id="content-timetable"></section>
+      <!-- Hero 顶部科技大看板 -->
+      <section class="hero">
+        <div class="hero-main">
+          <div>
+            <div class="hero-kicker">
+              <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+              <span>私属双人空间 · 客厅与卧室双模体系</span>
+            </div>
+            <h1 id="hero-title">Qiuhui & Yan 的时空印记</h1>
+            <div class="hero-meta">
+              <span id="hero-meta-date">
+                <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                实验室预约级精细时段排期
+              </span>
+              <span id="hero-meta-mode">
+                <svg class="ico" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                当前处于卧室模式
+              </span>
+            </div>
+          </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <label>今日日程</label>
+              <strong id="stat-today-events">0</strong><small>项</small>
+            </div>
+            <div class="stat">
+              <label>岁月相簿</label>
+              <strong class="mint" id="stat-album-count">0</strong><small>本</small>
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <!-- 2. 时光相簿板块容器 -->
-      <section id="content-albums" style="display: none;"></section>
+      <!-- Content 核心内容卡片 -->
+      <section class="content">
+        <!-- Tabs 分段切换器 -->
+        <div class="tabs">
+          <button type="button" class="tab active" data-tab="timetable">
+            <svg class="ico" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M16 3v4M8 3v4M3 10h18"/></svg>
+            共享时刻表
+          </button>
+          <button type="button" class="tab" data-tab="albums">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            岁月相簿
+          </button>
+          <button type="button" class="tab" id="tab-btn-resume" data-tab="resume">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            简历生成器
+          </button>
+          <button type="button" class="tab" id="tab-btn-settings" data-tab="settings">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8ZM4 12H2m20 0h-2M12 4V2m0 20v-2M5 5 3.5 3.5M20.5 20.5 19 19M19 5l1.5-1.5M3.5 20.5 5 19"/></svg>
+            空间管理
+          </button>
+        </div>
 
-      <!-- 3. 简历编辑器板块容器 (仅主人) -->
-      <section id="content-resume" style="display: none;"></section>
+        <!-- 各模块挂载容器 -->
+        <div id="content-timetable"></div>
+        <div id="content-albums" style="display:none;"></div>
+        <div id="content-resume" style="display:none;"></div>
+        <div id="content-settings" style="display:none;"></div>
+      </section>
 
-      <!-- 4. 后台设置中心容器 (仅主人) -->
-      <section id="content-settings" style="display: none;"></section>
-    </main>
+      <!-- Footer 底部版权与说明 -->
+      <div class="footer">
+        OASIS 专属情侣空间 · 传承 USV Lab 经典工整秩序美学 · 数据本地持久化<br>
+        纯静态架构严格保障双人隐私，离线也能完整运行
+      </div>
 
-    <!-- 移动端专用底部悬浮导航栏 -->
-    <nav class="mobile-bottom-nav">
-      <button class="mobile-nav-item active" data-tab="timetable">
-        <span class="nav-icon">📅</span>
-        <span>时刻表</span>
-      </button>
-      <button class="mobile-nav-item" data-tab="albums">
-        <span class="nav-icon">📖</span>
-        <span>相簿</span>
-      </button>
-      <button class="mobile-nav-item" id="mobile-nav-resume" data-tab="resume">
-        <span class="nav-icon">📄</span>
-        <span>简历</span>
-      </button>
-      <button class="mobile-nav-item" id="mobile-nav-settings" data-tab="settings">
-        <span class="nav-icon">⚙️</span>
-        <span>设置</span>
-      </button>
-    </nav>
-
+    </div>
   </div>
 
-  <!-- 脚本模块按依赖加载 -->
+  <!-- Toast 浮动提示组件 (复刻 USV Lab 原生 Toast) -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <!-- 脚本模块按顺序载入 -->
   <script src="./js/store.js"></script>
   <script src="./js/auth.js"></script>
   <script src="./js/timetable.js"></script>
