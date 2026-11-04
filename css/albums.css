@@ -1,10 +1,18 @@
 /* ==========================================================================
    OASIS | 岁月相簿多维艺术呈递系统
-   支持 4 套艺术呈现风格:
+   支持 竖屏流 (Vertical) 与 横屏展卷 (Horizontal) 多维呈现:
+   
+   【↕️ 竖屏 / 垂直流风格】
    1. 🎀 浪漫手账 (Scrapbook): 纸胶带、宝丽来微倾角、手绘贴纸、点阵暖纸
-   2. 📜 诗意卷轴 (Scroll): 紫檀木轴头、绢绫装裱、宣纸横卷、朱红印章
-   3. 📑 经折折子 (Accordion): 经折装硬壳封皮、风琴褶皱光影折痕、金线页码
-   4. 🏛️ 经典画册 (Classic): USV Lab 工整秩序感相片网格
+   2. 📱 拍立得挂绳墙 (Polaroid Wall): 原木横线麻绳、复古小木夹悬挂、微风轻摇手作感
+   
+   【↔️ 横屏 / 全景展卷风格】
+   3. 📜 诗意水墨长卷 (Scroll): 紫檀木轴头、绢绫装裱、宣纸横向滑行、朱红印章
+   4. 🎞️ 电影胶卷菲林 (Film Strip): 35mm负片链齿孔、怀旧暗调底片、全景横向幻灯
+
+   【🏛️ 典藏装帧】
+   5. 📑 经折折子 (Accordion): 经折装硬壳封皮、风琴褶皱光影折痕、金线页码
+   6. 🏛️ 经典画册 (Classic): USV Lab 工整秩序感相片网格
    ========================================================================== */
 
 /* 顶部风格切换导航栏 */
@@ -23,11 +31,35 @@
 .album-style-bar-left {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  flex-wrap: wrap;
 }
+.orientation-guide {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.orientation-guide.v {
+  background: #e6f4ea;
+  color: #1e7e48;
+}
+.orientation-guide.h {
+  background: #e8f0fe;
+  color: #1967d2;
+}
+.orientation-guide.m {
+  background: #f1f3f4;
+  color: #495a63;
+}
+
 .style-switcher {
   display: flex;
-  gap: 5px;
+  flex-wrap: wrap;
+  gap: 4px;
   background: #e5edf1;
   padding: 4px;
   border-radius: 10px;
@@ -37,14 +69,15 @@
   border-radius: 7px;
   background: transparent;
   color: #557585;
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 750;
-  padding: 5px 12px;
+  padding: 5px 10px;
   transition: all .16s ease;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 4px;
+  white-space: nowrap;
 }
 .style-tab:hover {
   color: #18354a;
@@ -55,8 +88,118 @@
   box-shadow: 0 1px 4px rgba(24, 53, 74, 0.12);
 }
 
+/* 相簿封面卡片上的风格标识胶囊 (Album Card Pills) */
+.album-style-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  font-size: 10.5px;
+  font-weight: 750;
+  padding: 3px 8px;
+  border-radius: 999px;
+  backdrop-filter: blur(4px);
+  z-index: 2;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+.album-style-pill.v {
+  background: rgba(22, 101, 52, 0.88);
+  color: #bbf7d0;
+}
+.album-style-pill.h {
+  background: rgba(29, 78, 216, 0.88);
+  color: #bfdbfe;
+}
+.album-style-pill.m {
+  background: rgba(55, 65, 81, 0.88);
+  color: #e5e7eb;
+}
+
 /* ==========================================================================
-   样式一：🎀 浪漫手账 (Scrapbook)
+   【新建/编辑相簿弹窗】风格选择器 (Modal Style Picker)
+   ========================================================================== */
+.style-picker-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.style-picker-group-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #637d8b;
+  margin-top: 6px;
+  padding-left: 2px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.style-choice-card {
+  position: relative;
+  display: block;
+  cursor: pointer;
+  margin: 0;
+}
+.style-choice-card input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.style-choice-body {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 12px;
+  border: 1.5px solid #dbe6eb;
+  border-radius: 10px;
+  background: #ffffff;
+  transition: all .16s ease;
+}
+.style-choice-card:hover .style-choice-body {
+  border-color: #a4c4d4;
+  background: #fbfdfe;
+}
+.style-choice-card input[type="radio"]:checked + .style-choice-body {
+  border-color: #1b7659;
+  background: #f0f9f5;
+  box-shadow: 0 2px 8px rgba(27, 118, 89, 0.12);
+}
+.style-choice-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.style-choice-info {
+  flex: 1;
+}
+.style-choice-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 750;
+  color: #18354a;
+  margin-bottom: 2px;
+}
+.style-choice-desc {
+  font-size: 11px;
+  color: #718894;
+  line-height: 1.35;
+}
+.pill-badge {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 1.5px 6px;
+  border-radius: 4px;
+}
+.pill-badge.v { background: #e6f4ea; color: #1e7e48; }
+.pill-badge.h { background: #e8f0fe; color: #1967d2; }
+.pill-badge.m { background: #f1f3f4; color: #495a63; }
+
+/* ==========================================================================
+   风格一：🎀 竖屏 · 浪漫手账 (Scrapbook)
    ========================================================================== */
 .scrapbook-board {
   position: relative;
@@ -71,7 +214,6 @@
   overflow: hidden;
 }
 
-/* 手账顶部标头 */
 .scrapbook-header-badge {
   display: flex;
   align-items: center;
@@ -95,7 +237,6 @@
   user-select: none;
 }
 
-/* 手账宝丽来照片网格 */
 .scrapbook-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -103,7 +244,6 @@
   padding: 10px 6px;
 }
 
-/* 宝丽来相纸卡片 */
 .scrapbook-card {
   position: relative;
   background: #ffffff;
@@ -114,21 +254,17 @@
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease, z-index 0.28s;
   z-index: 1;
 }
-
-/* 宝丽来悬停回正放大浮起 */
 .scrapbook-card:hover {
   transform: scale(1.05) rotate(0deg) !important;
   box-shadow: 0 16px 36px rgba(78, 56, 38, 0.22);
   z-index: 12;
 }
 
-/* 微倾角随机摆放感 */
 .scrapbook-card:nth-child(4n + 1) { transform: rotate(-2.4deg); }
 .scrapbook-card:nth-child(4n + 2) { transform: rotate(1.8deg); }
 .scrapbook-card:nth-child(4n + 3) { transform: rotate(-1.4deg); }
 .scrapbook-card:nth-child(4n + 4) { transform: rotate(2.6deg); }
 
-/* 和纸胶带 (Washi Tape) */
 .washi-tape {
   position: absolute;
   top: -12px;
@@ -150,7 +286,6 @@
 .tape-lavender { background: linear-gradient(135deg, rgba(212, 195, 245, 0.9), rgba(193, 171, 235, 0.9)); }
 .tape-sky { background: linear-gradient(135deg, rgba(178, 221, 255, 0.9), rgba(147, 203, 247, 0.9)); }
 
-/* 贴纸徽章 (Sticker) */
 .scrapbook-sticker {
   position: absolute;
   font-size: 20px;
@@ -159,9 +294,7 @@
   z-index: 4;
 }
 .sticker-top-right { top: 6px; right: 6px; }
-.sticker-bottom-left { bottom: 6px; left: 8px; }
 
-/* 宝丽来图片区域 */
 .scrapbook-img-box {
   width: 100%;
   aspect-ratio: 1 / 1;
@@ -176,11 +309,7 @@
   display: block;
   transition: transform .3s ease;
 }
-.scrapbook-card:hover .scrapbook-img-box img {
-  transform: scale(1.03);
-}
 
-/* 宝丽来手写描述栏 */
 .scrapbook-caption-row {
   margin-top: 10px;
   display: flex;
@@ -210,12 +339,128 @@
   padding: 0 4px;
   opacity: 0.6;
 }
-.scrapbook-btn-del:hover {
-  opacity: 1;
+.scrapbook-btn-del:hover { opacity: 1; }
+
+/* ==========================================================================
+   风格二：📱 竖屏 · 拍立得挂绳墙 (Polaroid Wall)
+   ========================================================================== */
+.polaroid-wall-stage {
+  position: relative;
+  background: #f4eee1;
+  background-image: 
+    radial-gradient(rgba(180, 160, 130, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, #f2ece0, #f8f4ec);
+  background-size: 24px 24px, 100% 100%;
+  border-radius: 18px;
+  padding: 30px 20px 40px;
+  box-shadow: inset 0 2px 14px rgba(130, 105, 80, 0.1);
+  margin-top: 14px;
+  border: 1px solid #e5dac9;
+}
+.wall-header-badge {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #d9cbba;
+}
+.wall-header-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #5c4535;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wall-twine-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 36px 24px;
+  padding: 16px 8px;
+}
+
+.hanging-card {
+  position: relative;
+  background: #ffffff;
+  padding: 10px 10px 22px 10px;
+  border-radius: 3px;
+  box-shadow: 0 8px 24px rgba(85, 65, 45, 0.15);
+  cursor: pointer;
+  transition: transform .28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow .28s ease;
+  transform-origin: top center;
+  z-index: 1;
+}
+.hanging-card:hover {
+  transform: scale(1.06) rotate(0deg) !important;
+  box-shadow: 0 16px 36px rgba(70, 50, 30, 0.22);
+  z-index: 10;
+}
+.hanging-card:nth-child(3n + 1) { transform: rotate(-2.2deg); }
+.hanging-card:nth-child(3n + 2) { transform: rotate(1.9deg); }
+.hanging-card:nth-child(3n + 3) { transform: rotate(-1.5deg); }
+
+/* 原木小木夹 (Wooden Clip) */
+.wood-clip {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 14px;
+  height: 28px;
+  background: linear-gradient(to right, #cf9d69, #e5b98a 50%, #bf8a54);
+  border-radius: 2px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.22);
+  z-index: 4;
+}
+.wood-clip::after {
+  content: '';
+  position: absolute;
+  top: 11px;
+  left: 1px;
+  right: 1px;
+  height: 3px;
+  background: #666;
+  border-radius: 1px;
+}
+
+.hanging-img-box {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #efe9e0;
+}
+.hanging-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.hanging-caption-row {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.hanging-title {
+  font-size: 12.5px;
+  font-weight: 750;
+  color: #3b2d23;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+}
+.hanging-date {
+  font-size: 10px;
+  color: #9c8a7b;
 }
 
 /* ==========================================================================
-   样式二：📜 诗意卷轴 (Chinese Scroll)
+   风格三：📜 横屏 · 诗意水墨长卷 (Scroll)
    ========================================================================== */
 .scroll-stage {
   position: relative;
@@ -237,7 +482,6 @@
   overflow: hidden;
 }
 
-/* 左右紫檀木轴杆 (Scroll Rods) */
 .scroll-rod {
   width: 24px;
   background: linear-gradient(to right, #24140c, #582f1b 45%, #2a160d);
@@ -257,7 +501,6 @@
   box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
-/* 宣纸长卷滑动流 */
 .scroll-paper-stream {
   flex: 1;
   background-color: #f7f1e5;
@@ -273,15 +516,12 @@
   border-top: 8px solid #4a3c2e;
   border-bottom: 8px solid #4a3c2e;
 }
-.scroll-paper-stream::-webkit-scrollbar {
-  height: 8px;
-}
+.scroll-paper-stream::-webkit-scrollbar { height: 8px; }
 .scroll-paper-stream::-webkit-scrollbar-thumb {
   background: #9d8161;
   border-radius: 4px;
 }
 
-/* 长卷中单幅挂画 */
 .scroll-painting-card {
   flex: 0 0 280px;
   background: #fffdf8;
@@ -314,7 +554,6 @@
   display: block;
 }
 
-/* 朱红古风印章 (Cinnabar Seal) */
 .chinese-seal {
   position: absolute;
   top: 14px;
@@ -359,7 +598,123 @@
 }
 
 /* ==========================================================================
-   样式三：📑 经折折子 (Accordion Fold)
+   风格四：🎞️ 横屏 · 电影胶卷菲林 (Film Strip)
+   ========================================================================== */
+.film-strip-stage {
+  margin-top: 14px;
+  background: #141417;
+  border-radius: 16px;
+  padding: 24px 16px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+  color: #e5e5e5;
+  border: 1px solid #282830;
+}
+.film-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #282830;
+}
+.film-logo-brand {
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-weight: 850;
+  color: #ffb703;
+  letter-spacing: 2.5px;
+  font-size: 13px;
+}
+
+.film-track-container {
+  background: #09090b;
+  border-radius: 8px;
+  padding: 12px 0;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  border-top: 2px solid #2b2b35;
+  border-bottom: 2px solid #2b2b35;
+}
+.film-track-container::-webkit-scrollbar { height: 8px; }
+.film-track-container::-webkit-scrollbar-thumb {
+  background: #474756;
+  border-radius: 4px;
+}
+
+.film-sprockets {
+  display: flex;
+  gap: 16px;
+  padding: 4px 14px;
+  overflow: hidden;
+  user-select: none;
+}
+.film-hole {
+  width: 14px;
+  height: 9px;
+  background: #202026;
+  border-radius: 2px;
+  border: 1px solid #33333e;
+  flex-shrink: 0;
+}
+
+.film-frames-stream {
+  display: flex;
+  gap: 22px;
+  padding: 12px 18px;
+  align-items: center;
+}
+.film-frame-card {
+  flex: 0 0 310px;
+  background: #18181f;
+  border: 2px solid #2c2c36;
+  border-radius: 4px;
+  padding: 10px;
+  position: relative;
+  cursor: pointer;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+  transition: transform .22s ease, border-color .22s ease;
+}
+.film-frame-card:hover {
+  transform: translateY(-4px);
+  border-color: #ffb703;
+}
+.film-frame-info-top {
+  display: flex;
+  justify-content: space-between;
+  font-family: ui-monospace, SFMono-Regular, monospace;
+  font-size: 10px;
+  color: #ffb703;
+  margin-bottom: 6px;
+}
+.film-frame-img-box {
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  border-radius: 2px;
+  background: #000000;
+}
+.film-frame-img-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.film-frame-footer {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.film-frame-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #f1f1f1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   风格五：📑 经折折子 (Accordion Fold)
    ========================================================================== */
 .accordion-book-stage {
   margin-top: 14px;
@@ -393,15 +748,12 @@
   perspective: 1200px;
   scroll-behavior: smooth;
 }
-.accordion-leaves-container::-webkit-scrollbar {
-  height: 8px;
-}
+.accordion-leaves-container::-webkit-scrollbar { height: 8px; }
 .accordion-leaves-container::-webkit-scrollbar-thumb {
   background: #395c73;
   border-radius: 4px;
 }
 
-/* 经折装硬壳封皮 (Hardcover Ends) */
 .accordion-cover-panel {
   flex: 0 0 160px;
   background: linear-gradient(135deg, #1c3547, #0e1e29);
@@ -428,7 +780,6 @@
   border-radius: 3px;
 }
 
-/* 单折折页 (Accordion Leaf) */
 .accordion-leaf {
   flex: 0 0 240px;
   background: #fcfbfa;
@@ -447,7 +798,6 @@
   z-index: 5;
 }
 
-/* 奇数折与偶数折交替光影，营造 3D 风琴折叠视觉立体感 */
 .accordion-leaf.odd-fold {
   background: linear-gradient(90deg, #ede5d8 0%, #fcfbfa 15%, #ffffff 92%, #e5dcce 100%);
   border-right: 1px solid #dcd1c2;
@@ -457,7 +807,6 @@
   border-right: 1px solid #dcd1c2;
 }
 
-/* 经折折线阴影 */
 .accordion-leaf::after {
   content: '';
   position: absolute;
@@ -502,21 +851,29 @@
   white-space: nowrap;
 }
 
-/* 响应式优化 */
+/* 响应式适配 */
 @media (max-width: 768px) {
-  .scrapbook-grid {
-    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-    gap: 20px 14px;
+  .scrapbook-grid, .wall-twine-container {
+    grid-template-columns: repeat(auto-fill, minmax(155px, 1fr));
+    gap: 20px 12px;
   }
-  .scrapbook-card {
-    padding: 8px 8px 18px 8px;
+  .scrapbook-card, .hanging-card {
+    padding: 8px 8px 16px 8px;
   }
   .washi-tape {
-    width: 56px;
+    width: 54px;
     height: 18px;
+  }
+  .wood-clip {
+    width: 12px;
+    height: 24px;
+    top: -12px;
   }
   .scroll-painting-card {
     flex: 0 0 220px;
+  }
+  .film-frame-card {
+    flex: 0 0 240px;
   }
   .accordion-leaf {
     flex: 0 0 190px;

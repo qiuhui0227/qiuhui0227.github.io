@@ -30,7 +30,7 @@ class ResumeModule {
           <!-- 双人身份切换器 (USV Lab 分段药丸结构) -->
           <div class="person-switcher">
             <button class="person-tab ${this.currentPerson === 'yan' ? 'active' : ''}" data-person="yan">
-              👦 王琰 (Yan) 的简历
+              👦 王岩 (Yan) 的简历
             </button>
             <button class="person-tab ${this.currentPerson === 'qiuhui' ? 'active' : ''}" data-person="qiuhui">
               👧 杜秋慧 (Qiuhui) 的简历
@@ -392,7 +392,7 @@ class ResumeModule {
       btn.addEventListener('click', () => {
         this.saveCurrentData();
         this.currentPerson = btn.dataset.person;
-        this.saveStatusText = `已切换至 ${this.currentPerson === 'yan' ? '王琰' : '秋慧'} 的简历`;
+        this.saveStatusText = `已切换至 ${this.currentPerson === 'yan' ? '王岩' : '秋慧'} 的简历`;
         this.render(container);
       });
     });
@@ -438,7 +438,7 @@ class ResumeModule {
     // 手动点击保存按钮
     container.querySelector('#btn-save-manual')?.addEventListener('click', () => {
       this.saveCurrentData();
-      const personName = this.currentPerson === 'yan' ? '王琰' : '秋慧';
+      const personName = this.currentPerson === 'yan' ? '王岩' : '秋慧';
       window.spaceApp?.showToast(`已成功保存【${personName}】的简历！`);
     });
 

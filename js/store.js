@@ -57,6 +57,7 @@ class SpaceStore {
           title: '初见 · 记忆序曲',
           desc: '定格那些心动的瞬间，每一次相遇都值得被永远珍藏。',
           visibility: 'living_room',
+          style: 'scrapbook',
           createdAt: '2024-02-14',
           count: 1
         },
@@ -65,6 +66,7 @@ class SpaceStore {
           title: '日常琐碎即是浪漫',
           desc: '关于一日三餐、四季更迭与我们的小小世界。',
           visibility: 'bedroom',
+          style: 'scroll',
           createdAt: '2024-05-20',
           count: 0
         }
@@ -131,7 +133,7 @@ class SpaceStore {
           id: 'yan',
           avatar: '',
           basics: {
-            name: '王琰 / Yan Wang',
+            name: '王岩 / Yan Wang',
             title: '嵌入式与无人控制系统算法工程师',
             email: 'yanwang20@mails.jlu.edu.cn',
             phone: '138-0000-0001',
@@ -181,48 +183,55 @@ class SpaceStore {
           avatar: '',
           basics: {
             name: '杜秋慧 / Qiuhui Du',
-            title: '视觉传达与数字交互设计师',
-            email: 'duqh9923@mails.jlu.edu.cn',
-            phone: '138-0000-0002',
-            location: '中国 · 吉林长春',
-            website: 'https://qiuhui0227.github.io',
-            summary: '专注于交互设计、视觉美学与数字体验建构。对色彩层次、手账艺术与排版秩序拥有敏锐洞察，善于以温度感赋予数字产品灵魂。'
+            title: '吉林大学 口腔医学（5+3一体化）| 意向导师：吴国民 教授',
+            email: '[待填写，建议填吉大校园邮箱]',
+            phone: '[待填写]',
+            location: '吉林省长春市 · 吉林大学白求恩口腔医学院',
+            website: '意向方向：口腔颌面外科 / 颌面整形与组织修复',
+            summary: '吉林大学口腔医学“5+3”一体化大四在读。大三年级综合排名 2/39（前5%），连续三年获学业奖学金；大一通过大学英语六级（CET-6 507分）。获全国大学生生命科学竞赛省级三等奖，完成基础科研与大创训练。担任口腔临床实习组长，工作严谨负责，具备良好的团队协同与抗压能力。对口腔颌面外科临床及科研具有极高热情，渴望在吴国民老师指导下进一步深造。'
           },
           education: [
             {
-              school: '吉林大学 (Jilin University)',
-              degree: '硕士在读',
-              major: '设计艺术学 / 数字媒体交互',
-              period: '2023.09 - 2026.06',
-              description: '研究方向为人机情感化界面设计、手账视觉修辞与跨媒介信息架构。'
+              school: '吉林大学 (Jilin University) · 白求恩口腔医学院',
+              degree: '本硕连读（5+3一体化）大四在读',
+              major: '口腔医学 (Stomatology)',
+              period: '2022.09 - 至今',
+              description: '大三学年综合排名：2 / 39 (Top 5%)；大一大二连续获校二等/三等奖学金；大学英语六级 CET-6 (507分，大一通过)。核心主修：口腔颌面外科学、口腔解剖生理学、口腔组织病理学、人体系统解剖学、诊断学、外科总论等。'
             }
           ],
           work: [
             {
-              company: '数字媒体与情感设计工作室',
-              position: '资深 UI/UX 设计师',
-              period: '2024.04 - 至今',
-              highlights: '负责数字生活类产品设计规范制定；主导多套高好评手账与国风卷轴数字化视觉资产落地。'
+              company: '吉林大学口腔医院 / 综合临床医院',
+              position: '口腔实习组长 / 临床轮转见习生',
+              period: '2025.07 - 至今',
+              highlights: '担任实习组长，协助科室带教老师统筹组内轮转日程与病区协调；先后在口腔各专科及心内科、肝胆外科等临床科室轮转见习，熟悉外科无菌规范、换药拆线、病历规范书写及术前评估流程，具备严谨敏锐的临床思维与医患沟通素养。'
             }
           ],
           projects: [
             {
-              name: 'OASIS 浪漫手账与古风卷轴视觉体系',
-              role: '艺术设计主创',
-              period: '2026.11 - 至今',
-              description: '设计纸胶带、藏书印章、经折装与宣纸卷轴展开交互，将工整秩序感与手作温度感高度交融。'
+              name: '全国大学生生命科学竞赛 (CULSC)',
+              role: '项目团队核心成员 | 省级三等奖',
+              period: '2024.03 - 2024.11',
+              description: '围绕生命科学前沿问题开展实验探索，协助完成实验前置文献调研、实验设计与数据复核，荣获吉林赛区省级三等奖。'
             },
             {
-              name: '智能人机协同系统交互界面',
-              role: '界面主设计师',
-              period: '2025.06 - 2025.12',
-              description: '打造面向严苛户外环境的高对比度、易读性极佳的测控看板。'
+              name: '大学生创新创业训练项目《随行精灵》',
+              role: '项目核心成员 (指导教师：王红波 老师)',
+              period: '2025.01 - 至今',
+              description: '在指导教师带领下开展创新项目方案论证、用户需求调研与功能框架搭建，锻炼跨学科团队协作与项目执行推进能力。'
+            },
+            {
+              name: '白求恩口腔医学院“5+3”科研基本技能实训',
+              role: '学术实训生',
+              period: '2023.09 - 2024.06',
+              description: '系统接受医学分子生物学、细胞培养、PCR 实验等科研基础操作规范训练，熟练运用 PubMed/Web of Science 开展医学英文文献检索与学术精读。'
             }
           ],
           skills: [
-            '设计工具: Figma, Sketch, Photoshop, Illustrator, Procreate',
-            '专业能力: 情感化交互设计, 视觉风格定义, 手账插画, 版式微排版',
-            '跨界沟通: 熟悉前端 CSS Grid/Flexbox 还原规范与设计工程协同'
+            '临床素养: 口腔颌面外科局部解剖基础、无菌操作规范、清创缝合、外科病历书写',
+            '科研技能: BioRender 生物医学机制通路图绘制、SPSS 基础统计、EndNote 文献管理',
+            '外语能力: 大学英语六级 (CET-6 507分，大一首考通过)，可流畅精读国际口腔医学英文文献 (SCI)',
+            '综合荣誉: 2024-2025学年 综合排名 2/39；连续获校二等/三等奖学金；校艾滋病防治同伴教育宣传员'
           ]
         }
       };
@@ -278,7 +287,13 @@ class SpaceStore {
   // --- 相簿操作 ---
   getAlbums() {
     try {
-      return JSON.parse(localStorage.getItem('oasis_albums')) || [];
+      const albums = JSON.parse(localStorage.getItem('oasis_albums')) || [];
+      return albums.map(a => {
+        if (!a.style) {
+          a.style = (a.id === 'album_sweet_life') ? 'scroll' : 'scrapbook';
+        }
+        return a;
+      });
     } catch (e) {
       return [];
     }
@@ -325,7 +340,7 @@ class SpaceStore {
       this.initDefaultStorage();
       dual = this.getDualResumes();
     }
-    return dual[person] || dual.yan || { basics: { name: person === 'yan' ? '王琰' : '杜秋慧' } };
+    return dual[person] || dual.yan || { basics: { name: person === 'yan' ? '王岩' : '杜秋慧' } };
   }
 
   saveResume(person = 'yan', data) {

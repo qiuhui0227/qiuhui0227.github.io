@@ -310,7 +310,7 @@ class TimetableModule {
                   <div>
                     <select name="participant" class="select" style="height:39px; font-size:12px;">
                       <option value="both">👫 共同参加 (Both)</option>
-                      <option value="yan">👦 Yan (王琰)</option>
+                      <option value="yan">👦 Yan (王岩)</option>
                       <option value="qiuhui">👧 Qiuhui (秋慧)</option>
                     </select>
                   </div>
@@ -424,7 +424,7 @@ class TimetableModule {
                 <label class="form-label">参加人</label>
                 <select name="participant" class="select">
                   <option value="both" ${item?.participant === 'both' ? 'selected' : ''}>👫 共同参加 (Both)</option>
-                  <option value="yan" ${item?.participant === 'yan' ? 'selected' : ''}>👦 Yan (王琰)</option>
+                  <option value="yan" ${item?.participant === 'yan' ? 'selected' : ''}>👦 Yan (王岩)</option>
                   <option value="qiuhui" ${item?.participant === 'qiuhui' ? 'selected' : ''}>👧 Qiuhui (秋慧)</option>
                 </select>
               </div>
