@@ -1,11 +1,12 @@
 /**
  * OASIS | Qiuhui & Yan
- * 双人独立简历编辑器 (支持男主/女主切换独立保存 + 证件照上传 + 实时双向渲染 + PDF/Word无损导出)
+ * 双人独立简历编辑器 (支持男主王岩工程研发型 + 女主杜秋慧医学生学术联系导师专用型)
+ * 支持纯前端证件照上传压缩 + 双向实时渲染 + 标准 Word 与矢量 A4 PDF 导出
  */
 
 class ResumeModule {
   constructor() {
-    this.currentPerson = 'yan'; // 'yan' (男主) | 'qiuhui' (女主)
+    this.currentPerson = 'qiuhui'; // 默认展示女主当前正在整理的医学学术简历
     this.currentViewMode = 'split';
     this.saveStatusText = '已全部自动保存';
   }
@@ -29,11 +30,11 @@ class ResumeModule {
 
           <!-- 双人身份切换器 (USV Lab 分段药丸结构) -->
           <div class="person-switcher">
-            <button class="person-tab ${this.currentPerson === 'yan' ? 'active' : ''}" data-person="yan">
-              👦 王岩 (Yan) 的简历
-            </button>
             <button class="person-tab ${this.currentPerson === 'qiuhui' ? 'active' : ''}" data-person="qiuhui">
-              👧 杜秋慧 (Qiuhui) 的简历
+              👧 杜秋慧 (Qiuhui) 的简历 · 医学生联系导师
+            </button>
+            <button class="person-tab ${this.currentPerson === 'yan' ? 'active' : ''}" data-person="yan">
+              👦 王岩 (Yan) 的简历 · 控制算法工程师
             </button>
           </div>
 
@@ -45,6 +46,9 @@ class ResumeModule {
 
           <div class="toolbar-actions">
             <span class="fine save-indicator" id="resume-save-indicator">${this.saveStatusText}</span>
+            <button class="btn btn-outline btn-sm" id="btn-reset-template" title="载入并恢复标准学术范本">
+              🔄 载入学术范式
+            </button>
             <button class="btn btn-primary btn-sm" id="btn-save-manual" title="立即保存当前简历">
               💾 保存当前简历
             </button>
@@ -77,19 +81,29 @@ class ResumeModule {
     this.bindEvents(container);
   }
 
-  // 渲染表单
+  // 渲染表单 (自适应医学生学术联系导师架构 vs 工程研发架构)
   renderEditorForm() {
     const d = this.resumeData;
     const b = d.basics || {};
     const hasAvatar = !!d.avatar;
+    const isMedical = (this.currentPerson === 'qiuhui' || !!d.isMedicalCV);
 
+    if (isMedical) {
+      return this.renderMedicalEditorForm(d, b, hasAvatar);
+    } else {
+      return this.renderEngineeringEditorForm(d, b, hasAvatar);
+    }
+  }
+
+  // 女主医学生学术简历表单
+  renderMedicalEditorForm(d, b, hasAvatar) {
     return `
       <form id="resume-main-form" class="resume-form-flow">
         <!-- 1. 基本信息 + 证件照上传 -->
         <div class="form-section-card">
           <div class="section-title">
             <svg class="ico" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>
-            <span>个人基本资料与证件照</span>
+            <span>个人基本资料与导师意向 (含证件照)</span>
           </div>
 
           <!-- 证件照上传操作区 -->
@@ -100,13 +114,241 @@ class ResumeModule {
               ` : `
                 <div class="avatar-placeholder-box">
                   <svg class="ico" width="28" height="28" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>
+                  <span>未上传证件照<br>(支持白大褂/正装)</span>
+                </div>
+              `}
+            </div>
+            <div class="avatar-actions-wrap">
+              <div style="font-weight:750; font-size:13px; color:#18354a; margin-bottom:4px;">标准医学学术证件照</div>
+              <div class="fine" style="margin-bottom:8px;">推荐 1寸/2寸 白大褂或正装照片，纯前端视网膜级轻量压缩。</div>
+              <div style="display:flex; gap:8px;">
+                <label class="btn btn-outline btn-xs" style="margin:0; cursor:pointer;">
+                  <input type="file" id="input-upload-avatar" accept="image/*" style="display:none;">
+                  📷 ${hasAvatar ? '更换证件照' : '上传证件照'}
+                </label>
+                ${hasAvatar ? `
+                  <button type="button" class="btn btn-danger btn-xs" id="btn-remove-avatar">移除照片</button>
+                ` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field" style="flex:1;">
+              <label>姓名</label>
+              <input type="text" class="input resume-sync" data-path="basics.name" value="${this.escapeHtml(b.name || '')}">
+            </div>
+            <div class="field" style="flex:1.5;">
+              <label>培养层次与院校专业</label>
+              <input type="text" class="input resume-sync" data-path="basics.title" value="${this.escapeHtml(b.title || '')}">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field" style="flex:2;">
+              <label>申请意向与意向导师</label>
+              <input type="text" class="input resume-sync" data-path="basics.target" value="${this.escapeHtml(b.target || '')}">
+            </div>
+            <div class="field" style="flex:1;">
+              <label>政治面貌</label>
+              <input type="text" class="input resume-sync" data-path="basics.politics" value="${this.escapeHtml(b.politics || '')}">
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="field" style="flex:1;">
+              <label>电子邮箱 (推荐吉大校园邮箱)</label>
+              <input type="email" class="input resume-sync" data-path="basics.email" value="${this.escapeHtml(b.email || '')}">
+            </div>
+            <div class="field" style="flex:1;">
+              <label>联系电话</label>
+              <input type="text" class="input resume-sync" data-path="basics.phone" value="${this.escapeHtml(b.phone || '')}">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>个人亮点与自述 (突出大三 2/39、六级 507、生命科学省三等奖、实习组长及对颌面外科志向)</label>
+            <textarea class="textarea resume-sync" rows="3" data-path="basics.summary">${this.escapeHtml(b.summary || '')}</textarea>
+          </div>
+        </div>
+
+        <!-- 2. 教育背景与学业排名 -->
+        <div class="form-section-card">
+          <div class="section-title">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <span>教育背景与核心学业指标</span>
+          </div>
+          <div id="edu-items-wrap">
+            ${(d.education || []).map((edu, idx) => `
+              <div class="sub-form-item">
+                <div class="form-row">
+                  <div class="field" style="flex:2;">
+                    <label>培养院校与院系</label>
+                    <input type="text" class="input sm resume-sync" value="${this.escapeHtml(edu.school)}" data-path="education.${idx}.school">
+                  </div>
+                  <div class="field" style="flex:1;">
+                    <label>起止时间</label>
+                    <input type="text" class="input sm resume-sync" value="${this.escapeHtml(edu.period)}" data-path="education.${idx}.period">
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="field" style="flex:1;">
+                    <label>培养层次 / 专业</label>
+                    <input type="text" class="input sm resume-sync" value="${this.escapeHtml(edu.major)}" data-path="education.${idx}.major">
+                  </div>
+                  <div class="field" style="flex:1;">
+                    <label>核心学业排名 (如 2/39)</label>
+                    <input type="text" class="input sm resume-sync" value="${this.escapeHtml(edu.ranking || '')}" data-path="education.${idx}.ranking">
+                  </div>
+                  <div class="field" style="flex:1;">
+                    <label>外语水平 (如 CET-6 507分)</label>
+                    <input type="text" class="input sm resume-sync" value="${this.escapeHtml(edu.cet6 || '')}" data-path="education.${idx}.cet6">
+                  </div>
+                </div>
+                <div class="field">
+                  <label>学业总结与核心课程清单</label>
+                  <textarea class="textarea resume-sync" rows="2" data-path="education.${idx}.description">${this.escapeHtml(edu.description || '')}</textarea>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- 3. 学业荣誉与奖学金 -->
+        <div class="form-section-card">
+          <div class="section-header-row">
+            <div class="section-title">
+              <svg class="ico" viewBox="0 0 24 24"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+              <span>学业荣誉与奖学金</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-xs" id="btn-add-honor">+ 增加荣誉</button>
+          </div>
+          <div id="honor-items-wrap">
+            ${(d.honors || []).map((h, idx) => `
+              <div class="sub-form-item">
+                <div class="sub-item-header">
+                  <span>荣誉记录 #${idx + 1}</span>
+                  <button type="button" class="btn-text-del btn-del-honor" data-index="${idx}">删除</button>
+                </div>
+                <div class="form-row">
+                  <div class="field" style="flex:1;">
+                    <input type="text" class="input sm resume-sync" placeholder="学年" value="${this.escapeHtml(h.period)}" data-path="honors.${idx}.period">
+                  </div>
+                  <div class="field" style="flex:3;">
+                    <input type="text" class="input sm resume-sync" placeholder="荣誉 / 奖学金内容" value="${this.escapeHtml(h.title)}" data-path="honors.${idx}.title">
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- 4. 科研训练与学科竞赛 -->
+        <div class="form-section-card">
+          <div class="section-header-row">
+            <div class="section-title">
+              <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              <span>科研训练与学科竞赛</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-xs" id="btn-add-research">+ 增加科研/竞赛</button>
+          </div>
+          <div id="research-items-wrap">
+            ${(d.research || []).map((r, idx) => `
+              <div class="sub-form-item">
+                <div class="sub-item-header">
+                  <span>科研/竞赛 #${idx + 1}</span>
+                  <button type="button" class="btn-text-del btn-del-research" data-index="${idx}">删除</button>
+                </div>
+                <div class="form-row">
+                  <div class="field" style="flex:2;">
+                    <input type="text" class="input sm resume-sync" placeholder="竞赛/项目名称" value="${this.escapeHtml(r.name)}" data-path="research.${idx}.name">
+                  </div>
+                  <div class="field" style="flex:1.5;">
+                    <input type="text" class="input sm resume-sync" placeholder="角色与获奖 (如 省级三等奖)" value="${this.escapeHtml(r.role)}" data-path="research.${idx}.role">
+                  </div>
+                  <div class="field" style="flex:1;">
+                    <input type="text" class="input sm resume-sync" placeholder="年份" value="${this.escapeHtml(r.period)}" data-path="research.${idx}.period">
+                  </div>
+                </div>
+                <div class="field">
+                  <textarea class="textarea resume-sync" rows="2" placeholder="职责与科研心得体会" data-path="research.${idx}.description">${this.escapeHtml(r.description || '')}</textarea>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- 5. 临床学习与轮转实习经历 -->
+        <div class="form-section-card">
+          <div class="section-header-row">
+            <div class="section-title">
+              <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+              <span>临床学习与轮转见习 (突出实习组长与严谨作风)</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-xs" id="btn-add-clinical">+ 增加临床经历</button>
+          </div>
+          <div id="clinical-items-wrap">
+            ${(d.clinical || []).map((c, idx) => `
+              <div class="sub-form-item">
+                <div class="sub-item-header">
+                  <span>临床实习记录 #${idx + 1}</span>
+                  <button type="button" class="btn-text-del btn-del-clinical" data-index="${idx}">删除</button>
+                </div>
+                <div class="form-row">
+                  <div class="field" style="flex:2;">
+                    <input type="text" class="input sm resume-sync" placeholder="医院 / 科室" value="${this.escapeHtml(c.hospital)}" data-path="clinical.${idx}.hospital">
+                  </div>
+                  <div class="field" style="flex:1.5;">
+                    <input type="text" class="input sm resume-sync" placeholder="职务 (如 口腔实习组长)" value="${this.escapeHtml(c.role)}" data-path="clinical.${idx}.role">
+                  </div>
+                  <div class="field" style="flex:1;">
+                    <input type="text" class="input sm resume-sync" placeholder="时间" value="${this.escapeHtml(c.period)}" data-path="clinical.${idx}.period">
+                  </div>
+                </div>
+                <div class="field">
+                  <textarea class="textarea resume-sync" rows="2" placeholder="工作表现与临床技能收获" data-path="clinical.${idx}.highlights">${this.escapeHtml(c.highlights || '')}</textarea>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+
+        <!-- 6. 专业素养、科研工具与学术志向 -->
+        <div class="form-section-card">
+          <div class="section-title">
+            <svg class="ico" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            <span>专业素养、科研工具、学术志向与社会工作</span>
+          </div>
+          <div class="fine" style="margin-bottom:6px;">每行输入一条，包含外科基本功、BioRender/文献工具、学术志向与社会实践：</div>
+          <textarea class="textarea" rows="4" id="resume-skills-input">${(d.skills || []).join('\n')}</textarea>
+        </div>
+      </form>
+    `;
+  }
+
+  // 男主工程研发简历表单
+  renderEngineeringEditorForm(d, b, hasAvatar) {
+    return `
+      <form id="resume-main-form" class="resume-form-flow">
+        <div class="form-section-card">
+          <div class="section-title">
+            <svg class="ico" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>
+            <span>个人基本资料与证件照</span>
+          </div>
+
+          <div class="avatar-uploader-row">
+            <div class="avatar-preview-box">
+              ${hasAvatar ? `
+                <img src="${d.avatar}" class="avatar-real-img" alt="avatar" />
+              ` : `
+                <div class="avatar-placeholder-box">
+                  <svg class="ico" width="28" height="28" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>
                   <span>未上传证件照</span>
                 </div>
               `}
             </div>
             <div class="avatar-actions-wrap">
-              <div style="font-weight:750; font-size:13px; color:#18354a; margin-bottom:4px;">简历标准证件照</div>
-              <div class="fine" style="margin-bottom:8px;">推荐 1寸/2寸 蓝底或白底照片，前端自动完成视网膜清晰度压缩排版。</div>
+              <div style="font-weight:750; font-size:13px; color:#18354a; margin-bottom:4px;">标准工程证件照</div>
               <div style="display:flex; gap:8px;">
                 <label class="btn btn-outline btn-xs" style="margin:0; cursor:pointer;">
                   <input type="file" id="input-upload-avatar" accept="image/*" style="display:none;">
@@ -125,7 +367,7 @@ class ResumeModule {
               <input type="text" class="input resume-sync" data-path="basics.name" value="${this.escapeHtml(b.name || '')}">
             </div>
             <div class="field" style="flex:1;">
-              <label>求职意向 / 专业岗位头衔</label>
+              <label>求职意向 / 岗位头衔</label>
               <input type="text" class="input resume-sync" data-path="basics.title" value="${this.escapeHtml(b.title || '')}">
             </div>
           </div>
@@ -141,140 +383,44 @@ class ResumeModule {
             </div>
           </div>
 
-          <div class="form-row">
-            <div class="field" style="flex:1;">
-              <label>常住地址 / 所在地</label>
-              <input type="text" class="input resume-sync" data-path="basics.location" value="${this.escapeHtml(b.location || '')}">
-            </div>
-            <div class="field" style="flex:1;">
-              <label>个人网站 / 个人主页</label>
-              <input type="text" class="input resume-sync" data-path="basics.website" value="${this.escapeHtml(b.website || '')}">
-            </div>
-          </div>
-
           <div class="field">
             <label>个人亮点概述</label>
             <textarea class="textarea resume-sync" rows="2" data-path="basics.summary">${this.escapeHtml(b.summary || '')}</textarea>
           </div>
         </div>
 
-        <!-- 2. 教育背景 -->
-        <div class="form-section-card">
-          <div class="section-header-row">
-            <div class="section-title">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              <span>教育经历</span>
-            </div>
-            <button type="button" class="btn btn-outline btn-xs" id="btn-add-edu">+ 增加经历</button>
-          </div>
-          <div id="edu-items-wrap">
-            ${(d.education || []).map((edu, idx) => `
-              <div class="sub-form-item">
-                <div class="sub-item-header">
-                  <span>教育记录 #${idx + 1}</span>
-                  <button type="button" class="btn-text-del btn-del-edu" data-index="${idx}">删除</button>
-                </div>
-                <div class="form-row">
-                  <div class="field" style="flex:1;">
-                    <input type="text" class="input sm resume-sync" placeholder="院校名称" value="${this.escapeHtml(edu.school)}" data-path="education.${idx}.school">
-                  </div>
-                  <div class="field" style="flex:1;">
-                    <input type="text" class="input sm resume-sync" placeholder="学历 (如 硕士/本科)" value="${this.escapeHtml(edu.degree)}" data-path="education.${idx}.degree">
-                  </div>
-                </div>
-                <div class="form-row">
-                  <div class="field" style="flex:1;">
-                    <input type="text" class="input sm resume-sync" placeholder="专业名称" value="${this.escapeHtml(edu.major)}" data-path="education.${idx}.major">
-                  </div>
-                  <div class="field" style="flex:1;">
-                    <input type="text" class="input sm resume-sync" placeholder="起止时间" value="${this.escapeHtml(edu.period)}" data-path="education.${idx}.period">
-                  </div>
-                </div>
-                <div class="field">
-                  <input type="text" class="input sm resume-sync" placeholder="主修方向 / 核心科研方向" value="${this.escapeHtml(edu.description || '')}" data-path="education.${idx}.description">
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- 3. 工作经历 -->
-        <div class="form-section-card">
-          <div class="section-header-row">
-            <div class="section-title">
-              <svg class="ico" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-              <span>工作 / 实习经历</span>
-            </div>
-            <button type="button" class="btn btn-outline btn-xs" id="btn-add-work">+ 增加经历</button>
-          </div>
-          <div id="work-items-wrap">
-            ${(d.work || []).map((w, idx) => `
-              <div class="sub-form-item">
-                <div class="sub-item-header">
-                  <span>工作记录 #${idx + 1}</span>
-                  <button type="button" class="btn-text-del btn-del-work" data-index="${idx}">删除</button>
-                </div>
-                <div class="form-row">
-                  <div class="field" style="flex:1;">
-                    <input type="text" class="input sm resume-sync" placeholder="单位 / 机构名称" value="${this.escapeHtml(w.company)}" data-path="work.${idx}.company">
-                  </div>
-                  <div class="field" style="flex:1;">
-                    <input type="text" class="input sm resume-sync" placeholder="职位名称" value="${this.escapeHtml(w.position)}" data-path="work.${idx}.position">
-                  </div>
-                  <div class="field" style="flex:1;">
-                    <input type="text" class="input sm resume-sync" placeholder="在职时间" value="${this.escapeHtml(w.period)}" data-path="work.${idx}.period">
-                  </div>
-                </div>
-                <div class="field">
-                  <textarea class="textarea resume-sync" rows="2" placeholder="工作职责与业绩突破" data-path="work.${idx}.highlights">${this.escapeHtml(w.highlights || '')}</textarea>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- 4. 重点项目经历 -->
-        <div class="form-section-card">
-          <div class="section-header-row">
-            <div class="section-title">
-              <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-              <span>重点项目经历</span>
-            </div>
-            <button type="button" class="btn btn-outline btn-xs" id="btn-add-proj">+ 增加项目</button>
-          </div>
-          <div id="proj-items-wrap">
-            ${(d.projects || []).map((p, idx) => `
-              <div class="sub-form-item">
-                <div class="sub-item-header">
-                  <span>项目记录 #${idx + 1}</span>
-                  <button type="button" class="btn-text-del btn-del-proj" data-index="${idx}">删除</button>
-                </div>
-                <div class="form-row">
-                  <div class="field" style="flex:2;">
-                    <input type="text" class="input sm resume-sync" placeholder="项目全称" value="${this.escapeHtml(p.name)}" data-path="projects.${idx}.name">
-                  </div>
-                  <div class="field" style="flex:1;">
-                    <input type="text" class="input sm resume-sync" placeholder="角色" value="${this.escapeHtml(p.role)}" data-path="projects.${idx}.role">
-                  </div>
-                  <div class="field" style="flex:1;">
-                    <input type="text" class="input sm resume-sync" placeholder="起止时间" value="${this.escapeHtml(p.period)}" data-path="projects.${idx}.period">
-                  </div>
-                </div>
-                <div class="field">
-                  <textarea class="textarea resume-sync" rows="2" placeholder="技术架构与交付成果" data-path="projects.${idx}.description">${this.escapeHtml(p.description || '')}</textarea>
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        </div>
-
-        <!-- 5. 技能清单 -->
         <div class="form-section-card">
           <div class="section-title">
-            <svg class="ico" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            <span>技能矩阵与工程素养</span>
+            <span>教育经历</span>
           </div>
-          <div class="fine" style="margin-bottom:6px;">每行输入一条技能，排版更具结构美。</div>
+          ${(d.education || []).map((edu, idx) => `
+            <div class="sub-form-item">
+              <div class="form-row">
+                <div class="field" style="flex:2;"><input type="text" class="input sm resume-sync" value="${this.escapeHtml(edu.school)}" data-path="education.${idx}.school"></div>
+                <div class="field" style="flex:1;"><input type="text" class="input sm resume-sync" value="${this.escapeHtml(edu.degree)}" data-path="education.${idx}.degree"></div>
+                <div class="field" style="flex:1;"><input type="text" class="input sm resume-sync" value="${this.escapeHtml(edu.period)}" data-path="education.${idx}.period"></div>
+              </div>
+              <div class="field"><input type="text" class="input sm resume-sync" value="${this.escapeHtml(edu.description || '')}" data-path="education.${idx}.description"></div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="form-section-card">
+          <div class="section-title"><span>项目研发与工作经历</span></div>
+          ${(d.projects || []).map((p, idx) => `
+            <div class="sub-form-item">
+              <div class="form-row">
+                <div class="field" style="flex:2;"><input type="text" class="input sm resume-sync" value="${this.escapeHtml(p.name)}" data-path="projects.${idx}.name"></div>
+                <div class="field" style="flex:1;"><input type="text" class="input sm resume-sync" value="${this.escapeHtml(p.role)}" data-path="projects.${idx}.role"></div>
+                <div class="field" style="flex:1;"><input type="text" class="input sm resume-sync" value="${this.escapeHtml(p.period)}" data-path="projects.${idx}.period"></div>
+              </div>
+              <div class="field"><textarea class="textarea resume-sync" rows="2" data-path="projects.${idx}.description">${this.escapeHtml(p.description || '')}</textarea></div>
+            </div>
+          `).join('')}
+        </div>
+
+        <div class="form-section-card">
+          <div class="section-title"><span>技能清单</span></div>
           <textarea class="textarea" rows="4" id="resume-skills-input">${(d.skills || []).join('\n')}</textarea>
         </div>
       </form>
@@ -286,20 +432,37 @@ class ResumeModule {
     const d = this.resumeData;
     const b = d.basics || {};
     const hasAvatar = !!d.avatar;
+    const isMedical = (this.currentPerson === 'qiuhui' || !!d.isMedicalCV);
 
+    if (isMedical) {
+      return this.renderMedicalA4Html(d, b, hasAvatar);
+    } else {
+      return this.renderEngineeringA4Html(d, b, hasAvatar);
+    }
+  }
+
+  // 女主医学生联系导师专属 A4 矢量排版
+  renderMedicalA4Html(d, b, hasAvatar) {
     return `
       <div class="resume-paper" id="resume-print-content">
-        <!-- 头部 Header (支持证件照右上角排布) -->
+        <!-- 头部 Header -->
         <header class="rp-header ${hasAvatar ? 'has-avatar' : ''}">
           <div class="rp-header-main">
-            <h1 class="rp-name">${this.escapeHtml(b.name || '姓名')}</h1>
-            <div class="rp-title">${this.escapeHtml(b.title || '专业工程师 / 岗位头衔')}</div>
+            <h1 class="rp-name">${this.escapeHtml(b.name || '杜秋慧 / [待填写]')}</h1>
+            <div class="rp-title">${this.escapeHtml(b.title || '吉林大学白求恩口腔医学院 · 口腔医学“5+3”一体化（2022级·大四）')}</div>
             
+            ${b.target ? `
+              <div class="rp-intent-bar">
+                <span class="rp-intent-label">申请意向：</span>
+                <span class="rp-intent-mentor">${this.escapeHtml(b.target)}</span>
+              </div>
+            ` : ''}
+
             <div class="rp-contact-bar">
-              ${b.phone ? `<span>📞 ${this.escapeHtml(b.phone)}</span>` : ''}
-              ${b.email ? `<span>✉️ ${this.escapeHtml(b.email)}</span>` : ''}
-              ${b.location ? `<span>📍 ${this.escapeHtml(b.location)}</span>` : ''}
-              ${b.website ? `<span>🌐 ${this.escapeHtml(b.website.replace(/^https?:\/\//, ''))}</span>` : ''}
+              ${b.phone ? `<span>📞 电话: ${this.escapeHtml(b.phone)}</span>` : ''}
+              ${b.email ? `<span>✉️ 邮箱: ${this.escapeHtml(b.email)}</span>` : ''}
+              ${b.politics ? `<span>🏛️ 政治面貌: ${this.escapeHtml(b.politics)}</span>` : ''}
+              ${b.location ? `<span>📍 培养院校: ${this.escapeHtml(b.location)}</span>` : ''}
             </div>
 
             ${b.summary ? `
@@ -311,10 +474,123 @@ class ResumeModule {
             <div class="rp-avatar-box">
               <img src="${d.avatar}" alt="证件照" class="rp-avatar-img">
             </div>
+          ` : `
+            <div class="rp-avatar-box" style="display:flex; flex-direction:column; align-items:center; justify-content:center; background:#f4f7f8; color:#9cb0ba; font-size:8pt; text-align:center; padding:4px;">
+              <span>【标准证件照】<br>(建议白大褂<br>或正装照)</span>
+            </div>
+          `}
+        </header>
+
+        <!-- 一、 教育背景与学业排名 -->
+        ${(d.education && d.education.length > 0) ? `
+          <section class="rp-section">
+            <h2 class="rp-section-title">▌ 教育背景与学业排名  EDUCATION & STANDING</h2>
+            <div class="rp-section-content">
+              ${d.education.map(e => `
+                <div class="rp-item">
+                  <div class="rp-item-row">
+                    <span class="rp-item-bold">${this.escapeHtml(e.school)}</span>
+                    <span class="rp-item-mid">${this.escapeHtml(e.major)}</span>
+                    <span class="rp-item-date">${this.escapeHtml(e.period)}</span>
+                  </div>
+                  <div style="margin: 3pt 0;">
+                    ${e.ranking ? `<span class="rp-badge-rank">${this.escapeHtml(e.ranking)}</span>` : ''}
+                    ${e.cet6 ? `<span class="rp-badge-tag">${this.escapeHtml(e.cet6)}</span>` : ''}
+                  </div>
+                  ${e.description ? `<div class="rp-item-desc">${this.escapeHtml(e.description)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- 二、 学业荣誉与奖学金 -->
+        ${(d.honors && d.honors.length > 0) ? `
+          <section class="rp-section">
+            <h2 class="rp-section-title">▌ 学业荣誉与奖学金  HONORS & SCHOLARSHIPS</h2>
+            <div class="rp-section-content">
+              <ul class="rp-skills-list" style="list-style-type: disc;">
+                ${d.honors.map(h => `
+                  <li><strong>${this.escapeHtml(h.period)}</strong>：${this.escapeHtml(h.title)}</li>
+                `).join('')}
+              </ul>
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- 三、 科研训练与学科竞赛 -->
+        ${(d.research && d.research.length > 0) ? `
+          <section class="rp-section">
+            <h2 class="rp-section-title">▌ 科研训练与学科竞赛  RESEARCH & COMPETITIONS</h2>
+            <div class="rp-section-content">
+              ${d.research.map(r => `
+                <div class="rp-item">
+                  <div class="rp-item-row">
+                    <span class="rp-item-bold">${this.escapeHtml(r.name)}</span>
+                    <span class="rp-item-mid" style="color:#1b7659; font-weight:700;">${this.escapeHtml(r.role)}</span>
+                    <span class="rp-item-date">${this.escapeHtml(r.period)}</span>
+                  </div>
+                  ${r.description ? `<div class="rp-item-desc">${this.escapeHtml(r.description)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- 四、 临床学习与轮转实习经历 -->
+        ${(d.clinical && d.clinical.length > 0) ? `
+          <section class="rp-section">
+            <h2 class="rp-section-title">▌ 临床学习与实习经历  CLINICAL TRAINING & CLERKSHIP</h2>
+            <div class="rp-section-content">
+              ${d.clinical.map(c => `
+                <div class="rp-item">
+                  <div class="rp-item-row">
+                    <span class="rp-item-bold">${this.escapeHtml(c.hospital)}</span>
+                    <span class="rp-item-mid" style="color:#15354a; font-weight:750;">${this.escapeHtml(c.role)}</span>
+                    <span class="rp-item-date">${this.escapeHtml(c.period)}</span>
+                  </div>
+                  ${c.highlights ? `<div class="rp-item-desc">${this.escapeHtml(c.highlights)}</div>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          </section>
+        ` : ''}
+
+        <!-- 五、 专业素养、科研工具与学术志向 -->
+        ${(d.skills && d.skills.length > 0) ? `
+          <section class="rp-section">
+            <h2 class="rp-section-title">▌ 专业素养、科研工具与学术志向  SKILLS & INTERESTS</h2>
+            <div class="rp-section-content">
+              <ul class="rp-skills-list" style="list-style-type: square;">
+                ${d.skills.map(s => `<li>${this.escapeHtml(s)}</li>`).join('')}
+              </ul>
+            </div>
+          </section>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  // 男主工科研发 A4 排版
+  renderEngineeringA4Html(d, b, hasAvatar) {
+    return `
+      <div class="resume-paper" id="resume-print-content">
+        <header class="rp-header ${hasAvatar ? 'has-avatar' : ''}">
+          <div class="rp-header-main">
+            <h1 class="rp-name">${this.escapeHtml(b.name || '王岩')}</h1>
+            <div class="rp-title">${this.escapeHtml(b.title || '嵌入式与无人控制系统算法工程师')}</div>
+            <div class="rp-contact-bar">
+              ${b.phone ? `<span>📞 ${this.escapeHtml(b.phone)}</span>` : ''}
+              ${b.email ? `<span>✉️ ${this.escapeHtml(b.email)}</span>` : ''}
+              ${b.location ? `<span>📍 ${this.escapeHtml(b.location)}</span>` : ''}
+            </div>
+            ${b.summary ? `<div class="rp-summary">${this.escapeHtml(b.summary)}</div>` : ''}
+          </div>
+          ${hasAvatar ? `
+            <div class="rp-avatar-box"><img src="${d.avatar}" alt="证件照" class="rp-avatar-img"></div>
           ` : ''}
         </header>
 
-        <!-- 1. 教育经历 -->
         ${(d.education && d.education.length > 0) ? `
           <section class="rp-section">
             <h2 class="rp-section-title">教育背景</h2>
@@ -326,36 +602,16 @@ class ResumeModule {
                     <span class="rp-item-mid">${this.escapeHtml(e.degree)} · ${this.escapeHtml(e.major)}</span>
                     <span class="rp-item-date">${this.escapeHtml(e.period)}</span>
                   </div>
-                  ${e.description ? `<div class="rp-item-sub">${this.escapeHtml(e.description)}</div>` : ''}
+                  ${e.description ? `<div class="rp-item-desc">${this.escapeHtml(e.description)}</div>` : ''}
                 </div>
               `).join('')}
             </div>
           </section>
         ` : ''}
 
-        <!-- 2. 工作经历 -->
-        ${(d.work && d.work.length > 0) ? `
-          <section class="rp-section">
-            <h2 class="rp-section-title">工作与实习经历</h2>
-            <div class="rp-section-content">
-              ${d.work.map(w => `
-                <div class="rp-item">
-                  <div class="rp-item-row">
-                    <span class="rp-item-bold">${this.escapeHtml(w.company)}</span>
-                    <span class="rp-item-mid">${this.escapeHtml(w.position)}</span>
-                    <span class="rp-item-date">${this.escapeHtml(w.period)}</span>
-                  </div>
-                  ${w.highlights ? `<div class="rp-item-desc">${this.escapeHtml(w.highlights)}</div>` : ''}
-                </div>
-              `).join('')}
-            </div>
-          </section>
-        ` : ''}
-
-        <!-- 3. 重点项目 -->
         ${(d.projects && d.projects.length > 0) ? `
           <section class="rp-section">
-            <h2 class="rp-section-title">重点项目经历</h2>
+            <h2 class="rp-section-title">核心研发项目</h2>
             <div class="rp-section-content">
               ${d.projects.map(p => `
                 <div class="rp-item">
@@ -371,7 +627,6 @@ class ResumeModule {
           </section>
         ` : ''}
 
-        <!-- 4. 专业技能 -->
         ${(d.skills && d.skills.length > 0) ? `
           <section class="rp-section">
             <h2 class="rp-section-title">技能矩阵与工程素养</h2>
@@ -392,9 +647,18 @@ class ResumeModule {
       btn.addEventListener('click', () => {
         this.saveCurrentData();
         this.currentPerson = btn.dataset.person;
-        this.saveStatusText = `已切换至 ${this.currentPerson === 'yan' ? '王岩' : '秋慧'} 的简历`;
+        this.saveStatusText = `已切换至 ${this.currentPerson === 'yan' ? '王岩' : '杜秋慧'} 的简历`;
         this.render(container);
       });
+    });
+
+    // 载入/重置为学术范式
+    container.querySelector('#btn-reset-template')?.addEventListener('click', () => {
+      if (confirm(`确认恢复【${this.currentPerson === 'yan' ? '王岩' : '杜秋慧'}】的初始规范范本吗？当前修改将被覆盖。`)) {
+        window.spaceStore.resetDefaultResume(this.currentPerson);
+        window.spaceApp?.showToast('已成功恢复标准学术范本！', 'good');
+        this.render(container);
+      }
     });
 
     // 监听所有输入自动同步并持久化
@@ -438,48 +702,50 @@ class ResumeModule {
     // 手动点击保存按钮
     container.querySelector('#btn-save-manual')?.addEventListener('click', () => {
       this.saveCurrentData();
-      const personName = this.currentPerson === 'yan' ? '王岩' : '秋慧';
+      const personName = this.currentPerson === 'yan' ? '王岩' : '杜秋慧';
       window.spaceApp?.showToast(`已成功保存【${personName}】的简历！`);
     });
 
-    // 增删项目
-    container.querySelector('#btn-add-edu')?.addEventListener('click', () => {
-      if (!this.resumeData.education) this.resumeData.education = [];
-      this.resumeData.education.push({ school: '院校名称', degree: '工学硕士', major: '主修专业', period: '2023.09 - 2026.06', description: '' });
+    // 增删医学荣誉
+    container.querySelector('#btn-add-honor')?.addEventListener('click', () => {
+      if (!this.resumeData.honors) this.resumeData.honors = [];
+      this.resumeData.honors.push({ period: '学年', title: '荣誉奖项内容' });
       this.saveCurrentData();
       this.render(container);
     });
-    container.querySelectorAll('.btn-del-edu').forEach(btn => {
+    container.querySelectorAll('.btn-del-honor').forEach(btn => {
       btn.addEventListener('click', () => {
-        this.resumeData.education.splice(parseInt(btn.dataset.index, 10), 1);
+        this.resumeData.honors.splice(parseInt(btn.dataset.index, 10), 1);
         this.saveCurrentData();
         this.render(container);
       });
     });
 
-    container.querySelector('#btn-add-work')?.addEventListener('click', () => {
-      if (!this.resumeData.work) this.resumeData.work = [];
-      this.resumeData.work.push({ company: '单位 / 实验室', position: '职位头衔', period: '2024.01 - 至今', highlights: '' });
+    // 增删科研训练
+    container.querySelector('#btn-add-research')?.addEventListener('click', () => {
+      if (!this.resumeData.research) this.resumeData.research = [];
+      this.resumeData.research.push({ name: '科研项目/竞赛名称', role: '项目成员', period: '年份', description: '' });
       this.saveCurrentData();
       this.render(container);
     });
-    container.querySelectorAll('.btn-del-work').forEach(btn => {
+    container.querySelectorAll('.btn-del-research').forEach(btn => {
       btn.addEventListener('click', () => {
-        this.resumeData.work.splice(parseInt(btn.dataset.index, 10), 1);
+        this.resumeData.research.splice(parseInt(btn.dataset.index, 10), 1);
         this.saveCurrentData();
         this.render(container);
       });
     });
 
-    container.querySelector('#btn-add-proj')?.addEventListener('click', () => {
-      if (!this.resumeData.projects) this.resumeData.projects = [];
-      this.resumeData.projects.push({ name: '项目全称', role: '研发主创', period: '2025.01 - 2025.06', description: '' });
+    // 增删临床实习
+    container.querySelector('#btn-add-clinical')?.addEventListener('click', () => {
+      if (!this.resumeData.clinical) this.resumeData.clinical = [];
+      this.resumeData.clinical.push({ hospital: '实习科室/医院', role: '口腔实习组长/见习生', period: '时间', highlights: '' });
       this.saveCurrentData();
       this.render(container);
     });
-    container.querySelectorAll('.btn-del-proj').forEach(btn => {
+    container.querySelectorAll('.btn-del-clinical').forEach(btn => {
       btn.addEventListener('click', () => {
-        this.resumeData.projects.splice(parseInt(btn.dataset.index, 10), 1);
+        this.resumeData.clinical.splice(parseInt(btn.dataset.index, 10), 1);
         this.saveCurrentData();
         this.render(container);
       });
@@ -522,7 +788,6 @@ class ResumeModule {
           canvas.height = targetH;
           const ctx = canvas.getContext('2d');
 
-          // 居中裁剪适应
           const imgRatio = img.width / img.height;
           const targetRatio = targetW / targetH;
           let renderW, renderH, offsetX, offsetY;
@@ -586,97 +851,33 @@ class ResumeModule {
     if (sheet) sheet.innerHTML = this.renderA4Html();
   }
 
-  // 导出标准 Word (.doc) 包含证件照
+  // 导出标准 Word (.doc)
   exportWord() {
     const d = this.resumeData;
     const b = d.basics || {};
-    const hasAvatar = !!d.avatar;
+    const contentHtml = this.renderA4Html();
 
     const wordHtml = `
       <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
       <head>
         <meta charset='utf-8'>
-        <title>${b.name || '个人简历'}</title>
+        <title>${b.name || '学术简历'}</title>
         <style>
-          body { font-family: 'Microsoft YaHei', SimSun, sans-serif; font-size: 10.5pt; line-height: 1.5; color: #1b3442; }
-          .header-table { width: 100%; border: none; margin-bottom: 12pt; border-bottom: 2pt solid #18354a; padding-bottom: 8pt; }
-          .header-main { vertical-align: top; }
-          .header-avatar { width: 90pt; text-align: right; vertical-align: top; }
-          .avatar-img { width: 80pt; height: 106pt; border: 1pt solid #dce5e9; border-radius: 4pt; }
-          h1 { font-size: 20pt; margin: 0 0 4pt 0; color: #15354a; }
-          .title { font-size: 11pt; color: #1b7659; font-weight: bold; margin-bottom: 6pt; }
-          .contact { font-size: 9pt; color: #557180; line-height: 1.6; }
-          .summary { font-size: 9pt; color: #344c59; margin-top: 6pt; background: #f4f7f8; padding: 6pt; }
-          .section-title { font-size: 11.5pt; font-weight: bold; color: #18354a; border-bottom: 1pt solid #dce5e9; padding-bottom: 3pt; margin-top: 14pt; margin-bottom: 6pt; }
-          .bold { font-weight: bold; color: #15354a; }
-          .date { color: #718894; float: right; }
-          .desc { font-size: 9.5pt; color: #47616f; margin-top: 2pt; margin-bottom: 6pt; }
-          ul { margin: 2pt 0 6pt 18pt; padding: 0; }
-          li { font-size: 9.5pt; color: #374151; margin-bottom: 2pt; }
+          @page { size: 21cm 29.7cm; margin: 1.5cm 1.8cm; }
+          body { font-family: 'Microsoft YaHei', '微软雅黑', 'SimSun', serif; font-size: 9.5pt; color: #222; line-height: 1.45; }
+          .rp-name { font-size: 18pt; font-weight: bold; color: #18354a; margin: 0 0 4pt; }
+          .rp-title { font-size: 10.5pt; font-weight: bold; color: #1b7659; margin-bottom: 4pt; }
+          .rp-intent-bar { background: #f0f6f9; border-left: 3pt solid #18354a; padding: 4pt 8pt; margin: 4pt 0; font-size: 9pt; }
+          .rp-section-title { font-size: 10.5pt; font-weight: bold; color: #18354a; border-bottom: 1.5pt solid #18354a; padding-bottom: 2pt; margin: 10pt 0 4pt; }
+          .rp-item-row { display: flex; justify-content: space-between; font-weight: bold; }
+          .rp-badge-rank { color: #1b7659; font-weight: bold; }
+          .rp-badge-tag { color: #1a73e8; font-weight: bold; }
+          ul { margin-left: 18pt; padding-left: 0; }
+          li { margin-bottom: 3pt; font-size: 8.8pt; }
         </style>
       </head>
       <body>
-        <table class="header-table">
-          <tr>
-            <td class="header-main">
-              <h1>${b.name || '个人简历'}</h1>
-              <div class="title">${b.title || ''}</div>
-              <div class="contact">
-                ${[b.phone, b.email, b.location, b.website].filter(Boolean).join(' | ')}
-              </div>
-              ${b.summary ? `<div class="summary"><strong>个人概述：</strong>${b.summary}</div>` : ''}
-            </td>
-            ${hasAvatar ? `
-              <td class="header-avatar">
-                <img src="${d.avatar}" class="avatar-img" alt="avatar" />
-              </td>
-            ` : ''}
-          </tr>
-        </table>
-
-        <!-- 教育经历 -->
-        ${(d.education && d.education.length > 0) ? `
-          <div class="section-title">教育背景</div>
-          ${d.education.map(e => `
-            <div>
-              <span class="bold">${e.school}</span> | ${e.degree} · ${e.major}
-              <span class="date">${e.period}</span>
-              ${e.description ? `<div class="desc">${e.description}</div>` : ''}
-            </div>
-          `).join('')}
-        ` : ''}
-
-        <!-- 工作经历 -->
-        ${(d.work && d.work.length > 0) ? `
-          <div class="section-title">工作与实习经历</div>
-          ${d.work.map(w => `
-            <div>
-              <span class="bold">${w.company}</span> | ${w.position}
-              <span class="date">${w.period}</span>
-              ${w.highlights ? `<div class="desc">${w.highlights}</div>` : ''}
-            </div>
-          `).join('')}
-        ` : ''}
-
-        <!-- 重点项目 -->
-        ${(d.projects && d.projects.length > 0) ? `
-          <div class="section-title">重点项目经历</div>
-          ${d.projects.map(p => `
-            <div>
-              <span class="bold">${p.name}</span> | ${p.role}
-              <span class="date">${p.period}</span>
-              ${p.description ? `<div class="desc">${p.description}</div>` : ''}
-            </div>
-          `).join('')}
-        ` : ''}
-
-        <!-- 专业技能 -->
-        ${(d.skills && d.skills.length > 0) ? `
-          <div class="section-title">技能矩阵与工程素养</div>
-          <ul>
-            ${d.skills.map(s => `<li>${s}</li>`).join('')}
-          </ul>
-        ` : ''}
+        ${contentHtml}
       </body>
       </html>
     `;
@@ -685,11 +886,12 @@ class ResumeModule {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${b.name || '个人'}_A4简历.doc`;
+    a.download = `${b.name ? b.name.split('/')[0].trim() : '学术简历'}_联系导师学术简历.doc`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+    window.spaceApp?.showToast('已成功生成并下载 Word 简历文档！', 'good');
   }
 
   escapeHtml(str) {

@@ -327,6 +327,56 @@
   color: #344c59;
 }
 
+/* 医学学术简历专有样式 (Medical Academic CV Styling) */
+.rp-badge-rank {
+  display: inline-block;
+  background: #e8f4ec;
+  color: #1b7659;
+  font-weight: 750;
+  padding: 1.5pt 5.5pt;
+  border-radius: 3pt;
+  font-size: 8.5pt;
+  margin-right: 4pt;
+}
+.rp-badge-tag {
+  display: inline-block;
+  background: #e8f0fe;
+  color: #1a73e8;
+  font-weight: 700;
+  padding: 1.5pt 5.5pt;
+  border-radius: 3pt;
+  font-size: 8.5pt;
+}
+.rp-intent-bar {
+  display: flex;
+  align-items: center;
+  gap: 6pt;
+  background: #f1f6f8;
+  border-left: 2.5pt solid #18354a;
+  padding: 3.5pt 8pt;
+  border-radius: 0 4pt 4pt 0;
+  margin: 4pt 0;
+  font-size: 8.8pt;
+}
+.rp-intent-label {
+  font-weight: 750;
+  color: #18354a;
+}
+.rp-intent-mentor {
+  font-weight: 750;
+  color: #1b7659;
+}
+.btn-text-del {
+  border: 0;
+  background: transparent;
+  color: #b05252;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+.btn-text-del:hover {
+  text-decoration: underline;
+}
+
 /* 打印 PDF 引擎 */
 @page {
   size: A4 portrait;
