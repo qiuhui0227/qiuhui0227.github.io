@@ -366,7 +366,7 @@ class SpaceApp {
           <form id="form-upgrade" class="login-form">
             <div class="field">
               <label class="form-label">主人访问密码</label>
-              <input type="password" class="input" id="upgrade-master-pwd" placeholder="请输入主人密码 (默认 admin)" required autofocus>
+              <input type="password" class="input" id="upgrade-master-pwd" placeholder="请输入主人密码" required autofocus>
               <div id="upgrade-err-tip" class="fine" style="color: #a7464c; margin-top: 5px;"></div>
             </div>
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
