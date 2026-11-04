@@ -1,0 +1,314 @@
+/* ==========================================================================
+   OASIS | 简历编辑器与标准 A4 预览打印排版系统
+   ========================================================================== */
+
+.resume-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* 顶部工具栏 */
+.resume-toolbar {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.toolbar-title-group h3 {
+  font-size: 1.125rem;
+  color: var(--text-main);
+  margin-bottom: 2px;
+}
+.mobile-resume-tabs {
+  display: none; /* 电脑端隐藏，移动端通过媒体查询显示 */
+  gap: 8px;
+}
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* 主工作区分屏布局 (PC 宽屏默认分屏) */
+.resume-workspace {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+/* 左侧表单编辑面板 */
+.resume-editor-panel {
+  padding: 20px;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+.resume-form-flow {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.form-section-card {
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 16px;
+}
+.section-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.section-title {
+  font-size: 0.9375rem;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.section-title .icon {
+  font-size: 1rem;
+}
+.sub-form-item {
+  background: #f8fafc;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+}
+.sub-item-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+.btn-text-del {
+  background: none;
+  border: none;
+  color: #ef4444;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.btn-text-del:hover {
+  text-decoration: underline;
+}
+.input-sm {
+  padding: 6px 10px;
+  font-size: 0.8125rem;
+}
+
+/* 右侧 A4 真实比例预览面板 */
+.resume-preview-panel {
+  display: flex;
+  justify-content: center;
+  overflow-y: auto;
+  max-height: calc(100vh - 180px);
+  padding-bottom: 40px;
+}
+
+/* A4 纸张白板模型 */
+.a4-page-sheet {
+  width: 100%;
+  max-width: 210mm;
+  min-height: 297mm;
+  background: #ffffff;
+  padding: 22mm 20mm;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e2e8f0;
+  border-radius: 2px;
+  color: #1f2937;
+  font-size: 9.5pt;
+  line-height: 1.55;
+  box-sizing: border-box;
+}
+
+/* A4 内部高保真排版 */
+.resume-paper {
+  display: flex;
+  flex-direction: column;
+  gap: 14pt;
+}
+
+.rp-header {
+  text-align: center;
+  border-bottom: 1.5pt solid #2563eb;
+  padding-bottom: 10pt;
+}
+.rp-name {
+  font-size: 19pt;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: 0.5px;
+  margin-bottom: 4pt;
+}
+.rp-title {
+  font-size: 10.5pt;
+  font-weight: 600;
+  color: #2563eb;
+  margin-bottom: 6pt;
+}
+.rp-contact-bar {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12pt;
+  font-size: 8.5pt;
+  color: #4b5563;
+}
+.rp-contact-bar a {
+  color: #2563eb;
+  text-decoration: underline;
+}
+.rp-summary {
+  margin-top: 8pt;
+  font-size: 8.5pt;
+  color: #374151;
+  text-align: justify;
+  line-height: 1.5;
+  background: #f8fafc;
+  padding: 6pt 10pt;
+  border-radius: 4px;
+}
+
+/* 栏目 Section */
+.rp-section {
+  display: flex;
+  flex-direction: column;
+  gap: 6pt;
+  page-break-inside: avoid;
+}
+.rp-section-title {
+  font-size: 11pt;
+  font-weight: 700;
+  color: #1e3a8a;
+  border-bottom: 1pt solid #cbd5e1;
+  padding-bottom: 3pt;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.rp-section-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8pt;
+}
+
+/* 单条经历 Item */
+.rp-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2pt;
+}
+.rp-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 9.5pt;
+}
+.rp-item-bold {
+  font-weight: 700;
+  color: #111827;
+}
+.rp-item-mid {
+  font-weight: 500;
+  color: #4b5563;
+  margin-left: 6pt;
+  margin-right: auto;
+}
+.rp-item-date {
+  font-size: 8.5pt;
+  color: #6b7280;
+  white-space: nowrap;
+}
+.rp-item-sub {
+  font-size: 8.5pt;
+  color: #6b7280;
+}
+.rp-item-desc {
+  font-size: 8.5pt;
+  color: #374151;
+  line-height: 1.45;
+  text-align: justify;
+  white-space: pre-line;
+}
+
+.rp-skills-list {
+  list-style-type: square;
+  margin-left: 14pt;
+  display: flex;
+  flex-direction: column;
+  gap: 3pt;
+  font-size: 8.5pt;
+  color: #374151;
+}
+
+/* ==========================================================================
+   打印机矢量高保真输出 (Print Stylesheet for A4 PDF)
+   ========================================================================== */
+
+@page {
+  size: A4 portrait;
+  margin: 12mm 10mm;
+}
+
+@media print {
+  /* 隐藏所有非简历页面元素 */
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+  #screen-lock,
+  .app-header,
+  .resume-toolbar,
+  .resume-editor-panel,
+  .mobile-bottom-nav,
+  .toast,
+  .modal-overlay,
+  .lightbox-overlay,
+  #content-timetable,
+  #content-albums,
+  #content-settings {
+    display: none !important;
+  }
+
+  .app-main-content {
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  .resume-wrapper {
+    gap: 0 !important;
+  }
+
+  .resume-workspace {
+    display: block !important;
+  }
+
+  .resume-preview-panel {
+    display: block !important;
+    overflow: visible !important;
+    max-height: none !important;
+    padding: 0 !important;
+  }
+
+  .a4-page-sheet {
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-height: auto !important;
+  }
+
+  .rp-header {
+    border-bottom: 2pt solid #2563eb !important;
+  }
+}

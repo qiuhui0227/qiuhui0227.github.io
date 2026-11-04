@@ -1,0 +1,266 @@
+/* ==========================================================================
+   OASIS | 全设备响应式适配规范 (Mobile / Pad / PC)
+   ========================================================================== */
+
+/* 移动端底部悬浮导航栏 (默认在宽屏隐藏) */
+.mobile-bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 60px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-top: 1px solid var(--border-color);
+  z-index: 900;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 10px;
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
+}
+
+.mobile-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  height: 100%;
+  color: var(--text-muted);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  background: none;
+  border: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.mobile-nav-item .nav-icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+.mobile-nav-item.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   平板端适配 (Pad: 768px ~ 1024px)
+   ========================================================================== */
+@media screen and (max-width: 1024px) {
+  .app-main-content {
+    padding: 16px;
+  }
+
+  /* 时刻表在平板上变为双列/流式 */
+  .tt-slots-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .tt-slots-grid .tt-slot-card:last-child {
+    grid-column: span 2;
+  }
+
+  /* 相册网格在平板上双列 */
+  .albums-books-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  /* 设置后台网格单列 */
+  .settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  /* 简历工作区分屏比例微调 */
+  .resume-workspace {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+  .a4-page-sheet {
+    padding: 14mm 12mm;
+  }
+}
+
+/* ==========================================================================
+   手机端适配 (Mobile: < 768px)
+   ========================================================================== */
+@media screen and (max-width: 767px) {
+  /* 显示移动端底部导航，主内容底部预留 70px 防遮挡 */
+  .mobile-bottom-nav {
+    display: flex;
+  }
+  .app-main-content {
+    padding: 12px;
+    padding-bottom: 80px;
+  }
+
+  /* 顶部导航简化：隐藏文字导航链接，只保留 Logo 与右侧退出 */
+  .header-nav {
+    display: none;
+  }
+  .header-container {
+    padding: 8px 14px;
+  }
+  .header-brand-name {
+    font-size: 1rem;
+  }
+  #header-role-badge {
+    font-size: 0.6875rem;
+    padding: 2px 6px;
+  }
+
+  /* 门禁卡片全屏友好 */
+  .gate-card {
+    padding: 28px 18px;
+  }
+
+  /* 时刻表手机端单列排布 */
+  .tt-control-bar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+    gap: 12px;
+  }
+  .tt-date-stepper {
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  .tt-date-stepper .input-date {
+    flex: 1;
+    min-width: 120px;
+  }
+  .tt-slots-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+  .tt-slots-grid .tt-slot-card:last-child {
+    grid-column: span 1;
+  }
+  .tt-slot-card {
+    min-height: auto;
+    padding: 14px;
+  }
+
+  /* 相册在手机端 */
+  .albums-header-bar {
+    padding: 14px;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .albums-books-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .album-book-cover-wrap {
+    height: 160px;
+  }
+  .photos-masonry-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+  .photo-polaroid-card {
+    padding: 6px 6px 10px 6px;
+  }
+  .album-detail-top-nav {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .detail-nav-actions {
+    display: flex;
+  }
+  .btn-upload-wrap {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* 灯箱在手机端触控优化 */
+  .lightbox-overlay {
+    padding: 12px;
+  }
+  .lightbox-arrow {
+    width: 38px;
+    height: 48px;
+    font-size: 1.8rem;
+  }
+  .arrow-left { left: 8px; }
+  .arrow-right { right: 8px; }
+
+  /* 简历编辑器手机端 Tab 切换模式 */
+  .mobile-resume-tabs {
+    display: flex;
+    width: 100%;
+  }
+  .mobile-resume-tabs .btn {
+    flex: 1;
+  }
+  .resume-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 12px;
+  }
+  .toolbar-actions {
+    justify-content: space-between;
+    width: 100%;
+  }
+  .toolbar-actions .btn {
+    flex: 1;
+    padding: 6px 8px;
+    font-size: 0.75rem;
+  }
+
+  /* 切换模式：编辑与预览互斥 */
+  .resume-workspace {
+    display: block;
+  }
+  .resume-workspace.edit #resume-editor-pane {
+    display: block;
+  }
+  .resume-workspace.edit #resume-preview-pane {
+    display: none;
+  }
+  .resume-workspace.preview #resume-editor-pane {
+    display: none;
+  }
+  .resume-workspace.preview #resume-preview-pane {
+    display: flex;
+  }
+
+  /* 默认手机端若无模式，先看编辑 */
+  .resume-workspace.split #resume-editor-pane {
+    display: block;
+  }
+  .resume-workspace.split #resume-preview-pane {
+    display: none;
+  }
+
+  .resume-editor-panel {
+    max-height: none;
+    padding: 12px;
+  }
+  .resume-preview-panel {
+    max-height: none;
+    overflow-x: auto;
+    padding: 0;
+  }
+  .a4-page-sheet {
+    padding: 12mm 10mm;
+    min-height: auto;
+    font-size: 8.5pt;
+  }
+  .rp-name {
+    font-size: 16pt;
+  }
+
+  /* 弹窗在手机端 */
+  .modal-overlay {
+    padding: 12px;
+  }
+  .modal-card {
+    max-width: 100%;
+  }
+  .form-row {
+    flex-direction: column;
+    gap: 0;
+  }
+}
