@@ -17,6 +17,26 @@ class ResumeModule {
 
   render(container) {
     if (!container) return;
+
+    // 严格隐私隔离：非卧室主人严禁访问双人档案
+    if (!window.spaceAuth.isMaster()) {
+      container.innerHTML = `
+        <div class="admin-card" style="text-align: center; padding: 48px 24px; max-width: 600px; margin: 40px auto;">
+          <div style="font-size: 42px; margin-bottom: 16px;">🔒</div>
+          <h3 style="font-size: 18px; color: #18354a; margin-bottom: 8px;">双人简历档案已处于私密保护状态</h3>
+          <p class="fine" style="color: #68889c; line-height: 1.6; margin-bottom: 20px;">
+            简历档案包含学业成绩、个人电话、邮箱及学术履历等敏感隐私。<br>
+            客厅来宾模式无权查阅或修改，请验证主人密码进入卧室以解锁。
+          </p>
+          <button class="btn btn-primary" id="btn-resume-upgrade-master">🔑 验证主人身份进入卧室</button>
+        </div>
+      `;
+      container.querySelector('#btn-resume-upgrade-master')?.addEventListener('click', () => {
+        if (window.spaceApp) window.spaceApp.openMasterUpgradeModal();
+      });
+      return;
+    }
+
     this.loadData();
 
     container.innerHTML = `

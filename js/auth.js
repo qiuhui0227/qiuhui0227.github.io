@@ -13,12 +13,37 @@ class SpaceAuth {
   // 加载当前登录状态
   loadSession() {
     try {
+      // 严格安全策略：来宾登录信息严禁长期常驻 localStorage，防止绕过次数限制
+      const localSaved = localStorage.getItem(this.SESSION_KEY);
+      if (localSaved) {
+        try {
+          const parsedLocal = JSON.parse(localSaved);
+          if (parsedLocal.role === 'guest') {
+            // 清理历史遗留写入 localStorage 的来宾会话
+            localStorage.removeItem(this.SESSION_KEY);
+          }
+        } catch (e) {}
+      }
+
       const saved = sessionStorage.getItem(this.SESSION_KEY) || localStorage.getItem(this.SESSION_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        // 如果是有效会话
-        if (parsed.role === 'master' || parsed.role === 'guest') {
-          this.currentRole = parsed.role;
+        if (parsed.role === 'master') {
+          this.currentRole = 'master';
+        } else if (parsed.role === 'guest') {
+          // 实时校验来宾凭据有效性与使用次数
+          const config = window.spaceStore ? window.spaceStore.getAuthConfig() : null;
+          if (config) {
+            const todayStr = new Date().toISOString().split('T')[0];
+            const isExpired = config.guestExpiryDate && todayStr > config.guestExpiryDate;
+            const isExhausted = config.guestUsageLimit !== -1 && config.guestUsageLimit !== undefined && config.guestUsedCount > config.guestUsageLimit;
+
+            if (isExpired || isExhausted) {
+              this.logout();
+              return;
+            }
+          }
+          this.currentRole = 'guest';
         }
       }
     } catch (e) {
@@ -33,10 +58,19 @@ class SpaceAuth {
       role: role,
       loginTime: new Date().toISOString()
     };
-    if (remember) {
-      localStorage.setItem(this.SESSION_KEY, JSON.stringify(sessionData));
-    } else {
+
+    if (role === 'guest') {
+      // 客厅来宾严格仅存 sessionStorage，关闭标签页或浏览器后必须重新输入密码，防止绕过使用次数限制
       sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(sessionData));
+      localStorage.removeItem(this.SESSION_KEY);
+    } else {
+      // 主人模式支持免密记住（若勾选）
+      if (remember) {
+        localStorage.setItem(this.SESSION_KEY, JSON.stringify(sessionData));
+        sessionStorage.removeItem(this.SESSION_KEY);
+      } else {
+        sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(sessionData));
+      }
     }
   }
 
@@ -105,7 +139,7 @@ class SpaceAuth {
         window.spaceStore.saveAuthConfig(config);
       }
 
-      this.saveSession('guest', remember);
+      this.saveSession('guest', false);
       const remaining = config.guestUsageLimit === -1 ? '无限次' : `${config.guestUsageLimit - config.guestUsedCount} 次`;
       return {
         success: true,

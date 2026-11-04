@@ -190,7 +190,7 @@ class AlbumsModule {
   async renderAlbumDetail(container, isMaster) {
     const albums = window.spaceStore.getAlbums();
     const album = albums.find(a => a.id === this.currentAlbumId);
-    if (!album) {
+    if (!album || (!isMaster && album.visibility === 'bedroom')) {
       this.currentAlbumId = null;
       return this.render(container);
     }
@@ -495,7 +495,7 @@ class AlbumsModule {
           <!-- 封面硬板 -->
           <div class="accordion-cover-panel">
             <div class="accordion-gold-label">岁 · 月 · 珍 · 藏</div>
-            <div style="font-size:10px; color:#68889c; margin-top:10px;">QI凋HUI & YAN</div>
+            <div style="font-size:10px; color:#68889c; margin-top:10px;">QIUHUI & YAN</div>
           </div>
 
           <!-- 折页序列 -->
@@ -788,7 +788,7 @@ class AlbumsModule {
                         <span>工整现代画册</span>
                         <span class="pill-badge m">🏛️ 经典</span>
                       </div>
-                      <div class="style-choice-desc">USV Lab 经典工整秩序相片网格，严谨干净</div>
+                      <div class="style-choice-desc">现代画册经典工整秩序相片网格，严谨大方</div>
                     </div>
                   </div>
                 </label>
@@ -877,7 +877,33 @@ class AlbumsModule {
       modalEl.querySelector('#lb-caption').innerText = p.title || '美好瞬间';
     };
 
-    modalEl.querySelector('#lb-close').addEventListener('click', () => modalEl.remove());
+    const closeLightbox = () => {
+      document.removeEventListener('keydown', handleKeyNav);
+      modalEl && modalEl.remove();
+    };
+
+    const handleKeyNav = (e) => {
+      if (e.key === 'Escape') {
+        closeLightbox();
+      } else if (e.key === 'ArrowLeft') {
+        const prev = (this.activePhotoIndex - 1 + this.currentPhotos.length) % this.currentPhotos.length;
+        update(prev);
+      } else if (e.key === 'ArrowRight') {
+        const next = (this.activePhotoIndex + 1) % this.currentPhotos.length;
+        update(next);
+      }
+    };
+
+    // 修复 Bug 3：点击遮罩层外部空白处直接关闭灯箱
+    modalEl.addEventListener('click', (e) => {
+      if (e.target === modalEl || e.target.id === 'lightbox-modal') {
+        closeLightbox();
+      }
+    });
+
+    modalEl.querySelector('#lb-close').addEventListener('click', closeLightbox);
+    document.addEventListener('keydown', handleKeyNav);
+
     modalEl.querySelector('#lb-prev').addEventListener('click', (e) => {
       e.stopPropagation();
       const prev = (this.activePhotoIndex - 1 + this.currentPhotos.length) % this.currentPhotos.length;

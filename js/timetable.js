@@ -138,8 +138,8 @@ class TimetableModule {
           ${count > 0 ? `<span class="slot-count-badge">${count}项</span>` : ''}
         </div>
         ${count === 0 ? `
-          <div class="slot-topic empty" data-action="slot-click" data-date="${dateStr}" data-slot="${slotKey}">
-            ${this.icon('plus', 11)} <span>安排事项</span>
+          <div class="slot-topic empty ${!isMaster ? 'guest-view' : ''}" data-action="slot-click" data-date="${dateStr}" data-slot="${slotKey}">
+            ${isMaster ? `${this.icon('plus', 11)} <span>安排事项</span>` : `<span>暂无排期</span>`}
           </div>
         ` : slotEvents.map(evt => this.renderTopic(evt, isMaster)).join('')}
       </div>
@@ -390,6 +390,7 @@ class TimetableModule {
 
   // 完整事项弹窗
   openEventModal(item = null, defaultDate = null, defaultSlot = 'morning') {
+    if (!window.spaceAuth.isMaster()) return;
     const isEdit = !!item;
     const modalHtml = `
       <div class="overlay" id="tt-modal">
@@ -439,7 +440,7 @@ class TimetableModule {
 
             <div>
               <label class="form-label">地点 / 备注备忘</label>
-              <input type="text" name="location" class="input" placeholder="例如：长春净月潭、实验室、咖啡小馆..." value="${item ? this.escapeHtml(item.location || '') : ''}">
+              <input type="text" name="location" class="input" placeholder="例如：长春净月潭、书房、咖啡小馆..." value="${item ? this.escapeHtml(item.location || '') : ''}">
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">

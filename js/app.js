@@ -10,10 +10,15 @@ class SpaceApp {
   }
 
   init() {
-    document.addEventListener('DOMContentLoaded', () => {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        this.checkAuthState();
+        this.bindGlobalEvents();
+      });
+    } else {
       this.checkAuthState();
       this.bindGlobalEvents();
-    });
+    }
   }
 
   checkAuthState() {
@@ -100,7 +105,8 @@ class SpaceApp {
       }
       if (heroTitle) heroTitle.innerText = '欢迎来到 Qiuhui & Yan 的客厅';
       if (heroMetaMode) heroMetaMode.innerHTML = `<svg class="ico" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> 🛋️ 客厅开放浏览`;
-      if (resumeTabBtn) resumeTabBtn.style.display = 'flex';
+      // 客厅来宾严格隐藏私密简历与空间管理，绝对保护个人隐私
+      if (resumeTabBtn) resumeTabBtn.style.display = 'none';
       if (settingsTabBtn) settingsTabBtn.style.display = 'none';
       if (btnSwitchMaster) btnSwitchMaster.style.display = 'inline-flex';
     }
@@ -127,6 +133,14 @@ class SpaceApp {
   }
 
   switchTab(tabName) {
+    const isMaster = window.spaceAuth.isMaster();
+
+    // 严密隐私拦截：来宾禁止通过任何方式切换到简历生成器或空间管理
+    if (!isMaster && (tabName === 'resume' || tabName === 'settings')) {
+      tabName = 'timetable';
+      this.showToast('⚠️ 客厅来宾模式仅开放公共时刻表与相簿，无法查看私密档案');
+    }
+
     this.currentTab = tabName;
 
     document.querySelectorAll('.tab[data-tab]').forEach(link => {
@@ -297,9 +311,10 @@ class SpaceApp {
 
     container.querySelector('#btn-export-backup')?.addEventListener('click', () => {
       const backup = {
+        version: '2.0',
         timetables: window.spaceStore.getTimetables(),
         albums: window.spaceStore.getAlbums(),
-        resume: window.spaceStore.getResume(),
+        resumes: window.spaceStore.getDualResumes(),
         authConfig: window.spaceStore.getAuthConfig(),
         exportAt: new Date().toISOString()
       };
@@ -321,7 +336,14 @@ class SpaceApp {
           const data = JSON.parse(ev.target.result);
           if (data.timetables) window.spaceStore.saveTimetables(data.timetables);
           if (data.albums) window.spaceStore.saveAlbums(data.albums);
-          if (data.resume) window.spaceStore.saveResume(data.resume);
+          // 修复双人简历备份恢复，支持新旧两种数据结构
+          if (data.resumes) {
+            if (data.resumes.qiuhui) window.spaceStore.saveResume('qiuhui', data.resumes.qiuhui);
+            if (data.resumes.yan) window.spaceStore.saveResume('yan', data.resumes.yan);
+          } else if (data.resume) {
+            const person = data.resume.id || (data.resume.isMedicalCV ? 'qiuhui' : 'yan');
+            window.spaceStore.saveResume(person, data.resume);
+          }
           if (data.authConfig) window.spaceStore.saveAuthConfig(data.authConfig);
           this.showToast('备份恢复成功！页面即将刷新...');
           setTimeout(() => location.reload(), 1000);

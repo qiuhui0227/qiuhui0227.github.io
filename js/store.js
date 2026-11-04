@@ -229,8 +229,8 @@ class SpaceStore {
           id: 'sched_2',
           date: today,
           slot: 'afternoon',
-          title: '课题方案整理 & 实验验证',
-          location: '智能无人船工程实验室',
+          title: '课题方案整理 & 仿真建模',
+          location: '工程控制中心 / 线上',
           participant: 'yan',
           status: 'ongoing',
           notes: '测试松花湖湖试方案第二阶段通信延时',
@@ -371,6 +371,11 @@ class SpaceStore {
   }
 
   saveResume(person = 'yan', data) {
+    // 兼容性保护：若只传了一个参数（如整份简历对象），自适应识别所属人物
+    if (typeof person === 'object' && !data) {
+      data = person;
+      person = data.id || (data.isMedicalCV ? 'qiuhui' : 'yan');
+    }
     const dual = this.getDualResumes();
     dual[person] = data;
     localStorage.setItem('oasis_resumes_dual', JSON.stringify(dual));
