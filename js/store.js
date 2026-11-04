@@ -47,7 +47,7 @@ class SpaceStore {
           email: 'yanwang20@mails.jlu.edu.cn',
           phone: '138-0000-0001',
           location: '中国 · 吉林长春',
-          website: 'https://qiuhui0227.github.io',
+          website: 'https://iqiuqiu.me',
           summary: '专注于无人系统、智能感知与嵌入式全栈开发。具备扎实的控制算法与软件架构设计能力，注重工程严谨性与跨端审美。'
         },
         education: [
