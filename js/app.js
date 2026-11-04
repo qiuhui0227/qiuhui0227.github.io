@@ -1,6 +1,7 @@
 /**
  * OASIS | Qiuhui & Yan
- * 空间核心路由调度与应用控制器 (USV Lab 经典交互与组件规范)
+ * 空间核心路由调度与应用控制器
+ * 支持：持久化设备记住、男女主人独立密码鉴权、多访客通行证（不限数量）全功能管理
  */
 
 class SpaceApp {
@@ -64,6 +65,7 @@ class SpaceApp {
 
   renderAppHeader() {
     const isMaster = window.spaceAuth.isMaster();
+    const currentUser = window.spaceAuth.getCurrentUser();
     const roleBadge = document.getElementById('header-role-badge');
     const resumeTabBtn = document.getElementById('tab-btn-resume');
     const settingsTabBtn = document.getElementById('tab-btn-settings');
@@ -73,7 +75,6 @@ class SpaceApp {
     const statEvents = document.getElementById('stat-today-events');
     const statAlbums = document.getElementById('stat-album-count');
 
-    const config = window.spaceStore.getAuthConfig();
     const today = new Date().toISOString().split('T')[0];
     const timetables = window.spaceStore.getTimetables();
     const visibleEvents = timetables.filter(e => e.date === today && (isMaster || e.visibility === 'living_room'));
@@ -84,28 +85,31 @@ class SpaceApp {
     if (statAlbums) statAlbums.innerText = visibleAlbums.length;
 
     if (isMaster) {
+      const uName = currentUser?.name || '主人';
+      const uAvatar = currentUser?.avatar || '🛏️';
       if (roleBadge) {
         roleBadge.innerHTML = `
-          <svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
-          <span>卧室主人 (全特权)</span>
+          <span style="font-size:14px; margin-right:4px;">${uAvatar}</span>
+          <span>${uName} (卧室全特权)</span>
         `;
       }
       if (heroTitle) heroTitle.innerText = 'Qiuhui & Yan 的时空印记';
-      if (heroMetaMode) heroMetaMode.innerHTML = `<svg class="ico" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> 🛏️ 卧室私密模式`;
+      if (heroMetaMode) heroMetaMode.innerHTML = `<svg class="ico" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> 🛏️ 卧室私密模式 (${uName})`;
       if (resumeTabBtn) resumeTabBtn.style.display = 'flex';
       if (settingsTabBtn) settingsTabBtn.style.display = 'flex';
       if (btnSwitchMaster) btnSwitchMaster.style.display = 'none';
     } else {
-      const remaining = config.guestUsageLimit === -1 ? '无限次' : `${config.guestUsageLimit - config.guestUsedCount}次`;
+      const gName = currentUser?.name || '来宾';
+      const guestAcc = window.spaceAuth.currentGuestAccount;
+      const remaining = guestAcc ? (guestAcc.usageLimit === -1 ? '无限次' : `${guestAcc.usageLimit - (guestAcc.usedCount || 0)}次`) : '受限';
       if (roleBadge) {
         roleBadge.innerHTML = `
-          <svg class="ico" viewBox="0 0 24 24"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="8" r="4"/></svg>
-          <span>客厅来宾 (剩余: ${remaining})</span>
+          <span style="font-size:14px; margin-right:4px;">🛋️</span>
+          <span>客厅来宾 · ${gName} (余: ${remaining})</span>
         `;
       }
-      if (heroTitle) heroTitle.innerText = '欢迎来到 Qiuhui & Yan 的客厅';
+      if (heroTitle) heroTitle.innerText = `欢迎来到 Qiuhui & Yan 的客厅 (${gName})`;
       if (heroMetaMode) heroMetaMode.innerHTML = `<svg class="ico" viewBox="0 0 24 24"><path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg> 🛋️ 客厅开放浏览`;
-      // 客厅来宾严格隐藏私密简历与空间管理，绝对保护个人隐私
       if (resumeTabBtn) resumeTabBtn.style.display = 'none';
       if (settingsTabBtn) settingsTabBtn.style.display = 'none';
       if (btnSwitchMaster) btnSwitchMaster.style.display = 'inline-flex';
@@ -121,7 +125,7 @@ class SpaceApp {
     });
 
     document.getElementById('btn-logout')?.addEventListener('click', () => {
-      if (confirm('确认锁定并退出空间吗？')) {
+      if (confirm('确认锁定并退出空间吗？退出后需要重新输入通行码。')) {
         window.spaceAuth.logout();
         this.checkAuthState();
       }
@@ -165,6 +169,12 @@ class SpaceApp {
     } else if (tabName === 'albums' && window.albumsModule) {
       window.albumsModule.render(containers.albums);
     } else if (tabName === 'resume' && window.resumeModule) {
+      // 自动定位到当前登录人的专属简历
+      if (window.spaceAuth.isYan()) {
+        window.resumeModule.currentPerson = 'yan';
+      } else if (window.spaceAuth.isQiuhui()) {
+        window.resumeModule.currentPerson = 'qiuhui';
+      }
       window.resumeModule.render(containers.resume);
     } else if (tabName === 'settings') {
       this.renderSettings(containers.settings);
@@ -173,85 +183,138 @@ class SpaceApp {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  // 渲染管理设置中心 (USV Lab Admin Card 格式)
+  // 渲染管理设置中心
   renderSettings(container) {
     if (!container) return;
+    if (!window.spaceAuth.isMaster()) {
+      container.innerHTML = `
+        <div class="admin-card" style="text-align:center; padding:40px 20px;">
+          <div style="font-size:40px; margin-bottom:14px;">🔒</div>
+          <h3>空间管理仅限卧室主人配置</h3>
+          <p class="fine">客厅来宾无权查看或修改空间安全规则与通行密码。</p>
+        </div>
+      `;
+      return;
+    }
+
     const config = window.spaceStore.getAuthConfig();
+    const guestAccounts = Array.isArray(config.guestAccounts) ? config.guestAccounts : [];
+    const currentUser = window.spaceAuth.getCurrentUser();
 
     container.innerHTML = `
       <div class="settings-wrap">
-        <!-- 1. 客厅门禁通行证 -->
+        <!-- 1. 访客通行证多账号管理 (不限数量) -->
         <div class="admin-card">
           <div class="card-title">
             <div class="card-title-left">
               <span class="badge-icon">
-                <svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+                <svg class="ico" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </span>
-              <span>客厅来宾通行证配置 (Guest Access)</span>
+              <span>访客通行证管理 (支持创建不限数量独立访客码)</span>
             </div>
-            <span class="pill good">来宾策略生效中</span>
+            <button class="btn btn-primary btn-sm" id="btn-create-guest-acc">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              创建新访客账号
+            </button>
           </div>
-          <p class="field-help">输入该密码的访客可以进入客厅，仅能翻阅设置为“客厅开放”的岁月相簿与公开时刻事项。</p>
+          <p class="field-help" style="margin-bottom:16px;">
+            可分别针对不同亲朋、同学或家人创建独立通行码。持有通行码的访客入座客厅，仅能翻阅“客厅开放”的相簿与排期。
+          </p>
 
-          <form id="form-guest-config">
-            <div class="field">
-              <label>来宾访问密码</label>
-              <input type="text" class="input" id="cfg-guest-pwd" value="${config.guestPassword || 'guest888'}" required>
-            </div>
-
-            <div class="form-row">
-              <div class="field">
-                <label>最大允许访问次数 (-1 为无限次)</label>
-                <input type="number" class="input" id="cfg-guest-limit" value="${config.guestUsageLimit ?? 20}" required>
+          <div class="guest-account-list">
+            ${guestAccounts.length === 0 ? `
+              <div class="fine" style="padding:16px; background:#f8fafb; border-radius:10px; text-align:center;">
+                当前暂无访客通行码，可点击右上角创建。
               </div>
-              <div class="field">
-                <label>已使用次数</label>
-                <div style="display:flex; gap:8px;">
-                  <input type="text" class="input" id="cfg-guest-used" value="${config.guestUsedCount || 0}" disabled>
-                  <button type="button" class="btn btn-outline btn-sm" id="btn-reset-guest-count">清零</button>
+            ` : guestAccounts.map(acc => {
+              const remaining = acc.usageLimit === -1 ? '无限次' : `${Math.max(0, acc.usageLimit - (acc.usedCount || 0))} 次`;
+              return `
+                <div class="guest-item-card" style="border:1px solid #e2eaee; border-radius:12px; padding:14px 16px; margin-bottom:10px; background:#fbfcfd; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                  <div>
+                    <div style="font-weight:700; color:#18354a; font-size:14px; display:flex; align-items:center; gap:8px;">
+                      <span>🏷️ ${this.escapeHtml(acc.name)}</span>
+                      <span class="pill good" style="font-size:11.5px; font-family:monospace; font-weight:700;">
+                        通行码: ${this.escapeHtml(acc.code)}
+                      </span>
+                    </div>
+                    <div class="fine" style="color:#68889c; margin-top:6px; display:flex; gap:16px; flex-wrap:wrap;">
+                      <span>已使用: <strong>${acc.usedCount || 0}</strong> 次 / 限额: <strong>${acc.usageLimit === -1 ? '无限次' : acc.usageLimit + '次'}</strong> (剩余: <span style="color:#248154; font-weight:700;">${remaining}</span>)</span>
+                      <span>有效期至: <strong>${acc.expiryDate || '永久'}</strong></span>
+                      <span>创建时间: ${acc.createdAt || '近期'}</span>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-outline btn-xs btn-reset-guest-acc" data-id="${acc.id}">🔄 重置次数</button>
+                    <button type="button" class="btn btn-outline btn-xs btn-edit-guest-acc" data-id="${acc.id}">✏️ 编辑</button>
+                    <button type="button" class="btn btn-danger btn-xs btn-del-guest-acc" data-id="${acc.id}">🗑️ 删除</button>
+                  </div>
                 </div>
-              </div>
-            </div>
-
-            <div class="field">
-              <label>有效截止日期</label>
-              <input type="date" class="input" id="cfg-guest-expiry" value="${config.guestExpiryDate || '2027-12-31'}" required>
-            </div>
-
-            <div style="display:flex; justify-content:flex-end; margin-top:14px;">
-              <button type="submit" class="btn btn-primary">保存来宾规则</button>
-            </div>
-          </form>
+              `;
+            }).join('')}
+          </div>
         </div>
 
-        <!-- 2. 主人密码修改 -->
+        <!-- 2. 男女主人独立密码修改 (王岩 vs 杜秋慧) -->
         <div class="admin-card">
           <div class="card-title">
             <div class="card-title-left">
               <span class="badge-icon">
                 <svg class="ico" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
               </span>
-              <span>修改主人密码 (卧室私密特权)</span>
+              <span>主人专属密码管理 (男女主独立密码)</span>
+            </div>
+            <span class="pill good">当前操作人: ${currentUser?.avatar} ${currentUser?.name}</span>
+          </div>
+          <p class="field-help" style="margin-bottom:16px;">
+            男主王岩（初始 <code>adminwy</code>）与女主杜秋慧（初始 <code>adminqh</code>）拥有各自独立的私密钥匙，可分别独立修改。
+          </p>
+
+          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
+            <!-- 修改王岩密码 -->
+            <div style="border:1px solid #e2eaee; border-radius:12px; padding:16px; background:#fbfcfd;">
+              <h4 style="margin:0 0 12px; font-size:13.5px; color:#18354a; display:flex; align-items:center; gap:6px;">
+                <span>👦 修改【王岩】的主人密码</span>
+                ${currentUser?.role === 'yan' ? '<span class="pill good" style="font-size:10px; padding:2px 6px;">本人</span>' : ''}
+              </h4>
+              <form id="form-pwd-yan">
+                <div class="field" style="margin:8px 0;">
+                  <label>原密码</label>
+                  <input type="password" class="input sm" id="old-pwd-yan" placeholder="请输入王岩当前密码" required>
+                </div>
+                <div class="field" style="margin:8px 0;">
+                  <label>设置新密码</label>
+                  <input type="password" class="input sm" id="new-pwd-yan" placeholder="至少4位新密码" required>
+                </div>
+                <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+                  <button type="submit" class="btn btn-primary btn-sm">更新王岩密码</button>
+                </div>
+              </form>
+            </div>
+
+            <!-- 修改秋慧密码 -->
+            <div style="border:1px solid #e2eaee; border-radius:12px; padding:16px; background:#fbfcfd;">
+              <h4 style="margin:0 0 12px; font-size:13.5px; color:#18354a; display:flex; align-items:center; gap:6px;">
+                <span>👧 修改【杜秋慧】的主人密码</span>
+                ${currentUser?.role === 'qiuhui' ? '<span class="pill good" style="font-size:10px; padding:2px 6px;">本人</span>' : ''}
+              </h4>
+              <form id="form-pwd-qiuhui">
+                <div class="field" style="margin:8px 0;">
+                  <label>原密码</label>
+                  <input type="password" class="input sm" id="old-pwd-qiuhui" placeholder="请输入秋慧当前密码" required>
+                </div>
+                <div class="field" style="margin:8px 0;">
+                  <label>设置新密码</label>
+                  <input type="password" class="input sm" id="new-pwd-qiuhui" placeholder="至少4位新密码" required>
+                </div>
+                <div style="display:flex; justify-content:flex-end; margin-top:12px;">
+                  <button type="submit" class="btn btn-primary btn-sm">更新秋慧密码</button>
+                </div>
+              </form>
             </div>
           </div>
-          <p class="field-help">主人密码拥有全功能权限。若修改请牢记新密码，初始密码为 <code>admin</code>。</p>
-
-          <form id="form-master-pwd">
-            <div class="field">
-              <label>原主人密码</label>
-              <input type="password" class="input" id="cfg-old-master" placeholder="请输入当前密码" required>
-            </div>
-            <div class="field">
-              <label>设置新主人密码</label>
-              <input type="password" class="input" id="cfg-new-master" placeholder="至少4位密码" required>
-            </div>
-            <div style="display:flex; justify-content:flex-end; margin-top:14px;">
-              <button type="submit" class="btn btn-primary">更新主人密码</button>
-            </div>
-          </form>
         </div>
 
-        <!-- 3. 数据备份 -->
+        <!-- 3. 数据离线备份与恢复 -->
         <div class="admin-card">
           <div class="card-title">
             <div class="card-title-left">
@@ -261,7 +324,7 @@ class SpaceApp {
               <span>全量数据离线备份与还原</span>
             </div>
           </div>
-          <p class="field-help">将时刻表、相簿元数据、简历与安全配置导出为标准 JSON 文件，防止数据丢失。</p>
+          <p class="field-help">将时刻表、相簿元数据、双人简历档案及全部安全账户配置导出为标准 JSON 文件，防止数据丢失。</p>
           <div style="display:flex; gap:12px; margin-top:14px; flex-wrap:wrap;">
             <button class="btn btn-outline" id="btn-export-backup">📥 导出完整空间备份 (JSON)</button>
             <label class="btn btn-outline" style="cursor:pointer; margin:0;">
@@ -273,45 +336,65 @@ class SpaceApp {
       </div>
     `;
 
-    // 绑定后台表单
-    container.querySelector('#form-guest-config')?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const pwd = container.querySelector('#cfg-guest-pwd').value;
-      const limit = container.querySelector('#cfg-guest-limit').value;
-      const exp = container.querySelector('#cfg-guest-expiry').value;
+    // 绑定访客账号管理事件
+    container.querySelector('#btn-create-guest-acc')?.addEventListener('click', () => {
+      this.openGuestAccountModal();
+    });
 
-      const res = window.spaceAuth.updateGuestConfig({
-        newGuestPassword: pwd,
-        usageLimit: limit,
-        expiryDate: exp
+    container.querySelectorAll('.btn-reset-guest-acc').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const res = window.spaceAuth.resetGuestAccountCount(btn.dataset.id);
+        this.showToast(res.message, !res.success);
+        this.renderSettings(container);
       });
-      this.showToast(res.message, !res.success);
-      this.renderAppHeader();
     });
 
-    container.querySelector('#btn-reset-guest-count')?.addEventListener('click', () => {
-      window.spaceAuth.updateGuestConfig({ resetCount: true });
-      container.querySelector('#cfg-guest-used').value = 0;
-      this.showToast('来宾已使用次数已清零！');
-      this.renderAppHeader();
+    container.querySelectorAll('.btn-edit-guest-acc').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const acc = guestAccounts.find(x => x.id === btn.dataset.id);
+        if (acc) this.openGuestAccountModal(acc);
+      });
     });
 
-    container.querySelector('#form-master-pwd')?.addEventListener('submit', (e) => {
+    container.querySelectorAll('.btn-del-guest-acc').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (confirm('确认删除该访客通行账号吗？删除后该通行码将无法进入空间。')) {
+          const res = window.spaceAuth.deleteGuestAccount(btn.dataset.id);
+          this.showToast(res.message, !res.success);
+          this.renderSettings(container);
+        }
+      });
+    });
+
+    // 绑定密码修改事件
+    container.querySelector('#form-pwd-yan')?.addEventListener('submit', (e) => {
       e.preventDefault();
-      const oldPwd = container.querySelector('#cfg-old-master').value;
-      const newPwd = container.querySelector('#cfg-new-master').value;
-
-      const res = window.spaceAuth.updateMasterPassword(oldPwd, newPwd);
+      const oldPwd = container.querySelector('#old-pwd-yan').value;
+      const newPwd = container.querySelector('#new-pwd-yan').value;
+      const res = window.spaceAuth.updateUserPassword('yan', oldPwd, newPwd);
       this.showToast(res.message, !res.success);
       if (res.success) {
-        container.querySelector('#cfg-old-master').value = '';
-        container.querySelector('#cfg-new-master').value = '';
+        container.querySelector('#old-pwd-yan').value = '';
+        container.querySelector('#new-pwd-yan').value = '';
       }
     });
 
+    container.querySelector('#form-pwd-qiuhui')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const oldPwd = container.querySelector('#old-pwd-qiuhui').value;
+      const newPwd = container.querySelector('#new-pwd-qiuhui').value;
+      const res = window.spaceAuth.updateUserPassword('qiuhui', oldPwd, newPwd);
+      this.showToast(res.message, !res.success);
+      if (res.success) {
+        container.querySelector('#old-pwd-qiuhui').value = '';
+        container.querySelector('#new-pwd-qiuhui').value = '';
+      }
+    });
+
+    // 备份导出与还原
     container.querySelector('#btn-export-backup')?.addEventListener('click', () => {
       const backup = {
-        version: '2.0',
+        version: '3.0',
         timetables: window.spaceStore.getTimetables(),
         albums: window.spaceStore.getAlbums(),
         resumes: window.spaceStore.getDualResumes(),
@@ -336,7 +419,6 @@ class SpaceApp {
           const data = JSON.parse(ev.target.result);
           if (data.timetables) window.spaceStore.saveTimetables(data.timetables);
           if (data.albums) window.spaceStore.saveAlbums(data.albums);
-          // 修复双人简历备份恢复，支持新旧两种数据结构
           if (data.resumes) {
             if (data.resumes.qiuhui) window.spaceStore.saveResume('qiuhui', data.resumes.qiuhui);
             if (data.resumes.yan) window.spaceStore.saveResume('yan', data.resumes.yan);
@@ -355,6 +437,80 @@ class SpaceApp {
     });
   }
 
+  // 创建/编辑访客通行证弹窗
+  openGuestAccountModal(acc = null) {
+    const isEdit = !!acc;
+    const modalHtml = `
+      <div class="overlay" id="modal-guest-acc">
+        <div class="sheet">
+          <div class="sheet-head">
+            <h3>${isEdit ? '✏️ 编辑访客通行证' : '➕ 创建新访客通行证'}</h3>
+            <button class="logout" id="btn-close-guest-modal" style="font-size:18px;">×</button>
+          </div>
+          <form id="form-guest-acc" class="login-form">
+            <div class="field">
+              <label class="form-label">访客名称 / 备注说明</label>
+              <input type="text" class="input" name="name" placeholder="例如：大学同学、亲友聚会、好友专属" value="${acc ? this.escapeHtml(acc.name) : ''}" required>
+            </div>
+            <div class="field">
+              <label class="form-label">专属访问通行码</label>
+              <input type="text" class="input" name="code" placeholder="例如：friends2026、guest999" value="${acc ? this.escapeHtml(acc.code) : ''}" required>
+              <div class="fine" style="color:#68889c; margin-top:4px;">访客在门禁页面输入此码即可入座客厅</div>
+            </div>
+            <div class="form-row">
+              <div class="field">
+                <label class="form-label">最大允许访问次数 (-1 为无限次)</label>
+                <input type="number" class="input" name="usageLimit" value="${acc ? (acc.usageLimit ?? 20) : 20}" required>
+              </div>
+              <div class="field">
+                <label class="form-label">有效截止日期</label>
+                <input type="date" class="input" name="expiryDate" value="${acc ? (acc.expiryDate || '2027-12-31') : '2027-12-31'}" required>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
+              <button type="button" class="btn btn-outline" id="btn-cancel-guest-modal">取消</button>
+              <button type="submit" class="btn btn-primary">${isEdit ? '保存修改' : '确认创建'}</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    const modalEl = document.getElementById('modal-guest-acc');
+    const close = () => modalEl && modalEl.remove();
+
+    modalEl.querySelector('#btn-close-guest-modal').addEventListener('click', close);
+    modalEl.querySelector('#btn-cancel-guest-modal').addEventListener('click', close);
+    modalEl.addEventListener('click', (e) => {
+      if (e.target === modalEl) close();
+    });
+
+    modalEl.querySelector('#form-guest-acc').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const name = form.name.value;
+      const code = form.code.value;
+      const usageLimit = form.usageLimit.value;
+      const expiryDate = form.expiryDate.value;
+
+      let res;
+      if (isEdit) {
+        res = window.spaceAuth.updateGuestAccount(acc.id, { name, code, usageLimit, expiryDate });
+      } else {
+        res = window.spaceAuth.createGuestAccount({ name, code, usageLimit, expiryDate });
+      }
+
+      this.showToast(res.message, !res.success);
+      if (res.success) {
+        close();
+        const settingsContainer = document.getElementById('content-settings');
+        if (settingsContainer) this.renderSettings(settingsContainer);
+      }
+    });
+  }
+
+  // 卧室主人升级验证弹窗 (王岩 adminwy 或 秋慧 adminqh 均可解锁)
   openMasterUpgradeModal() {
     const modalHtml = `
       <div class="overlay" id="modal-upgrade">
@@ -384,14 +540,17 @@ class SpaceApp {
 
     modalEl.querySelector('#btn-close-upgrade').addEventListener('click', close);
     modalEl.querySelector('#btn-cancel-upgrade').addEventListener('click', close);
+    modalEl.addEventListener('click', (e) => {
+      if (e.target === modalEl) close();
+    });
 
     modalEl.querySelector('#form-upgrade').addEventListener('submit', (e) => {
       e.preventDefault();
       const pwd = modalEl.querySelector('#upgrade-master-pwd').value;
       const res = window.spaceAuth.login(pwd);
-      if (res.success && res.role === 'master') {
+      if (res.success && res.role !== 'guest') {
         close();
-        this.showToast('欢迎进入卧室主人模式！');
+        this.showToast(`欢迎进入卧室主人模式，${res.user.name}！已为您记住此设备。`);
         this.checkAuthState();
       } else {
         modalEl.querySelector('#upgrade-err-tip').innerText = '主人密码错误，请核对后重试。';
@@ -399,7 +558,17 @@ class SpaceApp {
     });
   }
 
-  // Toast (复刻 USV Lab 原生悬浮气泡)
+  escapeHtml(str) {
+    if (!str) return '';
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  // Toast
   showToast(message, bad = false) {
     const el = document.getElementById('toast');
     if (!el) return;

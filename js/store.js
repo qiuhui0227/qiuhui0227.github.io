@@ -172,17 +172,60 @@ class SpaceStore {
   }
 
   initDefaultStorage() {
-    // 1. 安全配置
-    if (!localStorage.getItem('oasis_auth_config')) {
-      const defaultAuth = {
-        masterPassword: 'admin',
-        guestPassword: 'guest888',
-        guestUsageLimit: 20,
-        guestUsedCount: 0,
-        guestExpiryDate: '2027-12-31',
-        rememberDays: 7
+    // 1. 安全配置与双人独立主人密码 + 多访客体系
+    let authConfig = this.getAuthConfig();
+    let needSaveAuth = false;
+
+    if (!authConfig || Object.keys(authConfig).length === 0) {
+      authConfig = {
+        version: '20261105_v5_multi_account',
+        masterPasswords: {
+          yan: 'adminwy',      // 男主初始密码
+          qiuhui: 'adminqh'    // 女主初始密码
+        },
+        guestAccounts: [
+          {
+            id: 'guest_default',
+            name: '亲友通用通行证',
+            code: 'guest888',
+            usageLimit: 20,
+            usedCount: 0,
+            expiryDate: '2027-12-31',
+            createdAt: new Date().toISOString().split('T')[0]
+          }
+        ]
       };
-      localStorage.setItem('oasis_auth_config', JSON.stringify(defaultAuth));
+      needSaveAuth = true;
+    } else {
+      if (!authConfig.masterPasswords) {
+        authConfig.masterPasswords = {
+          yan: 'adminwy',
+          qiuhui: 'adminqh'
+        };
+        needSaveAuth = true;
+      } else {
+        if (!authConfig.masterPasswords.yan) authConfig.masterPasswords.yan = 'adminwy';
+        if (!authConfig.masterPasswords.qiuhui) authConfig.masterPasswords.qiuhui = 'adminqh';
+      }
+
+      if (!Array.isArray(authConfig.guestAccounts)) {
+        authConfig.guestAccounts = [
+          {
+            id: 'guest_default',
+            name: '亲友通用通行证',
+            code: authConfig.guestPassword || 'guest888',
+            usageLimit: authConfig.guestUsageLimit ?? 20,
+            usedCount: authConfig.guestUsedCount || 0,
+            expiryDate: authConfig.guestExpiryDate || '2027-12-31',
+            createdAt: new Date().toISOString().split('T')[0]
+          }
+        ];
+        needSaveAuth = true;
+      }
+    }
+
+    if (needSaveAuth) {
+      this.saveAuthConfig(authConfig);
     }
 
     // 2. 默认相簿 (包含横竖屏风格)
@@ -400,6 +443,18 @@ class SpaceStore {
 
   saveAuthConfig(config) {
     localStorage.setItem('oasis_auth_config', JSON.stringify(config));
+  }
+
+  // --- 访客多账号管理 ---
+  getGuestAccounts() {
+    const config = this.getAuthConfig();
+    return Array.isArray(config.guestAccounts) ? config.guestAccounts : [];
+  }
+
+  saveGuestAccounts(accounts) {
+    const config = this.getAuthConfig();
+    config.guestAccounts = accounts;
+    this.saveAuthConfig(config);
   }
 }
 

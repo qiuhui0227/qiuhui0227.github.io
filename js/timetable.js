@@ -243,6 +243,8 @@ class TimetableModule {
   // 点击时段卡槽弹出的时段管理抽屉 (.sheet)
   openSlotSheet(dateStr, slotKey) {
     const isMaster = window.spaceAuth.isMaster();
+    const currentUser = window.spaceAuth.getCurrentUser();
+    const defaultPart = currentUser?.role === 'qiuhui' ? 'qiuhui' : (currentUser?.role === 'yan' ? 'yan' : 'both');
     const meta = this.getDayMeta(dateStr);
     const slotNames = {
       morning: '晨光 / 上午 (08:00 - 12:00)',
@@ -309,9 +311,9 @@ class TimetableModule {
                 <div class="form-row">
                   <div>
                     <select name="participant" class="select" style="height:39px; font-size:12px;">
-                      <option value="both">👫 共同参加 (Both)</option>
-                      <option value="yan">👦 Yan (王岩)</option>
-                      <option value="qiuhui">👧 Qiuhui (秋慧)</option>
+                      <option value="both" ${defaultPart === 'both' ? 'selected' : ''}>👫 共同参加 (Both)</option>
+                      <option value="yan" ${defaultPart === 'yan' ? 'selected' : ''}>👦 Yan (王岩)</option>
+                      <option value="qiuhui" ${defaultPart === 'qiuhui' ? 'selected' : ''}>👧 Qiuhui (秋慧)</option>
                     </select>
                   </div>
                   <div>
@@ -392,6 +394,8 @@ class TimetableModule {
   openEventModal(item = null, defaultDate = null, defaultSlot = 'morning') {
     if (!window.spaceAuth.isMaster()) return;
     const isEdit = !!item;
+    const currentUser = window.spaceAuth.getCurrentUser();
+    const defaultPart = item ? item.participant : (currentUser?.role === 'qiuhui' ? 'qiuhui' : (currentUser?.role === 'yan' ? 'yan' : 'both'));
     const modalHtml = `
       <div class="overlay" id="tt-modal">
         <div class="sheet">
@@ -424,9 +428,9 @@ class TimetableModule {
               <div>
                 <label class="form-label">参加人</label>
                 <select name="participant" class="select">
-                  <option value="both" ${item?.participant === 'both' ? 'selected' : ''}>👫 共同参加 (Both)</option>
-                  <option value="yan" ${item?.participant === 'yan' ? 'selected' : ''}>👦 Yan (王岩)</option>
-                  <option value="qiuhui" ${item?.participant === 'qiuhui' ? 'selected' : ''}>👧 Qiuhui (秋慧)</option>
+                  <option value="both" ${defaultPart === 'both' ? 'selected' : ''}>👫 共同参加 (Both)</option>
+                  <option value="yan" ${defaultPart === 'yan' ? 'selected' : ''}>👦 Yan (王岩)</option>
+                  <option value="qiuhui" ${defaultPart === 'qiuhui' ? 'selected' : ''}>👧 Qiuhui (秋慧)</option>
                 </select>
               </div>
               <div>
