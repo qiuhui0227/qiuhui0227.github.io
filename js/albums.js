@@ -1,6 +1,11 @@
 /**
  * OASIS | Qiuhui & Yan
- * 岁月相簿与照片墙 (采用 USV Lab 管理卡片与媒体相簿规范)
+ * 岁月相簿与时光档案
+ * 支持 4 套呈递艺术风格:
+ * 1. 🎀 浪漫手账 (Scrapbook): 和纸胶带、宝丽来微倾角、可爱手绘贴纸、点阵暖纸
+ * 2. 📜 诗意卷轴 (Scroll): 紫檀木轴头、绢绫装裱、宣纸横卷、朱红印章
+ * 3. 📑 经折折子 (Accordion): 经折装硬壳封皮、风琴褶皱光影折痕、金线页码
+ * 4. 🏛️ 经典画册 (Classic): USV Lab 工整秩序感相片网格
  */
 
 class AlbumsModule {
@@ -46,7 +51,7 @@ class AlbumsModule {
         </div>
 
         <p class="fine" style="margin-bottom: 16px;">
-          客厅陈列着公开的美好回忆，卧室珍藏着独属于两人的私密温度。点击相簿封面即可进入翻阅。
+          客厅陈列着公开的美好回忆，卧室珍藏着独属于两人的私密温度。点击相簿封面即可进入翻阅，支持随时切换手账、卷轴与折子风格。
         </p>
 
         <div class="albums-grid">
@@ -146,7 +151,7 @@ class AlbumsModule {
     });
   }
 
-  // 2. 单本相簿详情照片流
+  // 2. 单本相簿详情展示 (支持 4 套艺术风格切换)
   async renderAlbumDetail(container, isMaster) {
     const albums = window.spaceStore.getAlbums();
     const album = albums.find(a => a.id === this.currentAlbumId);
@@ -154,6 +159,8 @@ class AlbumsModule {
       this.currentAlbumId = null;
       return this.render(container);
     }
+
+    const currentStyle = window.spaceStore.getAlbumStyle() || 'scrapbook';
 
     this.currentPhotos = await window.spaceStore.getPhotosByAlbum(album.id);
     if (this.currentPhotos.length === 0 && album.id === 'album_first_sight') {
@@ -187,20 +194,30 @@ class AlbumsModule {
 
         <p class="fine">${this.escapeHtml(album.desc || '点滴记录我们的美好时刻')}</p>
 
-        <div class="photos-masonry">
-          ${this.currentPhotos.length === 0 ? `
-            <div class="empty" style="grid-column: 1/-1;">这本相簿暂无照片，点击上方按钮上传第一张吧！</div>
-          ` : this.currentPhotos.map((photo, idx) => `
-            <div class="photo-item" data-index="${idx}">
-              <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
-              <div class="photo-bar">
-                <span class="photo-bar-title">${this.escapeHtml(photo.title || '美好瞬间')}</span>
-                ${isMaster ? `
-                  <button class="btn-text btn-del-photo" data-id="${photo.id}" style="color:#a7464c; padding:0 4px;" title="删除">🗑️</button>
-                ` : ''}
-              </div>
-            </div>
-          `).join('')}
+        <!-- 相簿艺术呈递风格切换器 (手账 / 卷轴 / 折子 / 经典) -->
+        <div class="album-style-bar">
+          <div class="album-style-bar-left">
+            <span class="fine" style="font-weight:750; color:#18354a;">🎨 相簿呈递艺术风格:</span>
+          </div>
+          <div class="style-switcher">
+            <button class="style-tab ${currentStyle === 'scrapbook' ? 'active' : ''}" data-style="scrapbook">
+              🎀 浪漫手账
+            </button>
+            <button class="style-tab ${currentStyle === 'scroll' ? 'active' : ''}" data-style="scroll">
+              📜 诗意卷轴
+            </button>
+            <button class="style-tab ${currentStyle === 'accordion' ? 'active' : ''}" data-style="accordion">
+              📑 经折折子
+            </button>
+            <button class="style-tab ${currentStyle === 'classic' ? 'active' : ''}" data-style="classic">
+              🏛️ 经典画册
+            </button>
+          </div>
+        </div>
+
+        <!-- 动态视觉展示容器 -->
+        <div id="album-photos-view">
+          ${this.renderPhotosByStyle(currentStyle, this.currentPhotos, isMaster)}
         </div>
       </div>
     `;
@@ -208,10 +225,195 @@ class AlbumsModule {
     this.bindDetailEvents(container, album);
   }
 
+  // 风格路由器
+  renderPhotosByStyle(style, photos, isMaster) {
+    if (photos.length === 0) {
+      return `<div class="empty" style="grid-column: 1/-1;">这本相簿暂无照片，点击上方按钮上传第一张吧！</div>`;
+    }
+
+    if (style === 'scrapbook') {
+      return this.renderScrapbookView(photos, isMaster);
+    } else if (style === 'scroll') {
+      return this.renderScrollView(photos, isMaster);
+    } else if (style === 'accordion') {
+      return this.renderAccordionView(photos, isMaster);
+    } else {
+      return this.renderClassicView(photos, isMaster);
+    }
+  }
+
+  // 风格 1: 🎀 浪漫手账 (Scrapbook)
+  renderScrapbookView(photos, isMaster) {
+    const tapes = ['tape-mint', 'tape-peach', 'tape-yellow', 'tape-lavender', 'tape-sky'];
+    const stickers = ['🎀', '✨', '🌸', '🧸', '💌', '☕', '🍀', '🪐', '💫', '💖'];
+
+    return `
+      <div class="scrapbook-board">
+        <div class="scrapbook-header-badge">
+          <div class="scrapbook-header-title">
+            <span>🌸 独家手账日志</span>
+            <span class="fine" style="color:#87715f;">(温润纸质 · 宝丽来微倾角与和纸胶带)</span>
+          </div>
+          <div class="scrapbook-decorations">
+            <span>✨</span><span>🎀</span><span>🌷</span><span>💌</span>
+          </div>
+        </div>
+
+        <div class="scrapbook-grid">
+          ${photos.map((photo, idx) => {
+            const tapeClass = tapes[idx % tapes.length];
+            const sticker = stickers[idx % stickers.length];
+            return `
+              <div class="scrapbook-card photo-card-target" data-index="${idx}">
+                <div class="washi-tape ${tapeClass}"></div>
+                <span class="scrapbook-sticker sticker-top-right">${sticker}</span>
+                <div class="scrapbook-img-box">
+                  <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+                </div>
+                <div class="scrapbook-caption-row">
+                  <span class="scrapbook-title">${this.escapeHtml(photo.title || '美好瞬间')}</span>
+                  ${photo.date ? `<span class="scrapbook-date">${photo.date}</span>` : ''}
+                  ${isMaster ? `
+                    <button class="scrapbook-btn-del btn-del-photo" data-id="${photo.id}" title="删除此照片">🗑️</button>
+                  ` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // 风格 2: 📜 诗意卷轴 (Chinese Scroll)
+  renderScrollView(photos, isMaster) {
+    const seals = ['心心相印', '岁岁欢喜', '良辰美景', '山海同游', '此情可待', '长乐未央'];
+
+    return `
+      <div class="scroll-stage">
+        <div class="fine" style="color:#c5b59f; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
+          <span>📜 古风水墨长卷 · 水平展卷翻阅 (支持触控横向滑动或滚轮滑动)</span>
+          <span class="fine" style="color:#9e8870;">紫檀轴杆 · 绢绫装裱</span>
+        </div>
+        <div class="scroll-mount-wrapper">
+          <div class="scroll-rod rod-left">
+            <div class="rod-cap"></div>
+            <div class="rod-cap"></div>
+          </div>
+
+          <div class="scroll-paper-stream">
+            ${photos.map((photo, idx) => {
+              const sealText = seals[idx % seals.length];
+              return `
+                <div class="scroll-painting-card photo-card-target" data-index="${idx}">
+                  <div class="chinese-seal">${sealText}</div>
+                  <div class="scroll-painting-img-box">
+                    <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+                  </div>
+                  <div class="scroll-painting-meta">
+                    <span class="scroll-painting-title">${this.escapeHtml(photo.title || '卷中良辰')}</span>
+                    <span class="scroll-painting-date">${photo.date || '岁在今朝'}</span>
+                    ${isMaster ? `
+                      <button class="btn-text btn-del-photo" data-id="${photo.id}" style="color:#a7464c; padding:0 4px;" title="删除">🗑️</button>
+                    ` : ''}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+
+          <div class="scroll-rod rod-right">
+            <div class="rod-cap"></div>
+            <div class="rod-cap"></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 风格 3: 📑 经折折子 (Accordion Fold)
+  renderAccordionView(photos, isMaster) {
+    const chineseNums = ['一', '二', '三', '四', '五', '六', '七', '八', '九', '十', '十一', '十二', '十三', '十四', '十五', '十六'];
+
+    return `
+      <div class="accordion-book-stage">
+        <div class="accordion-book-head">
+          <h4>📑 典藏经折装 · 风琴多折立体册页</h4>
+          <span class="fine" style="color:#7899ad;">传统经折连续装帧 · 横向连绵展开</span>
+        </div>
+
+        <div class="accordion-leaves-container">
+          <!-- 封面硬板 -->
+          <div class="accordion-cover-panel">
+            <div class="accordion-gold-label">岁 · 月 · 珍 · 藏</div>
+            <div style="font-size:10px; color:#68889c; margin-top:10px;">QI凋HUI & YAN</div>
+          </div>
+
+          <!-- 折页序列 -->
+          ${photos.map((photo, idx) => {
+            const isOdd = idx % 2 === 0;
+            const foldNum = chineseNums[idx] || (idx + 1);
+            return `
+              <div class="accordion-leaf ${isOdd ? 'odd-fold' : 'even-fold'} photo-card-target" data-index="${idx}">
+                <div class="accordion-leaf-index">
+                  <span>折 ${foldNum}</span>
+                  <span>${photo.date || '留影'}</span>
+                </div>
+                <div class="accordion-leaf-img-box">
+                  <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+                </div>
+                <div class="accordion-leaf-title">${this.escapeHtml(photo.title || '并肩时光')}</div>
+                ${isMaster ? `
+                  <div style="text-align:right; margin-top:4px;">
+                    <button class="btn-text btn-del-photo" data-id="${photo.id}" style="color:#a7464c; font-size:11px;" title="删除">🗑️ 移除</button>
+                  </div>
+                ` : ''}
+              </div>
+            `;
+          }).join('')}
+
+          <!-- 封底硬板 -->
+          <div class="accordion-cover-panel">
+            <div class="accordion-gold-label">未 · 完 · 待 · 续</div>
+            <div style="font-size:10px; color:#68889c; margin-top:10px;">OASIS 2026</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 风格 4: 🏛️ 经典画册 (Classic Archival)
+  renderClassicView(photos, isMaster) {
+    return `
+      <div class="photos-masonry">
+        ${photos.map((photo, idx) => `
+          <div class="photo-item photo-card-target" data-index="${idx}">
+            <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+            <div class="photo-bar">
+              <span class="photo-bar-title">${this.escapeHtml(photo.title || '美好瞬间')}</span>
+              ${isMaster ? `
+                <button class="btn-text btn-del-photo" data-id="${photo.id}" style="color:#a7464c; padding:0 4px;" title="删除">🗑️</button>
+              ` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
   bindDetailEvents(container, album) {
     container.querySelector('#btn-back-to-albums')?.addEventListener('click', () => {
       this.currentAlbumId = null;
       this.render(container);
+    });
+
+    // 艺术风格切换
+    container.querySelectorAll('.style-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        const style = tab.dataset.style;
+        window.spaceStore.saveAlbumStyle(style);
+        this.render(container);
+      });
     });
 
     const uploadInput = container.querySelector('#input-upload-photos');
@@ -248,14 +450,16 @@ class AlbumsModule {
       this.render(container);
     });
 
-    container.querySelectorAll('.photo-item').forEach(card => {
+    // 点击照片打开全屏大图灯箱
+    container.querySelectorAll('.photo-card-target').forEach(card => {
       card.addEventListener('click', (e) => {
-        if (e.target.closest('.btn-del-photo')) return;
+        if (e.target.closest('.btn-del-photo, .scrapbook-btn-del')) return;
         this.openLightbox(parseInt(card.dataset.index, 10));
       });
     });
 
-    container.querySelectorAll('.btn-del-photo').forEach(btn => {
+    // 删除单张照片
+    container.querySelectorAll('.btn-del-photo, .scrapbook-btn-del').forEach(btn => {
       btn.addEventListener('click', async (e) => {
         e.stopPropagation();
         if (confirm('确认删除这张照片吗？')) {
