@@ -165,39 +165,191 @@ class AlbumsModule {
   }
 
   bindAlbumsListEvents(container) {
+    const bookshelfGrid = container.querySelector('.bookshelf-grid');
+    let activePinnedCard = null;
+
+    // 核心函数：固定挺住相册并放大，向中间靠拢
+    const pinCard = (card) => {
+      if (activePinnedCard && activePinnedCard !== card) {
+        unpinCard();
+      }
+
+      // 计算卡片中心与屏幕/书架水平中心的相对偏移
+      const cardRect = card.getBoundingClientRect();
+      const cardCenterX = cardRect.left + cardRect.width / 2;
+      const shelfCenterX = window.innerWidth / 2;
+      const diffX = shelfCenterX - cardCenterX;
+
+      // 核心需求：“以自己的位置向中间靠拢，注意，不是直接居中”
+      // 适度向中心靠拢偏移约 38%，确保左右两侧书本向内聚拢，但保留原始站位
+      let nudgeX = 0;
+      if (diffX > 15) {
+        nudgeX = Math.min(diffX * 0.40, 42);
+      } else if (diffX < -15) {
+        nudgeX = Math.max(diffX * 0.40, -42);
+      }
+
+      // 放大倍数提升至 1.45 倍，上浮 22px，足以明显压住周围相册
+      card.style.transform = `translate3d(${nudgeX.toFixed(1)}px, -22px, 0) scale(1.45)`;
+      card.classList.add('card-pinned');
+      card.classList.remove('touch-pressing');
+      bookshelfGrid?.classList.add('bookshelf-has-pinned');
+      activePinnedCard = card;
+    };
+
+    // 核心函数：收回挺住的相册
+    const unpinCard = () => {
+      if (!activePinnedCard) return;
+      activePinnedCard.style.transform = '';
+      activePinnedCard.classList.remove('card-pinned');
+      activePinnedCard.classList.remove('touch-pressing');
+      bookshelfGrid?.classList.remove('bookshelf-has-pinned');
+      activePinnedCard = null;
+    };
+
+    // 点空白处收回
+    const handleOutsideTap = (e) => {
+      if (!activePinnedCard) return;
+      // 如果点击的是已经被锁定的卡片自身
+      if (e.target.closest('.shelf-photobook-card') === activePinnedCard) {
+        if (e.target.closest('.photobook-mini-btn')) return; // 让编辑/删除按钮自己处理
+        // 点击当前固定的卡片本身，直接进入相册
+        const card = activePinnedCard;
+        unpinCard();
+        if (card.classList.contains('special-meal-book')) {
+          window.mealsModule?.openMealAlbumModal();
+        } else {
+          this.currentAlbumId = card.dataset.id;
+          this.render(container);
+        }
+        return;
+      }
+      // 否则点击空白处或其它地方，收回！
+      unpinCard();
+    };
+
+    container.addEventListener('click', handleOutsideTap);
+
     // 阻止长按弹出微信上下文菜单（搜一搜、保存到手机等）
     container.addEventListener('contextmenu', (e) => {
       e.preventDefault();
       return false;
     }, { passive: false });
 
-    // 绑定特殊三餐相册点击
-    container.querySelector('#album-card-special-meals')?.addEventListener('click', () => {
-      window.mealsModule?.openMealAlbumModal();
-    });
-
     const albums = window.spaceStore.getAlbums();
 
-    // 绑定相册点击及手指触控明显放大
+    // 绑定相册交互：按住震动挺住，否则直接进入
     container.querySelectorAll('.shelf-photobook-card').forEach(card => {
-      // 手指按住即刻放大
-      card.addEventListener('touchstart', () => {
-        card.classList.add('touch-active');
+      let pressTimer = null;
+      let isVibrated = false;
+      let isTouchMove = false;
+      let startX = 0;
+      let startY = 0;
+
+      // 触摸开始
+      card.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.photobook-mini-btn')) return;
+
+        if (activePinnedCard && activePinnedCard !== card) {
+          unpinCard();
+        }
+
+        clearTimeout(pressTimer);
+        isVibrated = false;
+        isTouchMove = false;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+
+        card.classList.add('touch-pressing');
+
+        // 按住 280ms 触发震动并锁定放大
+        pressTimer = setTimeout(() => {
+          isVibrated = true;
+          if (navigator.vibrate) {
+            try { navigator.vibrate(35); } catch (_) {}
+          }
+          pinCard(card);
+        }, 280);
       }, { passive: true });
 
-      const removeTouchActive = () => {
-        setTimeout(() => {
-          card.classList.remove('touch-active');
-        }, 180);
-      };
-      card.addEventListener('touchend', removeTouchActive, { passive: true });
-      card.addEventListener('touchcancel', removeTouchActive, { passive: true });
+      // 滑动中（若在翻滚页面，取消按住计时）
+      card.addEventListener('touchmove', (e) => {
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (Math.hypot(dx, dy) > 10) {
+          isTouchMove = true;
+          clearTimeout(pressTimer);
+          card.classList.remove('touch-pressing');
+        }
+      }, { passive: true });
 
-      card.addEventListener('click', (e) => {
-        if (card.classList.contains('special-meal-book')) return;
-        if (e.target.closest('.photobook-quick-acts') || e.target.closest('.photobook-mini-btn')) return;
-        this.currentAlbumId = card.dataset.id;
-        this.render(container);
+      // 触摸结束
+      card.addEventListener('touchend', (e) => {
+        if (e.target.closest('.photobook-mini-btn')) return;
+        clearTimeout(pressTimer);
+        card.classList.remove('touch-pressing');
+
+        if (isTouchMove) return;
+
+        // 如果还没震动，用户只是轻点了一下：直接进入相册！
+        if (!isVibrated) {
+          if (activePinnedCard === card) {
+            unpinCard();
+          }
+          if (card.classList.contains('special-meal-book')) {
+            window.mealsModule?.openMealAlbumModal();
+          } else {
+            this.currentAlbumId = card.dataset.id;
+            this.render(container);
+          }
+        } else {
+          // 已经震动：松开就会挺住！
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      card.addEventListener('touchcancel', () => {
+        clearTimeout(pressTimer);
+        card.classList.remove('touch-pressing');
+      }, { passive: true });
+
+      // 桌面端鼠标交互：支持点击直达与长按挺住
+      let mouseTimer = null;
+      let mouseVibrated = false;
+
+      card.addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || e.target.closest('.photobook-mini-btn')) return;
+        if (activePinnedCard && activePinnedCard !== card) {
+          unpinCard();
+        }
+        mouseVibrated = false;
+        card.classList.add('touch-pressing');
+        mouseTimer = setTimeout(() => {
+          mouseVibrated = true;
+          pinCard(card);
+        }, 280);
+      });
+
+      card.addEventListener('mouseup', (e) => {
+        if (e.button !== 0 || e.target.closest('.photobook-mini-btn')) return;
+        clearTimeout(mouseTimer);
+        card.classList.remove('touch-pressing');
+        if (!mouseVibrated) {
+          if (activePinnedCard === card) {
+            unpinCard();
+          }
+          if (card.classList.contains('special-meal-book')) {
+            window.mealsModule?.openMealAlbumModal();
+          } else {
+            this.currentAlbumId = card.dataset.id;
+            this.render(container);
+          }
+        }
+      });
+
+      card.addEventListener('mouseleave', () => {
+        clearTimeout(mouseTimer);
+        card.classList.remove('touch-pressing');
       });
     });
 
