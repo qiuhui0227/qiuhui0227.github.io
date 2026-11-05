@@ -670,6 +670,57 @@ class SpaceStore {
     this.scheduleCloudSync();
   }
 
+  // ==========================================================================
+  // 三餐相机 / 美食手帐 (Meal Camera & Diary)
+  // 不可删除、不可创建的唯一私属永久手帐相册
+  // ==========================================================================
+
+  getMeals() {
+    try {
+      const data = localStorage.getItem("oasis_meals");
+      return data ? JSON.parse(data) : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  saveMeals(meals) {
+    localStorage.setItem("oasis_meals", JSON.stringify(meals));
+    this.scheduleCloudPush();
+  }
+
+  addMeal(meal) {
+    const list = this.getMeals();
+    const item = {
+      id: "meal_" + Date.now() + "_" + Math.random().toString(36).substr(2, 6),
+      title: meal.title || "今日美餐",
+      imageUrl: meal.imageUrl || "",
+      mealType: meal.mealType || "lunch", // breakfast, lunch, dinner, tea, snack
+      time: meal.time || new Date().toISOString(),
+      location: meal.location || "",
+      author: meal.author || "both", // yan, qiuhui, both
+      filter: meal.filter || "none",
+      createdAt: Date.now(),
+      ...meal
+    };
+    list.unshift(item);
+    this.saveMeals(list);
+    return item;
+  }
+
+  deleteMeal(id) {
+    const list = this.getMeals().filter(m => m.id !== id);
+    this.saveMeals(list);
+    return list;
+  }
+
+  updateMeal(id, patch) {
+    const list = this.getMeals().map(m => m.id === id ? { ...m, ...patch } : m);
+    this.saveMeals(list);
+    return list;
+  }
+
+
   // --- 排期时刻表操作 (无样例纯净日程) ---
   getTimetables() {
     try {
@@ -896,6 +947,10 @@ class SpaceStore {
             localStorage.setItem('oasis_albums', JSON.stringify(cloud.albums));
             hasUpdated = true;
           }
+          if (cloud.meals && Array.isArray(cloud.meals)) {
+            localStorage.setItem('oasis_meals', JSON.stringify(cloud.meals));
+            hasUpdated = true;
+          }
           if (cloud.auth_config && (cloud.auth_config.users || cloud.auth_config.masterPassword)) {
             localStorage.setItem('oasis_auth_config', JSON.stringify(cloud.auth_config));
             hasUpdated = true;
@@ -904,8 +959,13 @@ class SpaceStore {
           localStorage.setItem('oasis_last_saved_at', String(cloudSavedAt));
           localStorage.setItem('oasis_has_synced', 'true');
 
-          if (hasUpdated && !isInitial && window.spaceApp) {
-            window.spaceApp.refreshCurrentModule();
+          if (hasUpdated) {
+            if (!isInitial && window.spaceApp) {
+              window.spaceApp.refreshCurrentModule();
+            }
+            if (window.mealsModule && window.mealsModule.isOpen) {
+              window.mealsModule.renderGallery();
+            }
           }
         }
         this.lastSyncTime = new Date(cloudSavedAt || Date.now());
@@ -932,6 +992,7 @@ class SpaceStore {
         timetables: this.getTimetables(),
         resume_books: this.getResumeBooks(),
         albums: this.getAlbums(),
+        meals: this.getMeals(),
         auth_config: this.getAuthConfig(),
         clientTimestamp: Date.now()
       };

@@ -1,0 +1,847 @@
+/* ==========================================================================
+   OASIS | 三餐相机与美食手帐专属样式 (Meal Camera & Food Diary System)
+   极简白描线条风 + 温暖食欲感设计
+   ========================================================================== */
+
+/* 1. 顶部左上角三餐相机入口按钮 (替代原臃肿 Logo) */
+.meal-cam-top-btn {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  cursor: pointer;
+  color: #1e293b;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.16s ease;
+  user-select: none;
+}
+.meal-cam-top-btn:hover {
+  background: #f8fafc;
+  border-color: #0f172a;
+  transform: translateY(-1px);
+}
+.meal-cam-top-btn:active {
+  transform: translateY(0);
+}
+.meal-cam-ico-top {
+  width: 16px;
+  height: 16px;
+  color: #ea580c; /* 温暖美食橙红 */
+  flex-shrink: 0;
+}
+.meal-cam-text {
+  letter-spacing: -0.01em;
+}
+
+/* 2. 三餐相册弹层主体 (Modal Overlay) */
+.meal-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.meal-modal-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.meal-modal-dialog {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 40px -12px rgba(15, 23, 42, 0.18);
+  transform: scale(0.97);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+.meal-modal-overlay.active .meal-modal-dialog {
+  transform: scale(1);
+}
+
+/* 弹层头部 */
+.meal-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.meal-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.meal-header-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
+}
+.meal-badge-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ea580c;
+}
+.meal-header-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #0f172a;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  line-height: 1.25;
+}
+.meal-title-ico {
+  width: 20px;
+  height: 20px;
+  color: #ea580c;
+}
+.meal-header-sub {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+}
+.meal-header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.meal-btn-shoot {
+  background: #ea580c;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.meal-btn-shoot:hover {
+  background: #c2410c;
+  transform: translateY(-1px);
+}
+.meal-btn-close {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.meal-btn-close:hover {
+  color: #0f172a;
+  border-color: #0f172a;
+}
+.meal-ico-sm {
+  width: 14px;
+  height: 14px;
+}
+
+/* 筛选工具栏 */
+.meal-filter-bar {
+  padding: 10px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  background: #fafbfc;
+}
+.meal-filter-pills {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.meal-filter-pills::-webkit-scrollbar {
+  display: none;
+}
+.meal-filter-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+.meal-filter-btn:hover {
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+.meal-filter-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  font-weight: 600;
+}
+
+/* 作者圆点 */
+.meal-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.meal-dot.yan { background: #2563eb; }
+.meal-dot.qiuhui { background: #e11d48; }
+.meal-dot.both { background: #059669; }
+
+/* 画廊内容区域 */
+.meal-gallery-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 24px;
+}
+
+/* 空白占位 */
+.meal-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  gap: 10px;
+}
+.meal-empty-icon {
+  font-size: 48px;
+  line-height: 1;
+  margin-bottom: 6px;
+}
+.meal-empty-state h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+.meal-empty-state p {
+  font-size: 13px;
+  color: #94a3b8;
+  margin: 0;
+}
+
+/* 栅格网格 */
+.meal-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
+@media (max-width: 640px) {
+  .meal-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 美食卡片 */
+.meal-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  overflow: hidden;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  display: flex;
+  flex-direction: column;
+}
+.meal-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08);
+  border-color: #cbd5e1;
+}
+
+.meal-card-img-wrap {
+  width: 100%;
+  height: 190px;
+  background: #f1f5f9;
+  position: relative;
+  overflow: hidden;
+  cursor: zoom-in;
+}
+.meal-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+.meal-card:hover .meal-card-img {
+  transform: scale(1.03);
+}
+
+.meal-type-tag {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(4px);
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #0f172a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+}
+.meal-type-tag.breakfast { color: #d97706; }
+.meal-type-tag.lunch { color: #0284c7; }
+.meal-type-tag.dinner { color: #dc2626; }
+.meal-type-tag.tea { color: #d946ef; }
+.meal-type-tag.snack { color: #7c3aed; }
+
+.meal-filter-tag {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.meal-card-info {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+.meal-card-row-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+.meal-card-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: #0f172a;
+  line-height: 1.35;
+  word-break: break-all;
+}
+.btn-del-meal {
+  background: none;
+  border: none;
+  color: #cbd5e1;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.12s;
+}
+.btn-del-meal:hover {
+  color: #ef4444;
+}
+
+.meal-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11px;
+  color: #94a3b8;
+}
+.meal-author-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+}
+.meal-author-tag.yan { color: #2563eb; }
+.meal-author-tag.qiuhui { color: #e11d48; }
+.meal-author-tag.both { color: #059669; }
+
+.meal-loc-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 2px;
+}
+.meal-loc-ico {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  color: #ea580c;
+}
+
+.meal-modal-footer {
+  padding: 12px 24px;
+  border-top: 1px solid #f1f5f9;
+  font-size: 11px;
+  color: #94a3b8;
+  text-align: center;
+  background: #fafbfc;
+}
+
+/* ==========================================================================
+   3. 唤起拍照/相册底部操作面板 (Capture Source Sheet)
+   ========================================================================== */
+.meal-sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  z-index: 1050;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.meal-sheet-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.meal-sheet-panel {
+  background: #ffffff;
+  border-radius: 16px 16px 0 0;
+  width: 100%;
+  max-width: 500px;
+  padding: 18px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transform: translateY(100%);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.meal-sheet-overlay.active .meal-sheet-panel {
+  transform: translateY(0);
+}
+.meal-sheet-title {
+  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+.meal-sheet-opt {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s;
+}
+.meal-sheet-opt:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+.sheet-icon {
+  font-size: 26px;
+  line-height: 1;
+}
+.sheet-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sheet-text strong {
+  font-size: 14px;
+  color: #0f172a;
+}
+.sheet-text span {
+  font-size: 11.5px;
+  color: #94a3b8;
+}
+.meal-sheet-cancel {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 11px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  margin-top: 4px;
+  transition: all 0.15s;
+}
+.meal-sheet-cancel:hover {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   4. 美食录入与滤镜编辑弹层 (Meal Editor & Filter Studio)
+   ========================================================================== */
+.meal-modal-overlay.editor {
+  z-index: 1080;
+}
+.meal-editor-dialog {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 580px;
+  max-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+  overflow: hidden;
+}
+.meal-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.meal-editor-head h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+}
+.meal-editor-body {
+  overflow-y: auto;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 实时滤镜画布视窗 */
+.meal-preview-box {
+  width: 100%;
+  height: 250px;
+  border-radius: 10px;
+  background: #0f172a;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.meal-editor-canvas {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 6px;
+}
+.meal-preview-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(4px);
+  color: #ffffff;
+  border-radius: 4px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* 滤镜选择条 */
+.meal-filters-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.meal-filters-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #64748b;
+}
+.meal-filters-list {
+  display: flex;
+  gap: 7px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.meal-filters-list::-webkit-scrollbar {
+  display: none;
+}
+.meal-filter-chip {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+  transition: all 0.12s;
+}
+.meal-filter-chip:hover {
+  border-color: #94a3b8;
+  color: #0f172a;
+}
+.meal-filter-chip.active {
+  background: #ea580c;
+  color: #ffffff;
+  border-color: #ea580c;
+  font-weight: 600;
+}
+
+/* 录入表单 */
+.meal-record-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.meal-form-label {
+  display: block;
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 5px;
+}
+.meal-input {
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-size: 13px;
+  color: #0f172a;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.meal-input:focus {
+  border-color: #ea580c;
+}
+
+/* 餐别单选钮 */
+.meal-type-selector {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.meal-type-btn {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 5px 9px;
+  font-size: 12px;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.12s;
+}
+.meal-type-btn:hover {
+  border-color: #94a3b8;
+}
+.meal-type-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  font-weight: 600;
+}
+
+.meal-form-row {
+  display: flex;
+  gap: 12px;
+}
+.form-group.half {
+  flex: 1;
+}
+
+/* 记录人单选 */
+.meal-author-selector {
+  display: flex;
+  gap: 6px;
+}
+.meal-author-btn {
+  flex: 1;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 5px;
+  padding: 6px 4px;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.12s;
+}
+.meal-author-btn:hover {
+  border-color: #94a3b8;
+}
+.meal-author-btn.active {
+  background: #0f172a;
+  color: #ffffff;
+  border-color: #0f172a;
+  font-weight: 600;
+}
+
+/* 地点快捷 */
+.meal-label-with-hint {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+.meal-hint-action {
+  font-size: 11px;
+  color: #ea580c;
+  cursor: pointer;
+  font-weight: 500;
+}
+.meal-loc-quick-chips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+.meal-loc-chip {
+  background: #f1f5f9;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 11px;
+  color: #64748b;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.meal-loc-chip:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.meal-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid #f1f5f9;
+}
+
+/* ==========================================================================
+   5. 全屏大图灯箱 (Lightbox)
+   ========================================================================== */
+.meal-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 15, 26, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.meal-lightbox-overlay.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+.meal-lb-dialog {
+  max-width: 90vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  align-items: center;
+}
+.meal-lb-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: #ffffff;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.meal-lb-close:hover {
+  background: rgba(255, 255, 255, 0.35);
+}
+.meal-lb-img-wrap {
+  max-width: 85vw;
+  max-height: 75vh;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+}
+.meal-lb-img {
+  width: auto;
+  height: auto;
+  max-width: 85vw;
+  max-height: 75vh;
+  object-fit: contain;
+  display: block;
+}
+.meal-lb-bar {
+  margin-top: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(8px);
+  padding: 10px 16px;
+  border-radius: 8px;
+  color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.meal-lb-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.meal-lb-title-row h3 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.meal-lb-sub-row {
+  display: flex;
+  gap: 14px;
+  font-size: 11.5px;
+  color: #cbd5e1;
+  flex-wrap: wrap;
+}
