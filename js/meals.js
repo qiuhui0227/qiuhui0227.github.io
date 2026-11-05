@@ -185,7 +185,7 @@ class MealCameraModule {
               今日三餐
             </button>
             <button class="meal-filter-btn ${this.currentFilterTab === 'yan' ? 'active' : ''}" data-tab="yan">
-              <span class="meal-dot yan"></span> 燕先生
+              <span class="meal-dot yan"></span> 王岩
             </button>
             <button class="meal-filter-btn ${this.currentFilterTab === 'qiuhui' ? 'active' : ''}" data-tab="qiuhui">
               <span class="meal-dot qiuhui"></span> 杜秋慧
@@ -270,7 +270,7 @@ class MealCameraModule {
     let authorLabel = '共同';
     let authorClass = 'both';
     if (meal.author === 'yan') {
-      authorLabel = '燕先生';
+      authorLabel = '王岩';
       authorClass = 'yan';
     } else if (meal.author === 'qiuhui') {
       authorLabel = '杜秋慧';
@@ -481,7 +481,7 @@ class MealCameraModule {
               <div class="form-group half">
                 <label class="meal-form-label">记录人</label>
                 <div class="meal-author-selector">
-                  <button type="button" class="meal-author-btn ${defaultAuthor === 'yan' ? 'active' : ''}" data-author="yan">燕先生</button>
+                  <button type="button" class="meal-author-btn ${defaultAuthor === 'yan' ? 'active' : ''}" data-author="yan">王岩</button>
                   <button type="button" class="meal-author-btn ${defaultAuthor === 'qiuhui' ? 'active' : ''}" data-author="qiuhui">杜秋慧</button>
                   <button type="button" class="meal-author-btn" data-author="both">一起吃</button>
                 </div>
@@ -752,7 +752,7 @@ class MealCameraModule {
     const timeDisplay = `${dateObj.getFullYear()}年${dateObj.getMonth() + 1}月${dateObj.getDate()}日 ${String(dateObj.getHours()).padStart(2, '0')}:${String(dateObj.getMinutes()).padStart(2, '0')}`;
 
     let authorLabel = '两人共同';
-    if (meal.author === 'yan') authorLabel = '燕先生记录';
+    if (meal.author === 'yan') authorLabel = '王岩记录';
     if (meal.author === 'qiuhui') authorLabel = '杜秋慧记录';
 
     lb.innerHTML = `

@@ -8,11 +8,11 @@
   <link rel="icon" type="image/png" href="./images/logo.png">
 
   <!-- 加载完全复刻 USV Lab 经典美学与艺术扩展的样式表 (带强力防缓存指纹) -->
-  <link rel="stylesheet" href="./css/style.css?v=202611051135">
-  <link rel="stylesheet" href="./css/resume.css?v=202611051135">
-  <link rel="stylesheet" href="./css/albums.css?v=202611051135">
-  <link rel="stylesheet" href="./css/responsive.css?v=202611051135">
-  <link rel="stylesheet" href="./css/meals.css?v=202611051135">
+  <link rel="stylesheet" href="./css/style.css?v=202611051200">
+  <link rel="stylesheet" href="./css/resume.css?v=202611051200">
+  <link rel="stylesheet" href="./css/albums.css?v=202611051200">
+  <link rel="stylesheet" href="./css/responsive.css?v=202611051200">
+  <link rel="stylesheet" href="./css/meals.css?v=202611051200">
 </head>
 <body>
 
@@ -65,14 +65,19 @@
       
       <!-- Topline 顶部状态栏 -->
       <div class="topline">
-        <!-- 左上角三餐相机入口 (替代原 Logo 与字符) -->
+        <!-- 左上角三餐相机入口 (两个字一行，整齐优雅) -->
         <button type="button" class="meal-cam-top-btn" id="btn-top-meal-cam" title="点击打开三餐手帐与拍照打卡">
-          <svg class="meal-cam-ico-top" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-            <circle cx="12" cy="13" r="3"/>
-            <path d="M18 10h.01"/>
-          </svg>
-          <span class="meal-cam-text">三餐相机</span>
+          <div class="meal-cam-icon-box">
+            <svg class="meal-cam-ico-top" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+              <circle cx="12" cy="13" r="3"/>
+              <path d="M18 10h.01"/>
+            </svg>
+          </div>
+          <div class="meal-cam-text-col">
+            <span class="meal-cam-line">三餐</span>
+            <span class="meal-cam-line">相机</span>
+          </div>
         </button>
         <div class="top-actions">
           <span class="name-tag cloud-tag" id="header-cloud-badge" title="Cloudflare 云端双向实时同步状态">
@@ -133,12 +138,12 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- 脚本模块按顺序载入 (带强力防缓存指纹) -->
-  <script src="./js/store.js?v=202611051135"></script>
-  <script src="./js/auth.js?v=202611051135"></script>
-  <script src="./js/timetable.js?v=202611051135"></script>
-  <script src="./js/albums.js?v=202611051135"></script>
-  <script src="./js/resume.js?v=202611051135"></script>
-  <script src="./js/meals.js?v=202611051135"></script>
-  <script src="./js/app.js?v=202611051135"></script>
+  <script src="./js/store.js?v=202611051200"></script>
+  <script src="./js/auth.js?v=202611051200"></script>
+  <script src="./js/timetable.js?v=202611051200"></script>
+  <script src="./js/albums.js?v=202611051200"></script>
+  <script src="./js/resume.js?v=202611051200"></script>
+  <script src="./js/meals.js?v=202611051200"></script>
+  <script src="./js/app.js?v=202611051200"></script>
 </body>
 </html>

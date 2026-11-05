@@ -3,19 +3,16 @@
    极简白描线条风 + 温暖食欲感设计
    ========================================================================== */
 
-/* 1. 顶部左上角三餐相机入口按钮 (替代原臃肿 Logo) */
+/* 1. 顶部左上角三餐相机入口按钮 (两个字一行，整齐优雅) */
 .meal-cam-top-btn {
-  background: transparent;
+  background: #ffffff;
   border: 1px solid #e2e8f0;
-  border-radius: 6px;
-  padding: 4px 10px;
+  border-radius: 7px;
+  padding: 3px 8px;
   display: inline-flex;
   align-items: center;
   gap: 7px;
   cursor: pointer;
-  color: #1e293b;
-  font-size: 13px;
-  font-weight: 600;
   transition: all 0.16s ease;
   user-select: none;
 }
@@ -27,14 +24,39 @@
 .meal-cam-top-btn:active {
   transform: translateY(0);
 }
-.meal-cam-ico-top {
-  width: 16px;
-  height: 16px;
-  color: #ea580c; /* 温暖美食橙红 */
+
+.meal-cam-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  background: #fff7ed;
+  border: 1px solid #ffedd5;
+  color: #ea580c;
   flex-shrink: 0;
 }
-.meal-cam-text {
-  letter-spacing: -0.01em;
+.meal-cam-ico-top {
+  width: 14px;
+  height: 14px;
+  color: #ea580c;
+  flex-shrink: 0;
+}
+
+.meal-cam-text-col {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  line-height: 1.15;
+  letter-spacing: 0.06em;
+}
+.meal-cam-line {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1e293b;
+  display: block;
 }
 
 /* 2. 三餐相册弹层主体 (Modal Overlay) */

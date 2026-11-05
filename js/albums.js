@@ -52,10 +52,11 @@ class AlbumsModule {
     }
   }
 
-  // 1. 相簿列表页 (展示每一本相册的封面、私密空间、风格及横竖屏标签)
+  // 1. 相簿列表页 (紧凑雅致书架目录 · 第一本为专属不可删改三餐手帐)
   async renderAlbumsList(container, isMaster) {
     const allAlbums = window.spaceStore.getAlbums();
     const visibleAlbums = allAlbums.filter(a => isMaster || a.visibility === 'living_room');
+    const totalCount = visibleAlbums.length + 1; // +1 为专属三餐相册
 
     container.innerHTML = `
       <div class="albums-wrap">
@@ -67,7 +68,7 @@ class AlbumsModule {
               <span>岁月光影 · 艺术展卷典藏</span>
             </div>
             <h2 class="oasis-header-title">🎞️ 岁月相册</h2>
-            <p class="oasis-header-sub">记录生活的每帧细碎温柔 · 支持手账、拍立得挂绳墙、诗意长卷、电影胶卷与经折装等多套艺术风格</p>
+            <p class="oasis-header-sub">共计 ${totalCount} 本相册 · 记录生活的每帧细碎温柔 · 点击封面即刻翻阅</p>
           </div>
           <div class="oasis-header-actions">
             ${isMaster ? `
@@ -81,23 +82,10 @@ class AlbumsModule {
           </div>
         </div>
 
-        <!-- 统一二级风格导读栏 -->
-        <div class="oasis-sub-bar">
-          <div class="oasis-sub-bar-left">
-            <span class="fine" style="font-weight:700; color:#18354a;">🎨 艺术展卷风格：</span>
-            <span class="orientation-guide v">↕️ 竖屏手账/挂绳墙</span>
-            <span class="orientation-guide h">↔️ 横屏长卷/电影胶卷</span>
-            <span class="orientation-guide m">📑 典藏立体经折装</span>
-          </div>
-          <div class="oasis-sub-bar-right fine" style="color:#627d8c;">
-            共计 <strong>${visibleAlbums.length}</strong> 本相册 · 点击封面即刻翻阅
-          </div>
-        </div>
-
+        <!-- 紧凑精致相册目录书架网格 -->
         <div class="albums-grid">
-          ${visibleAlbums.length === 0 ? `
-            <div class="empty" style="grid-column: 1/-1;">暂无公开相册展示</div>
-          ` : visibleAlbums.map(album => this.renderAlbumCard(album, isMaster)).join('')}
+          ${this.renderSpecialMealAlbumCard()}
+          ${visibleAlbums.map(album => this.renderAlbumCard(album, isMaster)).join('')}
         </div>
       </div>
     `;
@@ -105,71 +93,95 @@ class AlbumsModule {
     this.bindAlbumsListEvents(container);
   }
 
+  // 专属三餐相册卡片 (系统保留 · 永久专属不可删除)
+  renderSpecialMealAlbumCard() {
+    const meals = window.spaceStore ? window.spaceStore.getMeals() : [];
+    const mealCoverUrl = (meals.length > 0 && meals[0].imageUrl) ? meals[0].imageUrl : './images/1001_1.jpg';
+    return `
+      <div class="album-entry compact-book-card special-meal-album" id="album-card-special-meals" title="点击打开三餐手帐">
+        <div class="album-thumb-wrap meal-cover-wrap">
+          <img src="${mealCoverUrl}" alt="三餐相册封面" class="meal-book-cover-img" loading="lazy">
+          <span class="album-count-badge meal-badge">🍱 ${meals.length} 餐</span>
+          <span class="album-status-pill meal-sys-pill">🔒 永久专属</span>
+        </div>
+        <div class="album-meta-compact">
+          <div class="album-title-line">
+            <h4 class="album-compact-title">🍱 三餐相册</h4>
+            <span class="meal-tag-sys">手帐</span>
+          </div>
+          <div class="album-sub-line">
+            <span>人间烟火</span>
+            <span class="album-sub-sep">·</span>
+            <span>不可删除</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   renderAlbumCard(album, isMaster) {
     const isLiving = album.visibility === 'living_room';
     const styleMeta = this.getStyleMeta(album.style);
+    const coverSrc = album.coverUrl || album.cover || (album.id === 'album_first_sight' ? './images/1001_1.jpg' : '');
 
     return `
-      <div class="album-entry" data-id="${album.id}">
+      <div class="album-entry compact-book-card" data-id="${album.id}">
         <div class="album-thumb-wrap" id="album-cover-box-${album.id}">
-          <div class="album-placeholder">📷</div>
-          <span class="album-style-pill ${styleMeta.type}">
-            ${styleMeta.badge}
-          </span>
-          <span class="album-status-badge ${isLiving ? 'living' : 'bedroom'}">
-            ${isLiving ? '🛋️ 客厅' : '🛏️ 卧室'}
-          </span>
+          ${coverSrc ? `<img src="${coverSrc}" alt="cover" loading="lazy" />` : `
+            <div class="album-placeholder">${styleMeta.icon}</div>
+          `}
+          <span class="album-count-badge" id="album-count-${album.id}">📷 ${album.count || 0}</span>
+          <span class="album-privacy-dot ${isLiving ? 'living' : 'bedroom'}" title="${isLiving ? '客厅公开' : '卧室私密'}"></span>
         </div>
-        <div class="album-meta-box">
-          <h3>${this.escapeHtml(album.title)}</h3>
-          <p>${this.escapeHtml(album.desc || '记录我们的点滴琐碎')}</p>
-          <div class="album-footer-line">
-            <span>📅 ${album.createdAt}</span>
-            <span>🎞️ <strong id="album-count-${album.id}">${album.count || 0}</strong> 张照片</span>
+        <div class="album-meta-compact">
+          <div class="album-title-line">
+            <h4 class="album-compact-title">${this.escapeHtml(album.title)}</h4>
+            ${isMaster ? `
+              <div class="album-quick-actions">
+                <button class="album-mini-act btn-edit-album" data-id="${album.id}" title="编辑相簿与封面">✎</button>
+                <button class="album-mini-act btn-del-album" data-id="${album.id}" title="删除相簿">×</button>
+              </div>
+            ` : ''}
           </div>
-          ${isMaster ? `
-            <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
-              <button class="btn-text btn-edit-album" data-id="${album.id}">编辑相簿</button>
-              <button class="btn-text btn-del-album" data-id="${album.id}" style="color:#a7464c;">删除</button>
-            </div>
-          ` : ''}
+          <div class="album-sub-line">
+            <span>${styleMeta.name}</span>
+            <span class="album-sub-sep">·</span>
+            <span>${album.createdAt ? album.createdAt.slice(5) : '相册'}</span>
+          </div>
         </div>
       </div>
     `;
   }
 
   bindAlbumsListEvents(container) {
+    // 绑定特殊三餐相册点击
+    container.querySelector('#album-card-special-meals')?.addEventListener('click', () => {
+      window.mealsModule?.openMealAlbumModal();
+    });
+
     const albums = window.spaceStore.getAlbums();
     albums.forEach(async (album) => {
       const photos = await window.spaceStore.getPhotosByAlbum(album.id);
       const countEl = container.querySelector(`#album-count-${album.id}`);
-      if (countEl) countEl.innerText = photos.length;
+      if (countEl) countEl.innerText = `📷 ${photos.length}`;
 
-      const coverBox = container.querySelector(`#album-cover-box-${album.id}`);
-      if (coverBox) {
-        const styleMeta = this.getStyleMeta(album.style);
-        const styleBadge = `<span class="album-style-pill ${styleMeta.type}">${styleMeta.badge}</span>`;
-        const privacyBadge = `<span class="album-status-badge ${album.visibility === 'living_room' ? 'living' : 'bedroom'}">${album.visibility === 'living_room' ? '🛋️ 客厅' : '🛏️ 卧室'}</span>`;
-
-        if (photos.length > 0) {
-          coverBox.innerHTML = `
-            <img src="${photos[0].dataUrl}" alt="cover" />
-            ${styleBadge}
-            ${privacyBadge}
-          `;
-        } else if (album.id === 'album_first_sight') {
-          coverBox.innerHTML = `
-            <img src="./images/1001_1.jpg" alt="cover" />
-            ${styleBadge}
-            ${privacyBadge}
-          `;
+      // 如果未指定自定义封面，且相册内有照片，则异步显示第一张
+      if (!album.coverUrl && !album.cover && photos.length > 0) {
+        const coverBox = container.querySelector(`#album-cover-box-${album.id}`);
+        if (coverBox && !coverBox.querySelector('img')) {
+          const img = document.createElement('img');
+          img.src = photos[0].dataUrl;
+          img.loading = 'lazy';
+          coverBox.prepend(img);
+          const ph = coverBox.querySelector('.album-placeholder');
+          if (ph) ph.remove();
         }
       }
     });
 
-    container.querySelectorAll('.album-entry').forEach(card => {
+    container.querySelectorAll('.album-entry:not(.special-meal-album)').forEach(card => {
       card.addEventListener('click', (e) => {
-        if (e.target.closest('.btn-text')) return;
+        if (e.target.closest('.album-quick-actions') || e.target.closest('.album-mini-act')) return;
         this.currentAlbumId = card.dataset.id;
         this.render(container);
       });
@@ -182,18 +194,18 @@ class AlbumsModule {
     container.querySelectorAll('.btn-edit-album').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const a = albums.find(x => x.id === btn.dataset.id);
+        const id = btn.dataset.id;
+        const a = albums.find(x => x.id === id);
         if (a) this.openAlbumModal(a);
       });
     });
 
     container.querySelectorAll('.btn-del-album').forEach(btn => {
-      btn.addEventListener('click', (e) => {
+      btn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (confirm('确认删除整本相册及所有照片吗？')) {
-          let list = window.spaceStore.getAlbums();
-          list = list.filter(x => x.id !== btn.dataset.id);
-          window.spaceStore.saveAlbums(list);
+        const id = btn.dataset.id;
+        if (confirm('确定要删除这本相册吗？相册内的照片也将一并移除。')) {
+          await window.spaceStore.deleteAlbum(id);
           this.render(container);
         }
       });
@@ -699,141 +711,83 @@ class AlbumsModule {
     });
   }
 
-  // 新建/编辑相簿弹窗 (核心增强：内置横屏/竖屏风格选择器)
+  // 新建/编辑相簿弹窗 (核心增强：支持封面自定义上传压缩、微缩秒开与艺术风格选择)
   openAlbumModal(album = null) {
     const isEdit = !!album;
-    const currentSelectedStyle = album ? (album.style || 'scrapbook') : 'scrapbook';
+    const currentStyle = album ? album.style : 'scrapbook';
+    const currentCover = album ? (album.coverUrl || album.cover || '') : '';
 
     const modalHtml = `
-      <div class="overlay" id="album-modal">
-        <div class="sheet" style="max-width: 520px;">
-          <div class="sheet-head">
-            <h3>${isEdit ? '编辑相簿信息与呈递风格' : '创建新岁月相簿'}</h3>
-            <button class="logout" id="album-modal-close" style="font-size:18px;">×</button>
+      <div class="oasis-modal" id="album-modal">
+        <div class="oasis-modal-card" style="max-width: 520px;">
+          <div class="oasis-modal-head">
+            <h3>${isEdit ? '编辑相簿设置' : '创建新时光相册'}</h3>
+            <button class="oasis-modal-close" id="album-modal-close">×</button>
           </div>
-          <form id="album-form" class="login-form">
-            <div>
-              <label class="form-label">相簿名称 *</label>
-              <input type="text" name="title" class="input" placeholder="输入相册名称" value="${album ? this.escapeHtml(album.title) : ''}" required>
+          <form id="form-album" style="padding: 16px 20px 20px;">
+            <div class="field">
+              <label class="label">相册标题 *</label>
+              <input type="text" name="title" class="input" required placeholder="例如：2026 盛夏漫游记" value="${album ? this.escapeHtml(album.title) : ''}">
             </div>
 
-            <div>
-              <label class="form-label">权限空间设定</label>
-              <select name="visibility" class="select">
-                <option value="living_room" ${album?.visibility === 'living_room' ? 'selected' : ''}>🛋️ 客厅开放 (来宾密码可见)</option>
-                <option value="bedroom" ${album?.visibility === 'bedroom' ? 'selected' : ''}>🛏️ 卧室私密 (仅主人密码可见)</option>
-              </select>
-            </div>
-
-            <!-- 核心功能：相簿艺术风格与横竖屏取向选择器 -->
-            <div>
-              <label class="form-label">相簿艺术风格与屏幕取向 *</label>
-              <div class="fine" style="margin-bottom:6px;">选择符合照片调性的呈递模式（支持竖屏流动与横屏全景展卷）：</div>
-              
-              <div class="style-picker-grid">
-                <!-- 竖屏组 -->
-                <div class="style-picker-group-title">↕️ 竖屏 / 垂直流风格 (适合手机纵向翻阅、手账与挂墙)</div>
-                
-                <label class="style-choice-card">
-                  <input type="radio" name="style" value="scrapbook" ${currentSelectedStyle === 'scrapbook' ? 'checked' : ''}>
-                  <div class="style-choice-body">
-                    <div class="style-choice-icon">🎀</div>
-                    <div class="style-choice-info">
-                      <div class="style-choice-title">
-                        <span>浪漫花哨手账</span>
-                        <span class="pill-badge v">↕️ 竖屏</span>
-                      </div>
-                      <div class="style-choice-desc">点阵暖纸、和纸胶带、宝丽来微倾角与可爱手绘贴纸</div>
-                    </div>
+            <!-- 自定义封面设置与纯前端轻量压缩 -->
+            <div class="field">
+              <label class="label">相册封面 (自定义封面 · 极速预加载)</label>
+              <div class="album-cover-picker-box">
+                <div class="album-cover-preview" id="album-cover-preview-box">
+                  ${currentCover ? `<img src="${currentCover}" alt="cover" id="album-cover-preview-img" />` : `<span class="album-cover-placeholder" id="album-cover-placeholder-txt">暂无封面</span>`}
+                </div>
+                <div class="album-cover-ctrls">
+                  <div style="display:flex; gap:8px;">
+                    <button type="button" class="btn btn-outline btn-xs" id="btn-pick-album-cover">
+                      📷 上传/更换封面
+                    </button>
+                    <button type="button" class="btn btn-outline btn-xs" id="btn-clear-album-cover" style="color:#ef4444; ${currentCover ? '' : 'display:none;'}">
+                      清除封面
+                    </button>
                   </div>
-                </label>
-
-                <label class="style-choice-card">
-                  <input type="radio" name="style" value="polaroid_wall" ${currentSelectedStyle === 'polaroid_wall' ? 'checked' : ''}>
-                  <div class="style-choice-body">
-                    <div class="style-choice-icon">📱</div>
-                    <div class="style-choice-info">
-                      <div class="style-choice-title">
-                        <span>拍立得挂绳墙</span>
-                        <span class="pill-badge v">↕️ 竖屏</span>
-                      </div>
-                      <div class="style-choice-desc">原木麻绳横线、小木夹悬挂、微风悬摆手作感</div>
-                    </div>
-                  </div>
-                </label>
-
-                <!-- 横屏组 -->
-                <div class="style-picker-group-title" style="margin-top: 8px;">↔️ 横屏 / 全景展卷风格 (适合横向滑动、长卷画幅与电影感)</div>
-
-                <label class="style-choice-card">
-                  <input type="radio" name="style" value="scroll" ${currentSelectedStyle === 'scroll' ? 'checked' : ''}>
-                  <div class="style-choice-body">
-                    <div class="style-choice-icon">📜</div>
-                    <div class="style-choice-info">
-                      <div class="style-choice-title">
-                        <span>诗意水墨长卷</span>
-                        <span class="pill-badge h">↔️ 横屏</span>
-                      </div>
-                      <div class="style-choice-desc">紫檀轴头、绢绫装裱、宣纸长卷水平展卷翻阅与朱红印章</div>
-                    </div>
-                  </div>
-                </label>
-
-                <label class="style-choice-card">
-                  <input type="radio" name="style" value="film_strip" ${currentSelectedStyle === 'film_strip' ? 'checked' : ''}>
-                  <div class="style-choice-body">
-                    <div class="style-choice-icon">🎞️</div>
-                    <div class="style-choice-info">
-                      <div class="style-choice-title">
-                        <span>电影胶卷菲林</span>
-                        <span class="pill-badge h">↔️ 横屏</span>
-                      </div>
-                      <div class="style-choice-desc">35mm负片链齿孔、胶卷帧序号、横向连续幻灯电影感</div>
-                    </div>
-                  </div>
-                </label>
-
-                <!-- 经典组 -->
-                <div class="style-picker-group-title" style="margin-top: 8px;">🏛️ 经典装帧典藏</div>
-
-                <label class="style-choice-card">
-                  <input type="radio" name="style" value="accordion" ${currentSelectedStyle === 'accordion' ? 'checked' : ''}>
-                  <div class="style-choice-body">
-                    <div class="style-choice-icon">📑</div>
-                    <div class="style-choice-info">
-                      <div class="style-choice-title">
-                        <span>经折典藏折子</span>
-                        <span class="pill-badge m">📑 折子</span>
-                      </div>
-                      <div class="style-choice-desc">风琴褶皱光影折痕、硬壳织锦封面封底与金线折码</div>
-                    </div>
-                  </div>
-                </label>
-
-                <label class="style-choice-card">
-                  <input type="radio" name="style" value="classic" ${currentSelectedStyle === 'classic' ? 'checked' : ''}>
-                  <div class="style-choice-body">
-                    <div class="style-choice-icon">🏛️</div>
-                    <div class="style-choice-info">
-                      <div class="style-choice-title">
-                        <span>工整现代画册</span>
-                        <span class="pill-badge m">🏛️ 经典</span>
-                      </div>
-                      <div class="style-choice-desc">现代画册经典工整秩序相片网格，严谨大方</div>
-                    </div>
-                  </div>
-                </label>
+                  <span class="fine" style="color:#64748b; font-size:11px;" id="album-cover-status-tip">
+                    ${currentCover ? '已设置封面 (自动压缩至秒开规格)' : '未设置时，将自动取相册第一张照片作为封面'}
+                  </span>
+                  <input type="file" id="input-album-cover" accept="image/*" style="display:none;" />
+                  <input type="hidden" name="coverUrl" id="input-album-cover-url" value="${currentCover}" />
+                </div>
               </div>
             </div>
 
-            <div>
-              <label class="form-label">相簿寄语 / 描述</label>
+            <div class="field">
+              <label class="label">展示空间 *</label>
+              <select name="visibility" class="select">
+                <option value="living_room" ${album && album.visibility === 'living_room' ? 'selected' : ''}>🛋️ 客厅 (公开展示 · 访客与两人均可见)</option>
+                <option value="bedroom" ${!album || album.visibility === 'bedroom' ? 'selected' : ''}>🛏️ 卧室 (私密相册 · 仅王岩与杜秋慧可见)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label class="label">艺术展卷风格 * (自适应手机/电脑)</label>
+              <div class="style-cards-grid">
+                ${this.stylesList.map(st => `
+                  <label class="style-card ${currentStyle === st.id ? 'active' : ''}">
+                    <input type="radio" name="style" value="${st.id}" ${currentStyle === st.id ? 'checked' : ''} style="display:none;">
+                    <div class="style-card-header">
+                      <span class="style-card-icon">${st.icon}</span>
+                      <span class="orientation-tag ${st.type}">${st.badge}</span>
+                    </div>
+                    <div class="style-card-name">${st.name}</div>
+                    <div class="style-card-desc">${st.desc}</div>
+                  </label>
+                `).join('')}
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="label">相册寄语 / 简介</label>
               <textarea name="desc" class="textarea" rows="2" placeholder="写下一两句时光箴言...">${album ? this.escapeHtml(album.desc || '') : ''}</textarea>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:10px;">
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
               <button type="button" class="btn btn-outline" id="album-modal-cancel">取消</button>
-              <button type="submit" class="btn btn-primary">${isEdit ? '保存修改' : '立即创建'}</button>
+              <button type="submit" class="btn btn-primary" id="btn-album-submit">${isEdit ? '保存修改' : '立即创建'}</button>
             </div>
           </form>
         </div>
@@ -847,11 +801,68 @@ class AlbumsModule {
     modalEl.querySelector('#album-modal-close').addEventListener('click', close);
     modalEl.querySelector('#album-modal-cancel').addEventListener('click', close);
 
-    modalEl.querySelector('#album-form').addEventListener('submit', (e) => {
+    // 单选卡片交互高亮
+    const styleCards = modalEl.querySelectorAll('.style-card');
+    styleCards.forEach(card => {
+      card.addEventListener('click', () => {
+        styleCards.forEach(c => c.classList.remove('active'));
+        card.classList.add('active');
+        const radio = card.querySelector('input[type="radio"]');
+        if (radio) radio.checked = true;
+      });
+    });
+
+    // 封面上传与自动压缩逻辑 (纯前端微缩至 640px 极速载入，消除等待)
+    const coverInput = modalEl.querySelector('#input-album-cover');
+    const pickCoverBtn = modalEl.querySelector('#btn-pick-album-cover');
+    const clearCoverBtn = modalEl.querySelector('#btn-clear-album-cover');
+    const coverPreviewBox = modalEl.querySelector('#album-cover-preview-box');
+    const coverTip = modalEl.querySelector('#album-cover-status-tip');
+    const coverUrlInput = modalEl.querySelector('#input-album-cover-url');
+
+    pickCoverBtn?.addEventListener('click', () => coverInput?.click());
+
+    coverInput?.addEventListener('change', async (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      if (coverTip) coverTip.innerHTML = '⏳ 正在压缩封面 (微缩秒开规格)...';
+      try {
+        // 关键：封面微缩压缩至 640px / 0.75 质量，体积仅 ~35KB-50KB，秒开且省流量
+        const { dataUrl } = await this.compressImage(file, 640, 0.75);
+        let finalCover = dataUrl;
+
+        try {
+          const cloudUrl = await window.spaceStore.uploadPhoto(dataUrl, 'covers', `cover_${Date.now()}.jpg`);
+          if (cloudUrl) finalCover = cloudUrl;
+        } catch (err) {
+          console.warn('Cover upload to cloud failed, using compressed base64:', err);
+        }
+
+        coverUrlInput.value = finalCover;
+        coverPreviewBox.innerHTML = `<img src="${finalCover}" alt="封面预览" style="width:100%; height:100%; object-fit:cover; display:block; border-radius:6px;" />`;
+        if (clearCoverBtn) clearCoverBtn.style.display = 'inline-block';
+        if (coverTip) coverTip.innerHTML = '✨ 封面压缩完毕，秒开就绪！';
+      } catch (err) {
+        console.error('Compress cover failed:', err);
+        if (coverTip) coverTip.innerHTML = '❌ 封面压缩处理失败，请重试';
+      }
+    });
+
+    clearCoverBtn?.addEventListener('click', () => {
+      coverUrlInput.value = '';
+      coverPreviewBox.innerHTML = `<span class="album-cover-placeholder">暂无封面</span>`;
+      clearCoverBtn.style.display = 'none';
+      if (coverTip) coverTip.innerText = '已清除自定义封面，将取相册首张照片展示';
+      coverInput.value = '';
+    });
+
+    modalEl.querySelector('#form-album').addEventListener('submit', (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
       const list = window.spaceStore.getAlbums();
       const chosenStyle = fd.get('style') || 'scrapbook';
+      const coverVal = (coverUrlInput ? coverUrlInput.value : '').trim();
 
       if (isEdit) {
         const found = list.find(a => a.id === album.id);
@@ -860,6 +871,8 @@ class AlbumsModule {
           found.visibility = fd.get('visibility');
           found.desc = fd.get('desc');
           found.style = chosenStyle;
+          found.coverUrl = coverVal;
+          found.cover = coverVal;
         }
       } else {
         list.push({
@@ -868,6 +881,8 @@ class AlbumsModule {
           visibility: fd.get('visibility'),
           desc: fd.get('desc'),
           style: chosenStyle,
+          coverUrl: coverVal,
+          cover: coverVal,
           createdAt: new Date().toISOString().split('T')[0],
           count: 0
         });
