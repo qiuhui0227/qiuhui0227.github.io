@@ -1,4 +1,4 @@
-/**
+﻿/**
  * OASIS | Qiuhui & Yan
  * 空间核心路由调度与应用控制器
  * 支持：持久化设备记住、男女主人独立密码鉴权、多访客通行证（不限数量）全功能管理
@@ -75,7 +75,7 @@ class SpaceApp {
     const statEvents = document.getElementById('stat-today-events');
     const statAlbums = document.getElementById('stat-album-count');
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = window.spaceStore?.getTodayDate ? window.spaceStore.getTodayDate() : new Date().toISOString().split('T')[0];
     const timetables = window.spaceStore.getTimetables();
     const visibleEvents = timetables.filter(e => e.date === today && (isMaster || e.visibility === 'living_room' || e.visibility === 'living'));
     const allAlbums = window.spaceStore.getAlbums();

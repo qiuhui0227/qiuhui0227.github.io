@@ -1,15 +1,38 @@
-/**
+﻿/**
  * OASIS | Qiuhui & Yan
  * 小黑板模块 (极简白描细线风 · 晨午晚三栏全览 · 触屏/鼠标横向手势拖动翻页)
  */
 
 class TimetableModule {
   constructor() {
-    this.currentDate = new Date().toISOString().split('T')[0];
+    this.currentDate = this.getTodayDate();
     this.container = null;
     this.isDragging = false;
     this.startX = 0;
     this.currentDiffX = 0;
+  }
+
+  // 本地日期格式化辅助（解决东八区清晨与晚上时区日期偏差）
+  formatLocalDate(d = new Date()) {
+    if (window.spaceStore?.formatLocalDate) return window.spaceStore.formatLocalDate(d);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  getTodayDate() {
+    if (window.spaceStore?.getTodayDate) return window.spaceStore.getTodayDate();
+    return this.formatLocalDate(new Date());
+  }
+
+  parseLocalDate(dateStr) {
+    if (!dateStr) return new Date();
+    const parts = dateStr.split('-').map(Number);
+    if (parts.length === 3) {
+      return new Date(parts[0], parts[1] - 1, parts[2], 12, 0, 0);
+    }
+    return new Date();
   }
 
   // 获取指定日期的待办事项
@@ -25,9 +48,9 @@ class TimetableModule {
 
   // 格式化日期元信息
   getDateMeta(dateStr) {
-    const d = new Date(dateStr + 'T00:00:00');
+    const d = this.parseLocalDate(dateStr);
     const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-    const today = new Date().toISOString().split('T')[0];
+    const today = this.getTodayDate();
     const month = d.getMonth() + 1;
     const day = d.getDate();
     return {
@@ -40,16 +63,16 @@ class TimetableModule {
     };
   }
 
-  // 生成连续 9 天日期轴
+  // 生成连续 9 天日期轴 (纯正本地日期无跳天偏移)
   getDateChips() {
     const chips = [];
-    const center = new Date(this.currentDate + 'T00:00:00');
-    const today = new Date().toISOString().split('T')[0];
+    const center = this.parseLocalDate(this.currentDate);
+    const today = this.getTodayDate();
 
     for (let offset = -4; offset <= 4; offset++) {
       const d = new Date(center);
       d.setDate(center.getDate() + offset);
-      const str = d.toISOString().split('T')[0];
+      const str = this.formatLocalDate(d);
       const weekdays = ['日', '一', '二', '三', '四', '五', '六'];
       chips.push({
         dateStr: str,
@@ -218,7 +241,7 @@ class TimetableModule {
 
     // 2. 回到今天
     container.querySelector('#tt-btn-today')?.addEventListener('click', () => {
-      this.currentDate = new Date().toISOString().split('T')[0];
+      this.currentDate = this.getTodayDate();
       this.render(container);
     });
 
@@ -282,7 +305,7 @@ class TimetableModule {
         if (found) {
           found.status = found.status === 'completed' ? 'pending' : 'completed';
           found.updatedAt = new Date().toISOString();
-          window.spaceStore.saveTimetables(all);
+          try { window.spaceStore.saveTimetables(all); } catch (_) {}
           this.render(container);
         }
       });
@@ -304,9 +327,13 @@ class TimetableModule {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (confirm('确认删除该备忘事项吗？')) {
-          let all = window.spaceStore.getTimetables();
-          all = all.filter(x => x.id !== btn.dataset.id);
-          window.spaceStore.saveTimetables(all);
+          if (window.spaceStore?.deleteTimetable) {
+            window.spaceStore.deleteTimetable(btn.dataset.id);
+          } else {
+            let all = window.spaceStore.getTimetables();
+            all = all.filter(x => x.id !== btn.dataset.id);
+            try { window.spaceStore.saveTimetables(all); } catch (_) {}
+          }
           this.render(container);
         }
       });
@@ -320,9 +347,9 @@ class TimetableModule {
   }
 
   stepDate(offset) {
-    const d = new Date(this.currentDate + 'T00:00:00');
+    const d = this.parseLocalDate(this.currentDate);
     d.setDate(d.getDate() + offset);
-    this.currentDate = d.toISOString().split('T')[0];
+    this.currentDate = this.formatLocalDate(d);
     this.render(this.container);
   }
 
@@ -517,7 +544,7 @@ class TimetableModule {
         }
       } else {
         all.push({
-          id: 'note_' + Date.now(),
+          id: 'note_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
           date: fd.get('date'),
           slot: fd.get('slot'),
           title: fd.get('title'),
@@ -525,15 +552,22 @@ class TimetableModule {
           visibility: fd.get('visibility') || 'bedroom',
           location: fd.get('location') || '',
           status: 'pending',
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
         });
       }
 
-      window.spaceStore.saveTimetables(all);
+      // 本地优先保存：先写 localStorage，UI 立即响应，云端异步上传
+      try {
+        window.spaceStore.saveTimetables(all);
+      } catch (err) {
+        console.warn('[timetable] saveTimetables error:', err);
+      }
+      // 无论云端状态如何，UI 立即关闭并刷新
       close();
       this.currentDate = fd.get('date');
       this.render(this.container);
-      window.spaceApp?.showToast(isEdit ? '备忘已更新' : '已记入小黑板');
+      window.spaceApp?.showToast(isEdit ? '备忘已更新 ✓' : '已记入小黑板 ✓');
     });
   }
 

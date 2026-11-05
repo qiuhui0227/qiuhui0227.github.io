@@ -1,4 +1,4 @@
-/**
+﻿/**
  * OASIS | Qiuhui & Yan
  * 数据存储中枢与持久化适配器
  * 
@@ -673,7 +673,7 @@ class SpaceStore {
 
   saveAlbums(albums) {
     localStorage.setItem('oasis_albums', JSON.stringify(albums));
-    this.scheduleCloudSync();
+    try { this.scheduleCloudPush(); } catch (_) {}
   }
 
   // ==========================================================================
@@ -692,7 +692,7 @@ class SpaceStore {
 
   saveMeals(meals) {
     localStorage.setItem("oasis_meals", JSON.stringify(meals));
-    this.scheduleCloudPush();
+    try { this.scheduleCloudPush(); } catch (_) {}
   }
 
   addMeal(meal) {
@@ -746,7 +746,85 @@ class SpaceStore {
 
   saveTimetables(timetables) {
     localStorage.setItem('oasis_timetables', JSON.stringify(timetables));
-    this.scheduleCloudSync();
+    try { this.scheduleCloudPush(); } catch (_) {}
+  }
+
+  // 本地删除的便签记录（防云端拉取时被旧备份复活）
+  recordDeletedNoteId(id) {
+    try {
+      const deleted = JSON.parse(localStorage.getItem('oasis_deleted_note_ids') || '[]');
+      if (!deleted.includes(id)) {
+        deleted.unshift(id);
+        if (deleted.length > 200) deleted.pop();
+        localStorage.setItem('oasis_deleted_note_ids', JSON.stringify(deleted));
+      }
+    } catch (e) {}
+  }
+
+  getDeletedNoteIds() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('oasis_deleted_note_ids') || '[]'));
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  deleteTimetable(id) {
+    this.recordDeletedNoteId(id);
+    const list = this.getTimetables().filter(item => item.id !== id);
+    this.saveTimetables(list);
+    return list;
+  }
+
+  // 小黑板智能双向合并（男女主人多设备协同防丢失）
+  mergeTimetables(localList = [], cloudList = []) {
+    const deletedIds = this.getDeletedNoteIds();
+    const map = new Map();
+
+    // 1. 载入云端数据
+    for (const item of (cloudList || [])) {
+      if (item && item.id && !deletedIds.has(item.id)) {
+        map.set(item.id, item);
+      }
+    }
+
+    // 2. 载入本地数据
+    for (const item of (localList || [])) {
+      if (item && item.id) {
+        if (!map.has(item.id)) {
+          if (!deletedIds.has(item.id)) {
+            map.set(item.id, item);
+          }
+        } else {
+          const cloudItem = map.get(item.id);
+          const localTime = new Date(item.updatedAt || item.createdAt || 0).getTime();
+          const cloudTime = new Date(cloudItem.updatedAt || cloudItem.createdAt || 0).getTime();
+          if (localTime >= cloudTime) {
+            map.set(item.id, item);
+          }
+        }
+      }
+    }
+
+    const merged = Array.from(map.values());
+    merged.sort((a, b) => {
+      const cmp = (a.date || '').localeCompare(b.date || '');
+      if (cmp !== 0) return cmp;
+      return (a.createdAt || '').localeCompare(b.createdAt || '');
+    });
+    return merged;
+  }
+
+  // 本地日期格式化工具（避免东八区时区转换 UTC 减一天 bug）
+  formatLocalDate(d = new Date()) {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  getTodayDate() {
+    return this.formatLocalDate(new Date());
   }
 
   // --- 履历文库 / 多简历体系 (Resume Books) ---
@@ -772,7 +850,7 @@ class SpaceStore {
       };
       localStorage.setItem('oasis_resumes_dual', JSON.stringify(dual));
     } catch (e) {}
-    this.scheduleCloudSync();
+    try { this.scheduleCloudPush(); } catch (_) {}
   }
 
   getResumeBook(owner, id) {
@@ -847,7 +925,7 @@ class SpaceStore {
 
   saveAuthConfig(config) {
     localStorage.setItem('oasis_auth_config', JSON.stringify(config));
-    this.scheduleCloudSync();
+    try { this.scheduleCloudPush(); } catch (_) {}
   }
 
   // --- 访客多账号管理 ---
@@ -892,7 +970,7 @@ class SpaceStore {
   }
 
   // 健壮的双轨云端网络请求适配器 (优先国内直连自定义域名 api.iqiuqiu.me，自动兜底 workers.dev)
-  async cloudFetch(path, options = {}, timeoutMs = 8000) {
+  async cloudFetch(path, options = {}, timeoutMs = 5000) {
     const urls = [
       `${this.cloudBaseUrl}${path}`,
       `${this.cloudFallbackUrl}${path}`
@@ -942,7 +1020,9 @@ class SpaceStore {
         if (cloudSavedAt > localSavedAt || !localStorage.getItem('oasis_has_synced')) {
           let hasUpdated = false;
           if (cloud.timetables && Array.isArray(cloud.timetables)) {
-            localStorage.setItem('oasis_timetables', JSON.stringify(cloud.timetables));
+            const localList = this.getTimetables();
+            const merged = this.mergeTimetables(localList, cloud.timetables);
+            localStorage.setItem('oasis_timetables', JSON.stringify(merged));
             hasUpdated = true;
           }
           if (cloud.resume_books && cloud.resume_books.yan) {
@@ -957,7 +1037,7 @@ class SpaceStore {
             localStorage.setItem('oasis_meals', JSON.stringify(cloud.meals));
             hasUpdated = true;
           }
-          if (cloud.auth_config && (cloud.auth_config.users || cloud.auth_config.masterPassword)) {
+          if (cloud.auth_config && (cloud.auth_config.masterPasswords || cloud.auth_config.guestAccounts)) {
             localStorage.setItem('oasis_auth_config', JSON.stringify(cloud.auth_config));
             hasUpdated = true;
           }
@@ -966,7 +1046,7 @@ class SpaceStore {
           localStorage.setItem('oasis_has_synced', 'true');
 
           if (hasUpdated) {
-            if (!isInitial && window.spaceApp) {
+            if (window.spaceApp) {
               window.spaceApp.refreshCurrentModule();
             }
             if (window.mealsModule && window.mealsModule.isOpen) {
