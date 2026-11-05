@@ -688,41 +688,44 @@ a { color: inherit; text-decoration: none; }
   line-height: 1.1;
 }
 
-/* 极简白描主画板 (手账便利贴 & 弹性自适应压缩画板 · 支持鼠标拖拽/触屏手势) */
+/* ==========================================================================
+   手账便利贴 (Real Post-it Sticky Notes Board)
+   拒绝长条行清单！纯正方块便签贴纸、双人微倾手作感、无安排极致压缩
+   ========================================================================== */
+
 .bb-board {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   background: transparent;
   user-select: none;
   cursor: grab;
   transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease-out;
-  min-height: 100px;
+  min-height: 80px;
 }
 
-/* 1. 时段区域通用 */
+/* 时段区域 */
 .bb-slot-section {
   display: flex;
   flex-direction: column;
-  border-radius: 10px;
+  border-radius: 12px;
   transition: all 0.2s ease;
 }
 
-/* 2. 有安排的时段展开区 */
+/* 1. 有安排时的时段：手账便利贴白板展开 */
 .bb-slot-section.has-notes {
-  background: #ffffff;
+  background: #f8fafc;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.03);
-  padding: 10px 14px 14px;
-  gap: 10px;
+  padding: 12px 14px 14px;
 }
 
 .bb-slot-head {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 12px;
   padding-bottom: 8px;
-  border-bottom: 1px solid #f1f5f9;
+  border-bottom: 1px dashed #e2e8f0;
 }
 
 .bb-slot-title-wrap {
@@ -733,12 +736,11 @@ a { color: inherit; text-decoration: none; }
 
 .bb-slot-icon {
   font-size: 14px;
-  line-height: 1;
 }
 
 .bb-slot-name {
-  font-size: 12.5px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 700;
   color: #1e293b;
 }
 
@@ -751,53 +753,321 @@ a { color: inherit; text-decoration: none; }
   font-size: 10.5px;
   padding: 1px 7px;
   border-radius: 10px;
-  background: #f1f5f9;
-  color: #475569;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
   font-weight: 500;
 }
 
-.bb-slot-add-btn {
+/* 便利贴画廊：绝对不拉成整行！自适应方块贴纸平铺排列 */
+.bb-slot-notes-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+/* 极简方块便利贴卡片 (拒绝横条，纯正便签小方块) */
+.bb-sticky-note {
+  width: 172px;
+  min-height: 154px;
+  border-radius: 2px 2px 7px 2px;
+  padding: 12px 11px 9px;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: all 0.18s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+  flex-shrink: 0;
+}
+
+/* 顶部贴纸压胶线 */
+.bb-note-tape {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 16px;
+  border-radius: 2px 2px 0 0;
+  pointer-events: none;
+}
+
+/* 真实便签纸底部微卷立体阴影 */
+.bb-sticky-note::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  right: 4px;
+  width: 45%;
+  height: 12px;
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.12);
+  transform: rotate(2.5deg);
+  z-index: -1;
+  border-radius: 3px;
+  transition: opacity 0.15s ease;
+}
+
+/* 微手作错落倾角：像随手贴在黑板上的真实便签纸 */
+.bb-sticky-note:nth-child(odd) {
+  transform: rotate(-1.2deg);
+}
+.bb-sticky-note:nth-child(even) {
+  transform: rotate(1.2deg);
+}
+.bb-sticky-note:nth-child(3n) {
+  transform: rotate(-0.5deg);
+}
+
+.bb-sticky-note:hover {
+  transform: translateY(-4px) scale(1.03) rotate(0deg) !important;
+  box-shadow: 0 12px 22px -3px rgba(15, 23, 42, 0.12), 0 4px 6px rgba(15, 23, 42, 0.04);
+  z-index: 10;
+}
+
+/* 便签纸经典马卡龙淡彩质感 */
+/* 王岩：冰雾蓝便签 */
+.bb-sticky-note.yan {
+  background: #ebf4ff;
+  border: 1px solid #dbeafe;
+  color: #1e3a8a;
+}
+.bb-sticky-note.yan .bb-note-tape {
+  background: rgba(37, 99, 235, 0.08);
+  border-bottom: 1px solid rgba(37, 99, 235, 0.1);
+}
+.bb-sticky-note.yan .bb-note-author {
+  color: #1d4ed8;
+}
+
+/* 杜秋慧：甜杏粉/柔绯便签 */
+.bb-sticky-note.qiuhui {
+  background: #fdf2f4;
+  border: 1px solid #ffe4e6;
+  color: #881337;
+}
+.bb-sticky-note.qiuhui .bb-note-tape {
+  background: rgba(225, 29, 72, 0.08);
+  border-bottom: 1px solid rgba(225, 29, 72, 0.1);
+}
+.bb-sticky-note.qiuhui .bb-note-author {
+  color: #be123c;
+}
+
+/* 两人一起：经典手账奶油黄便签 (Post-it Classic) */
+.bb-sticky-note.both {
+  background: #fefce8;
+  border: 1px solid #fef08a;
+  color: #713f12;
+}
+.bb-sticky-note.both .bb-note-tape {
+  background: rgba(202, 138, 4, 0.09);
+  border-bottom: 1px solid rgba(202, 138, 4, 0.12);
+}
+.bb-sticky-note.both .bb-note-author {
+  color: #854d0e;
+}
+
+/* 便签头部：简笔画头像 + 名字 + 打卡微框 */
+.bb-note-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  z-index: 1;
+}
+
+.bb-note-author {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 5px;
-  padding: 3px 8px;
-  font-size: 11.5px;
-  font-weight: 500;
-  color: #475569;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.bb-avatar-ico {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.bb-note-author-name {
+  font-size: 11px;
+}
+
+/* 打卡微按钮 */
+.bb-note-chk {
+  width: 17px;
+  height: 17px;
+  border-radius: 4px;
+  border: 1.5px solid currentColor;
+  opacity: 0.5;
+  background: rgba(255, 255, 255, 0.6);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: all 0.15s;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 0;
+  transition: all 0.15s ease;
 }
 
-.bb-slot-add-btn:hover {
+.bb-note-chk:hover {
+  opacity: 1;
   background: #ffffff;
-  border-color: #0f172a;
-  color: #0f172a;
 }
 
-.bb-slot-add-btn svg {
-  width: 12px;
-  height: 12px;
-  stroke-width: 2.5;
+/* 完成状态：优雅划线与淡印章 */
+.bb-sticky-note.is-done {
+  opacity: 0.6;
+}
+.bb-sticky-note.is-done .bb-note-chk {
+  opacity: 1;
+  background: #10b981;
+  border-color: #10b981;
+  color: #ffffff;
+}
+.bb-sticky-note.is-done .bb-note-title {
+  text-decoration: line-through;
+  opacity: 0.75;
 }
 
-/* 3. 便利贴自适应陈列网格 (有安排时) */
-.bb-slot-notes-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-  gap: 12px;
-  padding-top: 2px;
+/* 便签标题内容 (大字清晰，便签备忘感) */
+.bb-note-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  line-height: 1.42;
+  word-break: break-word;
+  margin: 4px 0 auto;
+  z-index: 1;
 }
 
-@media (max-width: 600px) {
+/* 便签底部信息 */
+.bb-note-footer {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 8px;
+  font-size: 10.5px;
+  z-index: 1;
+}
+
+.bb-note-loc {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  opacity: 0.85;
+  font-size: 10.5px;
+  max-width: 110px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bb-ico-pin {
+  width: 11px;
+  height: 11px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  flex-shrink: 0;
+}
+
+/* 悬浮操作图标 */
+.bb-note-actions {
+  display: inline-flex;
+  gap: 3px;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.bb-sticky-note:hover .bb-note-actions {
+  opacity: 1;
+}
+
+.bb-note-act-btn {
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+  width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10.5px;
+  cursor: pointer;
+  padding: 0;
+  color: inherit;
+  transition: all 0.12s;
+}
+
+.bb-note-act-btn:hover {
+  background: #ffffff;
+  transform: scale(1.1);
+}
+
+.bb-note-act-btn.del:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+/* 旁边可点击的虚线添加新便签卡片 (同等方形贴纸尺寸) */
+.bb-sticky-add-card {
+  width: 172px;
+  min-height: 154px;
+  border: 1.5px dashed #cbd5e1;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #94a3b8;
+  font-size: 11.5px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.5);
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.bb-sticky-add-card:hover {
+  border-color: #64748b;
+  color: #1e293b;
+  background: #ffffff;
+  transform: translateY(-2px);
+}
+
+.bb-sticky-add-plus {
+  font-size: 20px;
+  line-height: 1;
+  font-weight: 300;
+}
+
+/* 移动端适配：每排并列 2 个方块，绝不横跨整行！ */
+@media (max-width: 640px) {
   .bb-slot-notes-grid {
-    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .bb-sticky-note,
+  .bb-sticky-add-card {
+    width: calc(50% - 5px);
+    min-height: 140px;
+  }
+  .bb-note-title {
+    font-size: 12.5px;
   }
 }
 
-/* 4. 极简压缩栏 (没有安排时高度收拢，不占空白空间) */
+/* ==========================================================================
+   无安排时的极致压缩栏 (高度仅 34px，不霸占任何多余空间)
+   ========================================================================== */
 .bb-slot-section.is-empty {
   background: transparent;
 }
@@ -806,13 +1076,13 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 7px 12px;
+  padding: 6px 12px;
   border-radius: 8px;
   border: 1px dashed #e2e8f0;
   background: #fafbfc;
   cursor: pointer;
   transition: all 0.15s ease;
-  min-height: 36px;
+  min-height: 32px;
 }
 
 .bb-slot-compressed:hover {
@@ -830,19 +1100,18 @@ a { color: inherit; text-decoration: none; }
 .bb-slot-comp-status {
   font-size: 11px;
   color: #94a3b8;
-  margin-left: 2px;
 }
 
 .bb-slot-comp-btn {
   background: #ffffff;
   border: 1px solid #cbd5e1;
   border-radius: 4px;
-  width: 19px;
-  height: 19px;
+  width: 18px;
+  height: 18px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 13px;
+  font-size: 12px;
   color: #64748b;
   cursor: pointer;
   transition: all 0.15s;
@@ -852,230 +1121,6 @@ a { color: inherit; text-decoration: none; }
 .bb-slot-compressed:hover .bb-slot-comp-btn {
   border-color: #0f172a;
   color: #0f172a;
-}
-
-/* 5. 手账便利贴核心样式 (Post-it Sticky Note) */
-.bb-sticky-note {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding: 13px 12px 10px;
-  border-radius: 8px;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 5px -1px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.02);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
-  min-height: 88px;
-}
-
-.bb-sticky-note:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 5px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 4px rgba(15, 23, 42, 0.03);
-}
-
-/* 便签撕边和纸胶带装饰 */
-.bb-note-tape {
-  position: absolute;
-  top: -5px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 32px;
-  height: 9px;
-  background: rgba(148, 163, 184, 0.22);
-  border-radius: 1px;
-}
-
-/* 三种身份专属纸色微质感与胶带色调 */
-/* 王岩：冰蓝雅致 */
-.bb-sticky-note.yan {
-  border-top: 3px solid #3b82f6;
-  background: linear-gradient(180deg, #f7faff 0%, #ffffff 42px);
-}
-.bb-sticky-note.yan .bb-note-tape {
-  background: rgba(59, 130, 246, 0.22);
-}
-.bb-sticky-note.yan .bb-note-author {
-  color: #2563eb;
-  background: #eff6ff;
-}
-
-/* 杜秋慧：柔绯樱粉 */
-.bb-sticky-note.qiuhui {
-  border-top: 3px solid #f43f5e;
-  background: linear-gradient(180deg, #fff9fa 0%, #ffffff 42px);
-}
-.bb-sticky-note.qiuhui .bb-note-tape {
-  background: rgba(244, 63, 94, 0.22);
-}
-.bb-sticky-note.qiuhui .bb-note-author {
-  color: #e11d48;
-  background: #fff1f2;
-}
-
-/* 共同：清爽常春绿 */
-.bb-sticky-note.both {
-  border-top: 3px solid #10b981;
-  background: linear-gradient(180deg, #f5fbf7 0%, #ffffff 42px);
-}
-.bb-sticky-note.both .bb-note-tape {
-  background: rgba(16, 185, 129, 0.22);
-}
-.bb-sticky-note.both .bb-note-author {
-  color: #059669;
-  background: #ecfdf5;
-}
-
-/* 便签头部 */
-.bb-note-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 7px;
-}
-
-.bb-note-author {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 2px 7px 2px 5px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  line-height: 1;
-}
-
-/* 简笔画头像 SVG 图案 */
-.bb-avatar-ico {
-  width: 17px;
-  height: 17px;
-  flex-shrink: 0;
-  display: inline-block;
-  vertical-align: middle;
-}
-
-.bb-note-author-name {
-  font-size: 11px;
-  letter-spacing: 0.02em;
-}
-
-/* 打卡框 */
-.bb-note-chk {
-  width: 16px;
-  height: 16px;
-  border-radius: 4px;
-  border: 1.5px solid #cbd5e1;
-  background: #ffffff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #10b981;
-  padding: 0;
-  transition: all 0.15s ease;
-}
-
-.bb-note-chk:hover {
-  border-color: #10b981;
-  background: #f0fdf4;
-}
-
-.bb-sticky-note.is-done .bb-note-chk {
-  border-color: #10b981;
-  background: #10b981;
-  color: #ffffff;
-}
-
-/* 便签标题 */
-.bb-note-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #1e293b;
-  line-height: 1.45;
-  margin-bottom: 8px;
-  word-break: break-word;
-}
-
-.bb-sticky-note.is-done {
-  opacity: 0.55;
-}
-
-.bb-sticky-note.is-done .bb-note-title {
-  text-decoration: line-through;
-  color: #94a3b8;
-}
-
-/* 便签底部与地点徽章 */
-.bb-note-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-top: auto;
-  font-size: 11px;
-}
-
-.bb-note-loc {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  color: #64748b;
-  background: #f1f5f9;
-  padding: 2px 6px;
-  border-radius: 4px;
-  max-width: 160px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.bb-ico-pin {
-  width: 12px;
-  height: 12px;
-  stroke: currentColor;
-  fill: none;
-  stroke-width: 2;
-  flex-shrink: 0;
-}
-
-/* 悬浮操作按钮 */
-.bb-note-actions {
-  display: inline-flex;
-  gap: 4px;
-  opacity: 0;
-  transition: opacity 0.15s ease;
-}
-
-.bb-sticky-note:hover .bb-note-actions {
-  opacity: 1;
-}
-
-.bb-note-act-btn {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
-  width: 19px;
-  height: 19px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  color: #64748b;
-  cursor: pointer;
-  padding: 0;
-  transition: all 0.12s;
-}
-
-.bb-note-act-btn:hover {
-  border-color: #0f172a;
-  color: #0f172a;
-}
-
-.bb-note-act-btn.del:hover {
-  border-color: #ef4444;
-  color: #ef4444;
-  background: #fef2f2;
 }
 
 .bb-hint-footer {

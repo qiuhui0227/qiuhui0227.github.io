@@ -155,6 +155,12 @@ class TimetableModule {
           </div>
           <div class="bb-slot-notes-grid">
             ${notes.map(n => this.renderStickyNote(n, isMaster)).join('')}
+            ${isMaster ? `
+              <div class="bb-sticky-add-card bb-col-quick-add" data-slot="${slotKey}" title="贴一张新便签">
+                <span class="bb-sticky-add-plus">+</span>
+                <span>贴新便签</span>
+              </div>
+            ` : ''}
           </div>
         </div>
       `;
