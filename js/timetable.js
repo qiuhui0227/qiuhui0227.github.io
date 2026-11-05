@@ -169,7 +169,7 @@ class TimetableModule {
       return `
         <div class="bb-slot-section is-empty" data-slot="${slotKey}">
           <div class="bb-slot-compressed bb-empty-hint" data-slot="${slotKey}" title="${isMaster ? '点击记录' + slotName + '事项' : '暂无安排'}">
-            <div class="bb-slot-comp-left">
+            <div class="bb-slot-title-wrap bb-slot-comp-left">
               <span class="bb-slot-icon">${slotIcon}</span>
               <span class="bb-slot-name">${slotName}</span>
               <span class="bb-slot-time">${slotTime}</span>
@@ -285,7 +285,7 @@ class TimetableModule {
         <div class="bb-board" id="bb-drag-board">
           ${this.renderSlotSection('morning', '晨 · 上午', '08:00 - 12:00', '☀️', morningNotes, isMaster)}
           ${this.renderSlotSection('afternoon', '昼 · 午后', '12:00 - 18:00', '🌤️', afternoonNotes, isMaster)}
-          ${this.renderSlotSection('evening', '暮 · 晚间', '18:00 - 24:00', '🌙', eveningNotes, isMaster)}
+          ${this.renderSlotSection('evening', '晚 · 晚间', '18:00 - 24:00', '🌙', eveningNotes, isMaster)}
         </div>
 
         <!-- 底部微弱手势指引 -->
@@ -550,7 +550,7 @@ class TimetableModule {
                 <select name="slot" class="select" required>
                   <option value="morning" ${(item?.slot || defaultSlot) === 'morning' ? 'selected' : ''}>晨 · 上午 (08:00 - 12:00)</option>
                   <option value="afternoon" ${(item?.slot || defaultSlot) === 'afternoon' ? 'selected' : ''}>昼 · 午后 (12:00 - 18:00)</option>
-                  <option value="evening" ${(item?.slot || defaultSlot) === 'evening' ? 'selected' : ''}>暮 · 晚间 (18:00 - 24:00)</option>
+                  <option value="evening" ${(item?.slot || defaultSlot) === 'evening' ? 'selected' : ''}>晚 · 晚间 (18:00 - 24:00)</option>
                 </select>
               </div>
             </div>
@@ -647,7 +647,7 @@ class TimetableModule {
     let mdText = `# OASIS | Qiuhui & Yan 备忘历程归档\n导出时间：${new Date().toLocaleString()}\n总记录：${sorted.length} 项\n\n`;
     sorted.forEach(item => {
       const part = item.participant === 'yan' ? '王岩' : (item.participant === 'qiuhui' ? '秋慧' : '共同');
-      const slotName = item.slot === 'morning' ? '晨·上午' : (item.slot === 'afternoon' ? '昼·午后' : '暮·晚间');
+      const slotName = item.slot === 'morning' ? '晨·上午' : (item.slot === 'afternoon' ? '昼·午后' : '晚·晚间');
       const statusIcon = item.status === 'completed' ? 'x' : ' ';
       mdText += `- [${statusIcon}] **${item.date}** [${slotName}] (${part}) ${item.title}${item.location ? ' @' + item.location : ''}\n`;
     });
