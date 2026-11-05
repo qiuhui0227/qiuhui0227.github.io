@@ -774,5 +774,6 @@ class TimetableModule {
   }
 }
 
-// 挂载至全局
+// 挂载至全局与自动实例化
 window.TimetableModule = TimetableModule;
+window.timetableModule = new TimetableModule();
