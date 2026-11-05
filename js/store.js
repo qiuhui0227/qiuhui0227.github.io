@@ -1123,11 +1123,17 @@ class SpaceStore {
             if (window.mealsModule && window.mealsModule.isOpen) {
               window.mealsModule.renderGallery();
             }
+            if (window.albumsModule) {
+              window.albumsModule.updateSpecialMealCover();
+            }
           }
         }
         this.lastSyncTime = new Date(cloudSavedAt || Date.now());
         this.syncStatus = 'synced';
         this.notifyCloudStateChanged('synced');
+        if (window.albumsModule) {
+          window.albumsModule.updateSpecialMealCover();
+        }
       } else {
         // 云端为空，立即将当前本地数据全量推送至云端存档
         await this.pushToCloud(true);

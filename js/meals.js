@@ -59,6 +59,17 @@ class MealCameraModule {
     }
   }
 
+  // 获取本地时间的 YYYY-MM-DDTHH:mm 字符串，供 datetime-local 默认值使用
+  getLocalDatetimeString(d = new Date()) {
+    const pad = (n) => String(n).padStart(2, '0');
+    const year = d.getFullYear();
+    const month = pad(d.getMonth() + 1);
+    const day = pad(d.getDate());
+    const hours = pad(d.getHours());
+    const minutes = pad(d.getMinutes());
+    return `${year}-${month}-${day}T${hours}:${minutes}`;
+  }
+
   // 根据当前时刻智能推断餐别
   inferMealType(date) {
     const hour = date.getHours() + date.getMinutes() / 60;
@@ -136,10 +147,20 @@ class MealCameraModule {
     const filteredMeals = allMeals.filter(m => {
       if (this.currentFilterTab === 'all') return true;
       if (this.currentFilterTab === 'today') {
-        const todayStr = new Date().toISOString().slice(0, 10);
-        return (m.time || '').startsWith(todayStr);
+        const mealDate = new Date(m.time || m.createdAt);
+        const today = new Date();
+        return mealDate.getFullYear() === today.getFullYear() &&
+               mealDate.getMonth() === today.getMonth() &&
+               mealDate.getDate() === today.getDate();
       }
       return m.author === this.currentFilterTab;
+    });
+
+    // 确保按就餐时间倒序排列（最新的在最前）
+    filteredMeals.sort((a, b) => {
+      const tA = new Date(a.time || a.createdAt || 0).getTime();
+      const tB = new Date(b.time || b.createdAt || 0).getTime();
+      return tB - tA;
     });
 
     const isMaster = window.spaceAuth ? window.spaceAuth.isMaster() : true;
@@ -256,6 +277,7 @@ class MealCameraModule {
           window.spaceStore.deleteMeal(mealId);
           window.spaceApp?.showToast('已删除该餐记录');
           this.renderGallery();
+          window.albumsModule?.updateSpecialMealCover();
         }
       });
     });
@@ -423,7 +445,7 @@ class MealCameraModule {
     const filters = this.getFilters();
     const currentUser = window.spaceAuth ? window.spaceAuth.getCurrentUser() : 'yan';
     const defaultAuthor = currentUser === 'qiuhui' ? 'qiuhui' : 'yan';
-    const nowIso = new Date().toISOString().slice(0, 16);
+    const nowIso = this.getLocalDatetimeString(new Date());
 
     editor.innerHTML = `
       <div class="meal-editor-dialog">
@@ -536,12 +558,28 @@ class MealCameraModule {
     });
 
     // 餐别切换
+    let userHasManuallyToggledMealType = false;
     editor.querySelectorAll('.meal-type-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        userHasManuallyToggledMealType = true;
         editor.querySelectorAll('.meal-type-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         this.selectedMealType = btn.getAttribute('data-type');
       });
+    });
+
+    // 智能联动：当用户修改就餐时间且未手动指定餐别时，自适应推荐餐别
+    const timeInputEl = editor.querySelector('#meal-time-input');
+    timeInputEl?.addEventListener('change', () => {
+      if (!timeInputEl.value) return;
+      const parsed = new Date(timeInputEl.value);
+      if (!isNaN(parsed.getTime()) && !userHasManuallyToggledMealType) {
+        const autoType = this.inferMealType(parsed);
+        this.selectedMealType = autoType;
+        editor.querySelectorAll('.meal-type-btn').forEach(b => {
+          b.classList.toggle('active', b.getAttribute('data-type') === autoType);
+        });
+      }
     });
 
     // 记录人切换
@@ -631,12 +669,20 @@ class MealCameraModule {
         }
 
         // 3. 构造数据并保存至本地与全局 KV
+        let mealTime = new Date().toISOString();
+        if (timeInput && timeInput.value) {
+          const parsed = new Date(timeInput.value);
+          if (!isNaN(parsed.getTime())) {
+            mealTime = parsed.toISOString();
+          }
+        }
+
         const newMeal = {
           title,
           imageUrl: uploadedUrl,
           thumbUrl: thumbUrl || uploadedUrl,
           mealType: this.selectedMealType,
-          time: timeInput?.value || new Date().toISOString(),
+          time: mealTime,
           location: (locInput?.value || '').trim(),
           author: chosenAuthor,
           filter: this.currentFilter
@@ -647,6 +693,7 @@ class MealCameraModule {
 
         closeEditor();
         this.renderGallery();
+        window.albumsModule?.updateSpecialMealCover();
       } catch (err) {
         console.error('Save meal error:', err);
         alert('保存美食记录失败：' + (err.message || '未知错误'));

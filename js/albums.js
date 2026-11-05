@@ -110,9 +110,15 @@ class AlbumsModule {
 
   // 专属三餐相册 (系统永久手帐 · 书架第1本 · 18KB微缩秒开)
   renderSpecialMealAlbumCard() {
-    const meals = window.spaceStore ? window.spaceStore.getMeals() : [];
-    // 关键优化：优先使用真实照片微缩，兜底使用 18KB 本地极速图，杜绝大图慢速卡顿
-    const mealCoverUrl = (meals.length > 0 && (meals[0].thumbUrl || meals[0].imageUrl)) ? (meals[0].thumbUrl || meals[0].imageUrl) : './images/1001_1_thumb.jpg';
+    const rawMeals = window.spaceStore ? window.spaceStore.getMeals() : [];
+    const meals = [...rawMeals].sort((a, b) => {
+      const tA = new Date(a.time || a.createdAt || 0).getTime();
+      const tB = new Date(b.time || b.createdAt || 0).getTime();
+      return tB - tA;
+    });
+    // 关键优化：三餐相册封面优先使用最新拍摄/打卡的照片，兜底使用 18KB 本地极速图
+    const latestMealWithPhoto = meals.find(m => m.thumbUrl || m.imageUrl);
+    const mealCoverUrl = latestMealWithPhoto ? (latestMealWithPhoto.thumbUrl || latestMealWithPhoto.imageUrl) : './images/1001_1_thumb.jpg';
     return `
       <div class="shelf-photobook-card special-meal-book" id="album-card-special-meals" title="点击打开三餐手帐与拍照打卡">
         <div class="photobook-cover-wrap">
@@ -133,6 +139,29 @@ class AlbumsModule {
         </div>
       </div>
     `;
+  }
+
+  // 动态更新三餐相册封面为最新一张照片
+  updateSpecialMealCover() {
+    const card = document.getElementById('album-card-special-meals');
+    if (!card) return;
+    const rawMeals = window.spaceStore ? window.spaceStore.getMeals() : [];
+    const meals = [...rawMeals].sort((a, b) => {
+      const tA = new Date(a.time || a.createdAt || 0).getTime();
+      const tB = new Date(b.time || b.createdAt || 0).getTime();
+      return tB - tA;
+    });
+    const latestMealWithPhoto = meals.find(m => m.thumbUrl || m.imageUrl);
+    const coverUrl = latestMealWithPhoto ? (latestMealWithPhoto.thumbUrl || latestMealWithPhoto.imageUrl) : './images/1001_1_thumb.jpg';
+
+    const img = card.querySelector('.photobook-cover-img');
+    if (img && coverUrl) {
+      img.src = coverUrl;
+    }
+    const badge = card.querySelector('.photobook-stamp-badge');
+    if (badge) {
+      badge.textContent = `🍱 ${meals.length} 餐`;
+    }
   }
 
   renderAlbumCard(album, isMaster) {
