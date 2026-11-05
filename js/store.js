@@ -1,4 +1,4 @@
-﻿/**
+/**
  * OASIS | Qiuhui & Yan
  * 数据存储中枢与持久化适配器
  * 
@@ -674,6 +674,32 @@ class SpaceStore {
   saveAlbums(albums) {
     localStorage.setItem('oasis_albums', JSON.stringify(albums));
     try { this.scheduleCloudPush(); } catch (_) {}
+  }
+
+  async deleteAlbum(id) {
+    const list = this.getAlbums().filter(a => a.id !== id);
+    this.saveAlbums(list);
+    try {
+      const photos = await this.getPhotosByAlbum(id);
+      for (const p of photos) {
+        await this.deletePhoto(p.id);
+      }
+    } catch (_) {}
+    return list;
+  }
+
+  saveAlbumStyle(style) {
+    try {
+      localStorage.setItem('oasis_album_default_style', style);
+    } catch (_) {}
+  }
+
+  getAlbumStyle() {
+    try {
+      return localStorage.getItem('oasis_album_default_style') || 'scrapbook';
+    } catch (_) {
+      return 'scrapbook';
+    }
   }
 
   // ==========================================================================

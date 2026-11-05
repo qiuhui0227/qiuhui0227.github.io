@@ -1,4 +1,4 @@
-﻿/* ==========================================================================
+/* ==========================================================================
    USV LAB 经典秩序美学体系 (移植自 usv-schedule 实验预约系统)
    深蓝夜海 + 薄荷绿原质高光 + 同心轨道几何 + 实验级时段槽位
    ========================================================================== */
@@ -1242,17 +1242,72 @@ a { color: inherit; text-decoration: none; }
   }
 }
 
+/* 全局禁止微信 WebView 内长按图片呼出“保存到手机/转发/搜一搜”系统菜单 */
+.bookshelf-display-unit,
+.bookshelf-shelf-row,
+.shelf-photobook-card,
+.photobook-cover-wrap,
+.photobook-cover-img,
+.special-meal-book,
+.albums-grid,
+.scrapbook-board,
+.polaroid-wall-stage,
+.scroll-stage,
+.film-strip-stage,
+.accordion-book-stage,
+.photos-masonry,
+.photo-card-target {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none;
+  touch-action: pan-y;
+}
+
+.photobook-cover-img,
+.photobook-cover-wrap img,
+.shelf-photobook-card img,
+.scrapbook-img-box img,
+.hanging-img-box img,
+.scroll-painting-img-box img,
+.film-frame-img-box img,
+.accordion-leaf-img-box img,
+.photo-item img {
+  pointer-events: none !important;
+  -webkit-touch-callout: none !important;
+  -webkit-user-drag: none;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+}
+
 /* 单本时光影集 / 书脊质感艺术册 (Hardcover Photobook) */
 .shelf-photobook-card {
   display: flex;
   flex-direction: column;
   cursor: pointer;
   user-select: none;
-  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.22s ease;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none !important;
+  transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.28s ease;
   position: relative;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transform-origin: center bottom;
+  will-change: transform;
 }
+
+/* 鼠标悬停明显放大 (上浮 10px，放大 10%，阴影层次分明) */
 .shelf-photobook-card:hover {
-  transform: translateY(-5px) scale(1.02);
+  transform: translateY(-10px) scale(1.10);
+  z-index: 25;
+}
+
+/* 手指按住 (手机端 touch-active / active) 放大更加明显！(上浮 14px，放大 14%，给指尖清晰反馈) */
+.shelf-photobook-card:active,
+.shelf-photobook-card.touch-active {
+  transform: translateY(-14px) scale(1.14) !important;
+  z-index: 35 !important;
+  transition: transform 0.14s cubic-bezier(0.2, 0.9, 0.3, 1.2), box-shadow 0.14s ease;
 }
 
 /* 精装书封面盒 (3:4.1 经典摄影手账比例) */
@@ -1268,11 +1323,20 @@ a { color: inherit; text-decoration: none; }
     0 1px 3px rgba(0, 0, 0, 0.06),
     inset -1px 0 2px rgba(0, 0, 0, 0.05);
   border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.25s ease;
 }
 .shelf-photobook-card:hover .photobook-cover-wrap {
   box-shadow: 
-    0 10px 22px -3px rgba(60, 48, 38, 0.24),
-    0 2px 6px rgba(0, 0, 0, 0.08);
+    0 16px 30px -4px rgba(60, 48, 38, 0.36),
+    0 6px 14px rgba(0, 0, 0, 0.12),
+    inset -1px 0 2px rgba(0, 0, 0, 0.08);
+}
+.shelf-photobook-card:active .photobook-cover-wrap,
+.shelf-photobook-card.touch-active .photobook-cover-wrap {
+  box-shadow: 
+    0 22px 42px -6px rgba(60, 48, 38, 0.46),
+    0 8px 18px rgba(0, 0, 0, 0.16),
+    0 0 0 2px rgba(27, 118, 89, 0.35);
 }
 
 /* 仿真书脊左侧压痕装订光影 (Tactile Spine Fold) */
@@ -1297,7 +1361,11 @@ a { color: inherit; text-decoration: none; }
   background: #f5f2eb;
 }
 .shelf-photobook-card:hover .photobook-cover-img {
-  transform: scale(1.04);
+  transform: scale(1.08);
+}
+.shelf-photobook-card:active .photobook-cover-img,
+.shelf-photobook-card.touch-active .photobook-cover-img {
+  transform: scale(1.10);
 }
 
 /* 封面占位符 */
@@ -1323,8 +1391,15 @@ a { color: inherit; text-decoration: none; }
 }
 .shelf-photobook-card.special-meal-book:hover .photobook-cover-wrap {
   box-shadow: 
-    0 12px 24px -3px rgba(234, 88, 12, 0.32),
-    0 2px 6px rgba(0, 0, 0, 0.08);
+    0 18px 32px -4px rgba(234, 88, 12, 0.40),
+    0 6px 14px rgba(0, 0, 0, 0.12);
+}
+.shelf-photobook-card.special-meal-book:active .photobook-cover-wrap,
+.shelf-photobook-card.special-meal-book.touch-active .photobook-cover-wrap {
+  box-shadow: 
+    0 24px 44px -6px rgba(234, 88, 12, 0.50),
+    0 8px 18px rgba(0, 0, 0, 0.16),
+    0 0 0 2px rgba(234, 88, 12, 0.45);
 }
 
 /* 书签飘带 / 角标 (丝绸感微标签) */

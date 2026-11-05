@@ -23,22 +23,21 @@ class AlbumsModule {
     this.activePhotoIndex = -1;
   }
 
+  get stylesList() {
+    return [
+      { id: 'scrapbook', name: '浪漫花哨手账', badge: '↕️ 竖屏手账', type: 'v', orientation: 'vertical', icon: '🎀', desc: '和纸胶带 · 拍立得倾角 · 暖色手绘' },
+      { id: 'polaroid_wall', name: '拍立得挂绳墙', badge: '↕️ 竖屏挂墙', type: 'v', orientation: 'vertical', icon: '📱', desc: '原木麻绳 · 复古木夹 · 自由悬挂' },
+      { id: 'scroll', name: '诗意水墨长卷', badge: '↔️ 横屏长卷', type: 'h', orientation: 'horizontal', icon: '📜', desc: '紫檀木轴 · 绫绢宣纸 · 横向诗意展开' },
+      { id: 'film_strip', name: '电影胶卷菲林', badge: '↔️ 横屏胶卷', type: 'h', orientation: 'horizontal', icon: '🎞️', desc: '35mm画幅 · 胶卷齿孔 · 沉浸放映' },
+      { id: 'accordion', name: '经折典藏折子', badge: '📑 经折折子', type: 'm', orientation: 'mixed', icon: '📑', desc: '经折风琴褶 · 立体折页 · 典藏装帧' },
+      { id: 'classic', name: '工整现代画册', badge: '🏛️ 经典画册', type: 'm', orientation: 'mixed', icon: '🏛️', desc: '现代艺术画廊 · 秩序工整网格' }
+    ];
+  }
+
   getStyleMeta(style) {
-    switch (style) {
-      case 'polaroid_wall':
-        return { name: '拍立得挂绳墙', badge: '↕️ 竖屏挂墙', type: 'v', orientation: 'vertical' };
-      case 'scroll':
-        return { name: '诗意水墨长卷', badge: '↔️ 横屏长卷', type: 'h', orientation: 'horizontal' };
-      case 'film_strip':
-        return { name: '电影胶卷菲林', badge: '↔️ 横屏胶卷', type: 'h', orientation: 'horizontal' };
-      case 'accordion':
-        return { name: '经折典藏折子', badge: '📑 经折折子', type: 'm', orientation: 'mixed' };
-      case 'classic':
-        return { name: '工整现代画册', badge: '🏛️ 经典画册', type: 'm', orientation: 'mixed' };
-      case 'scrapbook':
-      default:
-        return { name: '浪漫花哨手账', badge: '↕️ 竖屏手账', type: 'v', orientation: 'vertical' };
-    }
+    const list = this.stylesList;
+    const found = list.find(s => s.id === style);
+    return found || list[0];
   }
 
   async render(container) {
@@ -102,8 +101,8 @@ class AlbumsModule {
   // 专属三餐相册 (系统永久手帐 · 书架第1本 · 18KB微缩秒开)
   renderSpecialMealAlbumCard() {
     const meals = window.spaceStore ? window.spaceStore.getMeals() : [];
-    // 关键优化：优先使用真实照片微缩，兜底使用 18KB 本地极速图，杜绝3.7MB和外网慢速卡顿
-    const mealCoverUrl = (meals.length > 0 && meals[0].imageUrl) ? meals[0].imageUrl : './images/1001_1_thumb.jpg';
+    // 关键优化：优先使用真实照片微缩，兜底使用 18KB 本地极速图，杜绝大图慢速卡顿
+    const mealCoverUrl = (meals.length > 0 && (meals[0].thumbUrl || meals[0].imageUrl)) ? (meals[0].thumbUrl || meals[0].imageUrl) : './images/1001_1_thumb.jpg';
     return `
       <div class="shelf-photobook-card special-meal-book" id="album-card-special-meals" title="点击打开三餐手帐与拍照打卡">
         <div class="photobook-cover-wrap">
@@ -128,9 +127,9 @@ class AlbumsModule {
     const isLiving = album.visibility === 'living_room';
     const styleMeta = this.getStyleMeta(album.style);
     
-    // 关键优化：杜绝 Unsplash 阻断网络，优先使用本地微缩图秒开
-    let coverSrc = album.coverUrl || album.cover;
-    if (!coverSrc || coverSrc.includes('unsplash.com') || album.id === 'album_first_sight') {
+    // 关键优化：优先使用微缩图秒开，杜绝大图慢速卡顿
+    let coverSrc = album.coverThumb || album.coverUrl || album.cover;
+    if (!coverSrc || coverSrc.includes('unsplash.com')) {
       coverSrc = './images/1001_1_thumb.jpg';
     }
 
@@ -166,6 +165,12 @@ class AlbumsModule {
   }
 
   bindAlbumsListEvents(container) {
+    // 阻止长按弹出微信上下文菜单（搜一搜、保存到手机等）
+    container.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      return false;
+    }, { passive: false });
+
     // 绑定特殊三餐相册点击
     container.querySelector('#album-card-special-meals')?.addEventListener('click', () => {
       window.mealsModule?.openMealAlbumModal();
@@ -173,9 +178,23 @@ class AlbumsModule {
 
     const albums = window.spaceStore.getAlbums();
 
-    // 绑定普通相册点击
-    container.querySelectorAll('.shelf-photobook-card:not(.special-meal-book)').forEach(card => {
+    // 绑定相册点击及手指触控明显放大
+    container.querySelectorAll('.shelf-photobook-card').forEach(card => {
+      // 手指按住即刻放大
+      card.addEventListener('touchstart', () => {
+        card.classList.add('touch-active');
+      }, { passive: true });
+
+      const removeTouchActive = () => {
+        setTimeout(() => {
+          card.classList.remove('touch-active');
+        }, 180);
+      };
+      card.addEventListener('touchend', removeTouchActive, { passive: true });
+      card.addEventListener('touchcancel', removeTouchActive, { passive: true });
+
       card.addEventListener('click', (e) => {
+        if (card.classList.contains('special-meal-book')) return;
         if (e.target.closest('.photobook-quick-acts') || e.target.closest('.photobook-mini-btn')) return;
         this.currentAlbumId = card.dataset.id;
         this.render(container);
@@ -202,6 +221,7 @@ class AlbumsModule {
         if (confirm('确定要删除这本相册吗？相册内的照片也将一并移除。')) {
           await window.spaceStore.deleteAlbum(id);
           this.render(container);
+          window.spaceApp?.showToast('相册已删除');
         }
       });
     });
@@ -355,7 +375,7 @@ class AlbumsModule {
                 <div class="washi-tape ${tapeClass}"></div>
                 <span class="scrapbook-sticker sticker-top-right">${sticker}</span>
                 <div class="scrapbook-img-box">
-                  <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+                  <img src="${photo.thumbUrl || photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy" decoding="async">
                 </div>
                 <div class="scrapbook-caption-row">
                   <span class="scrapbook-title">${this.escapeHtml(photo.title || '美好瞬间')}</span>
@@ -389,7 +409,7 @@ class AlbumsModule {
             <div class="hanging-card photo-card-target" data-index="${idx}">
               <div class="wood-clip"></div>
               <div class="hanging-img-box">
-                <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+                <img src="${photo.thumbUrl || photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy" decoding="async">
               </div>
               <div class="hanging-caption-row">
                 <span class="hanging-title">${this.escapeHtml(photo.title || '美好瞬间')}</span>
@@ -428,7 +448,7 @@ class AlbumsModule {
                 <div class="scroll-painting-card photo-card-target" data-index="${idx}">
                   <div class="chinese-seal">${sealText}</div>
                   <div class="scroll-painting-img-box">
-                    <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+                    <img src="${photo.thumbUrl || photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy" decoding="async">
                   </div>
                   <div class="scroll-painting-meta">
                     <span class="scroll-painting-title">${this.escapeHtml(photo.title || '卷中良辰')}</span>
@@ -482,7 +502,7 @@ class AlbumsModule {
                     <span>ISO 400 · 1/250s</span>
                   </div>
                   <div class="film-frame-img-box">
-                    <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+                    <img src="${photo.thumbUrl || photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy" decoding="async">
                   </div>
                   <div class="film-frame-footer">
                     <span class="film-frame-title">${this.escapeHtml(photo.title || '胶卷定格')}</span>
@@ -534,7 +554,7 @@ class AlbumsModule {
                   <span>${photo.date || '留影'}</span>
                 </div>
                 <div class="accordion-leaf-img-box">
-                  <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+                  <img src="${photo.thumbUrl || photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy" decoding="async">
                 </div>
                 <div class="accordion-leaf-title">${this.escapeHtml(photo.title || '并肩时光')}</div>
                 ${isMaster ? `
@@ -562,7 +582,7 @@ class AlbumsModule {
       <div class="photos-masonry">
         ${photos.map((photo, idx) => `
           <div class="photo-item photo-card-target" data-index="${idx}">
-            <img src="${photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy">
+            <img src="${photo.thumbUrl || photo.dataUrl}" alt="${this.escapeHtml(photo.title)}" loading="lazy" decoding="async">
             <div class="photo-bar">
               <span class="photo-bar-title">${this.escapeHtml(photo.title || '美好瞬间')}</span>
               ${isMaster ? `
@@ -604,17 +624,21 @@ class AlbumsModule {
       const files = Array.from(e.target.files);
       if (files.length === 0) return;
 
-      window.spaceApp?.showToast(`正在前端轻量视网膜压缩 (${files.length} 张)...`);
+      window.spaceApp?.showToast(`正在前端生成极速微缩图 (${files.length} 张)...`);
 
-      window.spaceApp?.showToast('正在上传并同步至 Cloudflare 云端...', false);
       for (const file of files) {
         try {
-          const compressed = await this.compressImage(file);
+          // 1. 生成极速小缩略图 (最长边 380px，质量 0.70，体积仅 15KB-20KB，列表秒开零卡顿)
+          const thumbObj = await this.compressImage(file, 380, 0.70);
+          // 2. 生成高清大图 (最长边 1280px，质量 0.80，体积仅 120KB-180KB，杜绝手机原始 10MB 巨图瘫痪网络)
+          const displayObj = await this.compressImage(file, 1280, 0.80);
+
           let cloudUrl = null;
           try {
-            cloudUrl = await window.spaceStore.uploadPhoto(file, album.id, file.name);
+            // 上传轻量高清大图到云端，杜绝上传动辄十几兆的原始巨图
+            cloudUrl = await window.spaceStore.uploadPhoto(displayObj.dataUrl, album.id, file.name);
           } catch (e) {
-            console.warn('Cloud photo upload failed, using local:', e);
+            console.warn('Cloud photo upload failed, using local compressed dataUrl:', e);
           }
 
           const photoData = {
@@ -622,13 +646,17 @@ class AlbumsModule {
             albumId: album.id,
             title: file.name.replace(/\.[^/.]+$/, ''),
             date: new Date().toISOString().split('T')[0],
-            dataUrl: cloudUrl || compressed.dataUrl,
+            thumbUrl: thumbObj.dataUrl,
+            dataUrl: cloudUrl || displayObj.dataUrl,
             cloudUrl: cloudUrl || ''
           };
           await window.spaceStore.savePhoto(photoData);
 
-          if (!album.cover || album.cover.includes('unsplash')) {
-            album.cover = cloudUrl || compressed.dataUrl;
+          // 若相册尚无封面，将本张微缩图设为封面
+          if (!album.cover || album.cover.includes('unsplash') || album.cover === './images/1001_1_thumb.jpg') {
+            album.cover = thumbObj.dataUrl;
+            album.coverThumb = thumbObj.dataUrl;
+            album.coverUrl = thumbObj.dataUrl;
           }
         } catch (err) {
           console.error('上传处理失败:', err);
@@ -639,10 +667,17 @@ class AlbumsModule {
       album.count = updated.length;
       const all = window.spaceStore.getAlbums();
       const found = all.find(x => x.id === album.id);
-      if (found) found.count = updated.length;
+      if (found) {
+        found.count = updated.length;
+        if (album.cover) {
+          found.cover = album.cover;
+          found.coverThumb = album.coverThumb || album.cover;
+          found.coverUrl = album.coverUrl || album.cover;
+        }
+      }
       window.spaceStore.saveAlbums(all);
 
-      window.spaceApp?.showToast('照片已上传并持久化保存！', 'good');
+      window.spaceApp?.showToast('照片已上传并生成极速缩略图！', 'good');
       this.render(container);
     });
 
@@ -666,43 +701,53 @@ class AlbumsModule {
     });
   }
 
-  // 纯前端 Canvas 视网膜级轻量压缩
-  compressImage(file, maxDimension = 1600, quality = 0.82) {
+  // 纯前端 Canvas 视网膜级轻量压缩 (支持 File 或 dataUrl 字符串)
+  compressImage(fileOrUrl, maxDimension = 1280, quality = 0.80) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          let width = img.width;
-          let height = img.height;
-          if (width > height) {
-            if (width > maxDimension) {
-              height = Math.round((height * maxDimension) / width);
-              width = maxDimension;
-            }
-          } else {
-            if (height > maxDimension) {
-              width = Math.round((width * maxDimension) / height);
-              height = maxDimension;
-            }
+      const handleImage = (img) => {
+        let width = img.width;
+        let height = img.height;
+        if (width > height) {
+          if (width > maxDimension) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
           }
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx.drawImage(img, 0, 0, width, height);
+        } else {
+          if (height > maxDimension) {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
 
-          let dataUrl = canvas.toDataURL('image/webp', quality);
-          if (!dataUrl.startsWith('data:image/webp')) {
-            dataUrl = canvas.toDataURL('image/jpeg', quality);
-          }
-          resolve({ dataUrl });
-        };
-        img.onerror = reject;
-        img.src = e.target.result;
+        let dataUrl = canvas.toDataURL('image/webp', quality);
+        if (!dataUrl.startsWith('data:image/webp')) {
+          dataUrl = canvas.toDataURL('image/jpeg', quality);
+        }
+        resolve({ dataUrl, width, height });
       };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+
+      if (typeof fileOrUrl === 'string') {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => handleImage(img);
+        img.onerror = reject;
+        img.src = fileOrUrl;
+      } else {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => handleImage(img);
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(fileOrUrl);
+      }
     });
   }
 
@@ -710,19 +755,30 @@ class AlbumsModule {
   openAlbumModal(album = null) {
     const isEdit = !!album;
     const currentStyle = album ? album.style : 'scrapbook';
-    const currentCover = album ? (album.coverUrl || album.cover || '') : '';
+    const currentCover = album ? (album.coverUrl || album.coverThumb || album.cover || '') : '';
 
     const modalHtml = `
-      <div class="oasis-modal" id="album-modal">
-        <div class="oasis-modal-card" style="max-width: 520px;">
-          <div class="oasis-modal-head">
-            <h3>${isEdit ? '编辑相簿设置' : '创建新时光相册'}</h3>
-            <button class="oasis-modal-close" id="album-modal-close">×</button>
+      <div class="overlay" id="album-modal">
+        <div class="sheet" style="max-width: 540px;">
+          <div class="sheet-head">
+            <div>
+              <h3>${isEdit ? '编辑相簿设置' : '创建新时光相册'}</h3>
+              <div class="fine">岁月相册 · 记录朝夕温暖印记</div>
+            </div>
+            <button type="button" class="logout" id="album-modal-close" style="font-size: 20px; line-height: 1;">×</button>
           </div>
-          <form id="form-album" style="padding: 16px 20px 20px;">
+          <form id="form-album">
             <div class="field">
               <label class="label">相册标题 *</label>
               <input type="text" name="title" class="input" required placeholder="例如：2026 盛夏漫游记" value="${album ? this.escapeHtml(album.title) : ''}">
+            </div>
+
+            <div class="field">
+              <label class="label">展示空间 *</label>
+              <select name="visibility" class="select">
+                <option value="living_room" ${album && album.visibility === 'living_room' ? 'selected' : ''}>🛋️ 客厅 (公开展示 · 访客与两人均可见)</option>
+                <option value="bedroom" ${!album || album.visibility === 'bedroom' ? 'selected' : ''}>🛏️ 卧室 (私密相册 · 仅王岩与杜秋慧可见)</option>
+              </select>
             </div>
 
             <!-- 自定义封面设置与纯前端轻量压缩 -->
@@ -742,7 +798,7 @@ class AlbumsModule {
                     </button>
                   </div>
                   <span class="fine" style="color:#64748b; font-size:11px;" id="album-cover-status-tip">
-                    ${currentCover ? '已设置封面 (自动压缩至秒开规格)' : '未设置时，将自动取相册第一张照片作为封面'}
+                    ${currentCover ? '已设置封面 (自动压缩至微缩规格)' : '未设置时，将自动取相册第一张照片作为封面'}
                   </span>
                   <input type="file" id="input-album-cover" accept="image/*" style="display:none;" />
                   <input type="hidden" name="coverUrl" id="input-album-cover-url" value="${currentCover}" />
@@ -751,25 +807,21 @@ class AlbumsModule {
             </div>
 
             <div class="field">
-              <label class="label">展示空间 *</label>
-              <select name="visibility" class="select">
-                <option value="living_room" ${album && album.visibility === 'living_room' ? 'selected' : ''}>🛋️ 客厅 (公开展示 · 访客与两人均可见)</option>
-                <option value="bedroom" ${!album || album.visibility === 'bedroom' ? 'selected' : ''}>🛏️ 卧室 (私密相册 · 仅王岩与杜秋慧可见)</option>
-              </select>
-            </div>
-
-            <div class="field">
               <label class="label">艺术展卷风格 * (自适应手机/电脑)</label>
-              <div class="style-cards-grid">
+              <div class="style-picker-grid">
                 ${this.stylesList.map(st => `
-                  <label class="style-card ${currentStyle === st.id ? 'active' : ''}">
-                    <input type="radio" name="style" value="${st.id}" ${currentStyle === st.id ? 'checked' : ''} style="display:none;">
-                    <div class="style-card-header">
-                      <span class="style-card-icon">${st.icon}</span>
-                      <span class="orientation-tag ${st.type}">${st.badge}</span>
+                  <label class="style-choice-card">
+                    <input type="radio" name="style" value="${st.id}" ${currentStyle === st.id ? 'checked' : ''}>
+                    <div class="style-choice-body">
+                      <span class="style-choice-icon">${st.icon}</span>
+                      <div class="style-choice-info">
+                        <div class="style-choice-title">
+                          <span>${st.name}</span>
+                          <span class="pill-badge ${st.type}">${st.badge}</span>
+                        </div>
+                        <div class="style-choice-desc">${st.desc}</div>
+                      </div>
                     </div>
-                    <div class="style-card-name">${st.name}</div>
-                    <div class="style-card-desc">${st.desc}</div>
                   </label>
                 `).join('')}
               </div>
@@ -780,7 +832,7 @@ class AlbumsModule {
               <textarea name="desc" class="textarea" rows="2" placeholder="写下一两句时光箴言...">${album ? this.escapeHtml(album.desc || '') : ''}</textarea>
             </div>
 
-            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px;">
+            <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
               <button type="button" class="btn btn-outline" id="album-modal-cancel">取消</button>
               <button type="submit" class="btn btn-primary" id="btn-album-submit">${isEdit ? '保存修改' : '立即创建'}</button>
             </div>
@@ -796,18 +848,7 @@ class AlbumsModule {
     modalEl.querySelector('#album-modal-close').addEventListener('click', close);
     modalEl.querySelector('#album-modal-cancel').addEventListener('click', close);
 
-    // 单选卡片交互高亮
-    const styleCards = modalEl.querySelectorAll('.style-card');
-    styleCards.forEach(card => {
-      card.addEventListener('click', () => {
-        styleCards.forEach(c => c.classList.remove('active'));
-        card.classList.add('active');
-        const radio = card.querySelector('input[type="radio"]');
-        if (radio) radio.checked = true;
-      });
-    });
-
-    // 封面上传与自动压缩逻辑 (纯前端微缩至 640px 极速载入，消除等待)
+    // 封面上传与自动压缩逻辑 (纯前端微缩至 380px 极速载入，消除等待)
     const coverInput = modalEl.querySelector('#input-album-cover');
     const pickCoverBtn = modalEl.querySelector('#btn-pick-album-cover');
     const clearCoverBtn = modalEl.querySelector('#btn-clear-album-cover');
@@ -823,8 +864,8 @@ class AlbumsModule {
 
       if (coverTip) coverTip.innerHTML = '⏳ 正在压缩封面 (微缩秒开规格)...';
       try {
-        // 关键：封面微缩压缩至 640px / 0.75 质量，体积仅 ~35KB-50KB，秒开且省流量
-        const { dataUrl } = await this.compressImage(file, 640, 0.75);
+        // 关键：封面微缩压缩至 380px / 0.72 质量，体积仅 ~15KB-20KB，秒开且省流量
+        const { dataUrl } = await this.compressImage(file, 380, 0.72);
         let finalCover = dataUrl;
 
         try {
@@ -837,7 +878,7 @@ class AlbumsModule {
         coverUrlInput.value = finalCover;
         coverPreviewBox.innerHTML = `<img src="${finalCover}" alt="封面预览" style="width:100%; height:100%; object-fit:cover; display:block; border-radius:6px;" />`;
         if (clearCoverBtn) clearCoverBtn.style.display = 'inline-block';
-        if (coverTip) coverTip.innerHTML = '✨ 封面压缩完毕，秒开就绪！';
+        if (coverTip) coverTip.innerHTML = '✨ 封面微缩压缩完成，秒开就绪！';
       } catch (err) {
         console.error('Compress cover failed:', err);
         if (coverTip) coverTip.innerHTML = '❌ 封面压缩处理失败，请重试';
@@ -867,6 +908,7 @@ class AlbumsModule {
           found.desc = fd.get('desc');
           found.style = chosenStyle;
           found.coverUrl = coverVal;
+          found.coverThumb = coverVal;
           found.cover = coverVal;
         }
       } else {
@@ -877,6 +919,7 @@ class AlbumsModule {
           desc: fd.get('desc'),
           style: chosenStyle,
           coverUrl: coverVal,
+          coverThumb: coverVal,
           cover: coverVal,
           createdAt: new Date().toISOString().split('T')[0],
           count: 0
@@ -887,6 +930,7 @@ class AlbumsModule {
       close();
       const container = document.getElementById('content-albums');
       if (container) this.render(container);
+      window.spaceApp?.showToast(isEdit ? '相册设置已保存' : '✨ 新相册已成功创建！', 'good');
     });
   }
 
@@ -902,7 +946,7 @@ class AlbumsModule {
         <button class="btn btn-outline" id="lb-prev" style="position:absolute; left:20px; top:50%; transform:translateY(-50%);">‹</button>
         <button class="btn btn-outline" id="lb-next" style="position:absolute; right:20px; top:50%; transform:translateY(-50%);">›</button>
         <div style="text-align:center; max-width:90vw;">
-          <img src="${photo.dataUrl}" id="lb-img" style="max-width:100%; max-height:80vh; border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.5);">
+          <img src="${photo.dataUrl || photo.cloudUrl || photo.thumbUrl}" id="lb-img" style="max-width:100%; max-height:80vh; border-radius:12px; box-shadow:0 12px 35px rgba(0,0,0,0.5);">
           <div style="color:#fff; margin-top:12px; font-size:14px; font-weight:700;" id="lb-caption">${this.escapeHtml(photo.title)}</div>
         </div>
       </div>
@@ -911,10 +955,16 @@ class AlbumsModule {
     document.body.insertAdjacentHTML('beforeend', lbHtml);
     const modalEl = document.getElementById('lightbox-modal');
 
+    // 阻止长按呼出微信菜单
+    modalEl.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      return false;
+    }, { passive: false });
+
     const update = (newIdx) => {
       this.activePhotoIndex = newIdx;
       const p = this.currentPhotos[newIdx];
-      modalEl.querySelector('#lb-img').src = p.dataUrl;
+      modalEl.querySelector('#lb-img').src = p.dataUrl || p.cloudUrl || p.thumbUrl;
       modalEl.querySelector('#lb-caption').innerText = p.title || '美好瞬间';
     };
 

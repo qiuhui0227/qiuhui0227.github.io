@@ -280,7 +280,7 @@ class MealCameraModule {
     return `
       <div class="meal-card" data-meal-id="${meal.id}">
         <div class="meal-card-img-wrap" data-meal-id="${meal.id}" title="点击查看大图">
-          <img src="${meal.imageUrl}" alt="${meal.title}" loading="lazy" class="meal-card-img">
+          <img src="${meal.thumbUrl || meal.imageUrl}" alt="${meal.title}" loading="lazy" decoding="async" class="meal-card-img">
           <span class="meal-type-tag ${mealMeta.class}">
             ${mealMeta.icon} ${mealMeta.label}
           </span>
@@ -607,8 +607,13 @@ class MealCameraModule {
       submitBtn.innerText = '正在压缩并同步云端...';
 
       try {
-        // 1. 将滤镜后的图片导出为高质量压缩 Blob (最长边1440px / JPEG 0.80)
+        // 1. 将滤镜后的图片导出为高质量压缩 Blob (最长边1440px / JPEG 0.80) 与极速小缩略图 (380px / 0.70)
         const compressedBlob = await this.exportFilteredBlob(this.currentFilter);
+        const thumbBlob = await this.exportThumbnailBlob(this.currentFilter);
+        let thumbUrl = '';
+        if (thumbBlob) {
+          thumbUrl = await this.blobToDataUrl(thumbBlob);
+        }
 
         // 2. 上传至 Cloudflare 存储
         let uploadedUrl = null;
@@ -629,6 +634,7 @@ class MealCameraModule {
         const newMeal = {
           title,
           imageUrl: uploadedUrl,
+          thumbUrl: thumbUrl || uploadedUrl,
           mealType: this.selectedMealType,
           time: timeInput?.value || new Date().toISOString(),
           location: (locInput?.value || '').trim(),
@@ -726,6 +732,46 @@ class MealCameraModule {
     });
   }
 
+  // 导出极速小缩略图 Blob (最长边380px，体积~15KB-20KB，秒开零延迟)
+  exportThumbnailBlob(filterId) {
+    return new Promise((resolve) => {
+      const offlineCanvas = document.createElement('canvas');
+      const ctx = offlineCanvas.getContext('2d');
+      const img = this.rawImageBitmap;
+      if (!img) return resolve(null);
+
+      const MAX_DIM = 380;
+      let w = img.width;
+      let h = img.height;
+      if (w > MAX_DIM || h > MAX_DIM) {
+        if (w > h) {
+          h = Math.round((h * MAX_DIM) / w);
+          w = MAX_DIM;
+        } else {
+          w = Math.round((w * MAX_DIM) / h);
+          h = MAX_DIM;
+        }
+      }
+
+      offlineCanvas.width = w;
+      offlineCanvas.height = h;
+
+      const filters = this.getFilters();
+      const fObj = filters.find(x => x.id === filterId);
+      ctx.filter = fObj ? fObj.filterStr : 'none';
+      ctx.drawImage(img, 0, 0, w, h);
+
+      offlineCanvas.toBlob(
+        (blob) => {
+          if (blob) resolve(blob);
+          else resolve(null);
+        },
+        'image/jpeg',
+        0.70
+      );
+    });
+  }
+
   blobToDataUrl(blob) {
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -778,6 +824,7 @@ class MealCameraModule {
     lb.classList.add('active');
 
     const closeLb = () => lb.classList.remove('active');
+    lb.addEventListener('contextmenu', (e) => { e.preventDefault(); return false; });
     lb.querySelector('#btn-close-meal-lb')?.addEventListener('click', closeLb);
     lb.addEventListener('click', (e) => {
       if (e.target === lb) closeLb();
