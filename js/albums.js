@@ -181,16 +181,16 @@ class AlbumsModule {
       const diffX = shelfCenterX - cardCenterX;
 
       // 核心需求：“以自己的位置向中间靠拢，注意，不是直接居中”
-      // 适度向中心靠拢偏移约 38%，确保左右两侧书本向内聚拢，但保留原始站位
+      // 适度向中心靠拢偏移约 44%，确保左右两侧书本向内聚拢，但保留原始站位
       let nudgeX = 0;
       if (diffX > 15) {
-        nudgeX = Math.min(diffX * 0.40, 42);
+        nudgeX = Math.min(diffX * 0.44, 52);
       } else if (diffX < -15) {
-        nudgeX = Math.max(diffX * 0.40, -42);
+        nudgeX = Math.max(diffX * 0.44, -52);
       }
 
-      // 放大倍数提升至 1.45 倍，上浮 22px，足以明显压住周围相册
-      card.style.transform = `translate3d(${nudgeX.toFixed(1)}px, -22px, 0) scale(1.45)`;
+      // 放大倍数提升至 1.68 倍，上浮 36px（超出书架依然美观，霸气压住周围相册）
+      card.style.transform = `translate3d(${nudgeX.toFixed(1)}px, -36px, 0) scale(1.68)`;
       card.classList.add('card-pinned');
       card.classList.remove('touch-pressing');
       bookshelfGrid?.classList.add('bookshelf-has-pinned');

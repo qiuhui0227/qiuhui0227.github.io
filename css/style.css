@@ -1308,24 +1308,24 @@ a { color: inherit; text-decoration: none; }
   transition: transform 0.12s ease;
 }
 
-/* 核心锁定挺住状态：震动后放大 1.45 倍，向中间靠拢，压住相邻相册，层级最高 */
+/* 核心锁定挺住状态：震动后放大 1.68 倍，向中间靠拢，压住相邻相册，层级最高 */
 .shelf-photobook-card.card-pinned {
-  z-index: 150 !important;
+  z-index: 180 !important;
   transition: transform 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.25), box-shadow 0.32s ease !important;
 }
 
 .shelf-photobook-card.card-pinned .photobook-cover-wrap {
   box-shadow: 
-    0 28px 60px -8px rgba(35, 25, 15, 0.65),
-    0 12px 28px rgba(0, 0, 0, 0.25),
-    0 0 0 2.5px rgba(27, 118, 89, 0.50) !important;
+    0 32px 70px -10px rgba(35, 25, 15, 0.70),
+    0 16px 36px rgba(0, 0, 0, 0.28),
+    0 0 0 2.5px rgba(27, 118, 89, 0.55) !important;
 }
 
 .shelf-photobook-card.special-meal-book.card-pinned .photobook-cover-wrap {
   box-shadow: 
-    0 28px 60px -8px rgba(45, 20, 10, 0.65),
-    0 12px 28px rgba(0, 0, 0, 0.25),
-    0 0 0 2.5px rgba(234, 88, 12, 0.60) !important;
+    0 32px 70px -10px rgba(45, 20, 10, 0.70),
+    0 16px 36px rgba(0, 0, 0, 0.28),
+    0 0 0 2.5px rgba(234, 88, 12, 0.65) !important;
 }
 
 .shelf-photobook-card.card-pinned .photobook-cover-img {
@@ -1335,6 +1335,39 @@ a { color: inherit; text-decoration: none; }
 .shelf-photobook-card.card-pinned .photobook-quick-acts {
   opacity: 1 !important;
   pointer-events: auto !important;
+}
+
+/* 挺住放大后相册文字标签：加浅色半透明高斯模糊背景，防止与其余相册重叠 */
+.shelf-photobook-card.card-pinned .photobook-spine-label {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 5px 12px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(222, 216, 206, 0.92);
+  box-shadow: 
+    0 8px 20px -3px rgba(40, 30, 20, 0.20),
+    0 2px 6px rgba(0, 0, 0, 0.08);
+  margin-top: 8px;
+  width: fit-content;
+  max-width: 140%;
+  align-self: center;
+  position: relative;
+  z-index: 20;
+  transition: all 0.25s ease;
+}
+
+.shelf-photobook-card.card-pinned .photobook-title-txt {
+  font-size: 12px;
+  font-weight: 750;
+  color: #18354a;
+  letter-spacing: 0.02em;
+}
+
+.shelf-photobook-card.card-pinned .photobook-sub-txt {
+  font-size: 9.5px;
+  color: #557585;
+  font-weight: 600;
 }
 
 /* 当某本相册被挺住时，其他相册柔和半透明后退，突显主角感 */
