@@ -6,7 +6,7 @@
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-Device-Id',
+  'Access-Control-Allow-Headers': '*',
   'Access-Control-Max-Age': '86400',
 };
 
@@ -96,7 +96,6 @@ export default {
         let albumId = '';
 
         if (contentType.includes('application/json')) {
-          // JSON base64 模式
           const jsonBody = await request.json();
           if (!jsonBody.base64) {
             return jsonResponse({ error: '缺少 base64 图片数据' }, 400);
@@ -117,7 +116,6 @@ export default {
           originalName = jsonBody.name || originalName;
           albumId = jsonBody.albumId || '';
         } else if (contentType.includes('multipart/form-data')) {
-          // FormData 上传模式
           const formData = await request.formData();
           const file = formData.get('file');
           if (!file || !(file instanceof File)) {
@@ -128,7 +126,6 @@ export default {
           originalName = file.name || originalName;
           albumId = formData.get('albumId') || '';
         } else {
-          // Raw binary 模式
           photoBuffer = await request.arrayBuffer();
           mimeType = contentType || mimeType;
         }
@@ -195,7 +192,6 @@ export default {
         return jsonResponse({ success: true, message: '照片已从云端删除' });
       }
 
-      // 未知路由
       return jsonResponse({ error: 'Not Found', path }, 404);
     } catch (err) {
       return jsonResponse(

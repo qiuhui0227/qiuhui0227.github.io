@@ -838,9 +838,7 @@ class SpaceStore {
       this.syncStatus = 'syncing';
       this.notifyCloudStateChanged('syncing');
 
-      const res = await fetch(`${this.cloudBaseUrl}/api/sync`, {
-        headers: { 'Cache-Control': 'no-cache' }
-      });
+      const res = await fetch(`${this.cloudBaseUrl}/api/sync`);
       if (!res.ok) throw new Error(`Cloud HTTP ${res.status}`);
       const json = await res.json();
 
