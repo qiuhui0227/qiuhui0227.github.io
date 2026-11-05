@@ -21,7 +21,9 @@ const PHOTO_STORE = 'photos';
 class SpaceStore {
   constructor() {
     this.db = null;
-    this.cloudBaseUrl = 'https://oasis-backend.yanwang0227.workers.dev';
+    this.cloudBaseUrl = 'https://api.iqiuqiu.me';
+    this.cloudFallbackUrl = 'https://oasis-backend.yanwang0227.workers.dev';
+    this.activeCloudUrl = 'https://api.iqiuqiu.me';
     this.syncStatus = 'idle';
     this.lastSyncTime = null;
     this.syncDebounceTimer = null;
@@ -832,14 +834,46 @@ class SpaceStore {
     }
   }
 
+  // 健壮的双轨云端网络请求适配器 (优先国内直连自定义域名 api.iqiuqiu.me，自动兜底 workers.dev)
+  async cloudFetch(path, options = {}, timeoutMs = 8000) {
+    const urls = [
+      `${this.cloudBaseUrl}${path}`,
+      `${this.cloudFallbackUrl}${path}`
+    ];
+    let lastError = null;
+
+    for (const url of urls) {
+      try {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+        const res = await fetch(url, {
+          credentials: 'omit',
+          ...options,
+          signal: controller.signal
+        });
+        clearTimeout(timer);
+
+        if (res.ok) {
+          const u = new URL(url);
+          this.activeCloudUrl = `${u.protocol}//${u.host}`;
+          return res;
+        }
+        lastError = new Error(`HTTP ${res.status} from ${url}`);
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError || new Error('All cloud sync endpoints unreachable');
+  }
+
   // 从 Cloudflare 云端拉取全量数据并合并
   async pullFromCloud(isInitial = false) {
     try {
       this.syncStatus = 'syncing';
       this.notifyCloudStateChanged('syncing');
 
-      const res = await fetch(`${this.cloudBaseUrl}/api/sync`);
-      if (!res.ok) throw new Error(`Cloud HTTP ${res.status}`);
+      const res = await this.cloudFetch('/api/sync');
       const json = await res.json();
 
       if (json.exists && json.data) {
@@ -902,13 +936,12 @@ class SpaceStore {
         clientTimestamp: Date.now()
       };
 
-      const res = await fetch(`${this.cloudBaseUrl}/api/sync`, {
+      const res = await this.cloudFetch('/api/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       });
 
-      if (!res.ok) throw new Error(`Push HTTP ${res.status}`);
       const json = await res.json();
       if (json.success) {
         localStorage.setItem('oasis_last_saved_at', String(json.savedAt));
@@ -916,22 +949,20 @@ class SpaceStore {
         this.lastSyncTime = new Date(json.savedAt);
         this.syncStatus = 'synced';
         this.notifyCloudStateChanged('synced');
-        if (!silent && window.spaceApp) {
-          window.spaceApp.showToast('☁️ 已实时同步至 Cloudflare 云端');
-        }
       }
     } catch (err) {
-      console.error('pushToCloud error:', err);
+      console.warn('Cloud push error:', err);
       this.syncStatus = 'error';
       this.notifyCloudStateChanged('error');
     }
   }
 
-  // 防抖调度同步（避免高频保存刷屏）
-  scheduleCloudSync() {
-    this.syncStatus = 'syncing';
+  // 防抖延迟上云
+  scheduleCloudPush() {
+    if (this.syncDebounceTimer) {
+      clearTimeout(this.syncDebounceTimer);
+    }
     this.notifyCloudStateChanged('syncing');
-    clearTimeout(this.syncDebounceTimer);
     this.syncDebounceTimer = setTimeout(() => {
       this.pushToCloud();
     }, 1000);
@@ -945,11 +976,11 @@ class SpaceStore {
     const textEl = badge.querySelector('.cloud-text');
     if (!textEl) return;
     if (status === 'syncing') {
-      textEl.innerText = '☁️ 正在同步...';
+      textEl.innerText = '正在同步...';
     } else if (status === 'synced') {
-      textEl.innerText = '☁️ 云端已同步';
+      textEl.innerText = '云端已同步';
     } else if (status === 'error') {
-      textEl.innerText = '⚠️ 离线缓存中';
+      textEl.innerText = '离线缓存';
     }
   }
 
@@ -973,16 +1004,16 @@ class SpaceStore {
         headers['Content-Type'] = 'application/json';
       }
 
-      const res = await fetch(`${this.cloudBaseUrl}/api/upload`, {
+      const res = await this.cloudFetch('/api/upload', {
         method: 'POST',
         headers,
         body
       });
 
-      if (!res.ok) throw new Error(`Upload HTTP ${res.status}`);
       const data = await res.json();
       if (data.success && data.url) {
-        return `${this.cloudBaseUrl}${data.url}`;
+        const root = this.activeCloudUrl || this.cloudBaseUrl;
+        return `${root}${data.url}`;
       }
       return null;
     } catch (e) {

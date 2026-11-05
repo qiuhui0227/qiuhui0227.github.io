@@ -5,6 +5,7 @@ account_id = "34336c65f09d7200e072384581abce31"
 workers_dev = true
 
 routes = [
+  { pattern = "api.iqiuqiu.me", custom_domain = true },
   { pattern = "iqiuqiu.me/api/*", zone_id = "9d089977166433e45ebdae600683ed69" },
   { pattern = "www.iqiuqiu.me/api/*", zone_id = "9d089977166433e45ebdae600683ed69" }
 ]

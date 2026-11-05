@@ -46,7 +46,7 @@ export default {
       }
 
       // 2. 数据读取 (GET /api/sync)
-      if (path === '/api/sync' && request.method === 'GET') {
+      if (path === '/api/sync' && (request.method === 'GET' || request.method === 'HEAD')) {
         const globalData = await env.OASIS_KV.get('oasis_global_data', 'json');
         if (!globalData) {
           return jsonResponse({
