@@ -86,6 +86,145 @@ class TimetableModule {
     return chips;
   }
 
+  // 三种身份的极简白描简笔画 SVG 图标 (王岩 / 杜秋慧 / 两人一起)
+  getParticipantIcon(part) {
+    if (part === 'yan') {
+      // 王岩：帅气利落工科少年简笔头像
+      return `
+        <svg class="bb-avatar-ico yan" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" title="王岩">
+          <path d="M5 11.5a7 7 0 0 0 14 0c0-1.8-.4-3-1.3-4"/>
+          <path d="M4.8 11.5V9c0-3 3-5 7.2-5 3.8 0 6.8 1.8 7.2 4.5v3"/>
+          <path d="M5 9.5c2-1 4.8-1.5 7.2-.5 2 .8 4.2.5 6.2-.8"/>
+          <circle cx="9" cy="12" r="0.9" fill="currentColor"/>
+          <circle cx="15" cy="12" r="0.9" fill="currentColor"/>
+          <path d="M10.5 15.2c.8.7 2.2.7 3 0"/>
+        </svg>
+      `;
+    } else if (part === 'qiuhui') {
+      // 杜秋慧：温柔微卷长发女孩简笔头像
+      return `
+        <svg class="bb-avatar-ico qiuhui" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" title="杜秋慧">
+          <path d="M5.5 13.5c-.8 2.5-.8 5.2 0 7.5"/>
+          <path d="M18.5 13.5c.8 2.5.8 5.2 0 7.5"/>
+          <path d="M5 12c-.5-4.5 2.8-8 7-8s7.5 3.5 7 8"/>
+          <path d="M6 10c2-1 4.8 0 6 1.8 1.2-1.8 4-2.8 6-1.8"/>
+          <path d="M7.2 12c0 3 2 5.5 4.8 5.5s4.8-2.5 4.8-5.5"/>
+          <circle cx="9.5" cy="12.5" r="0.9" fill="currentColor"/>
+          <circle cx="14.5" cy="12.5" r="0.9" fill="currentColor"/>
+          <path d="M10.8 15.2c.6.5 1.8.5 2.4 0"/>
+          <circle cx="18.2" cy="10.8" r="1.2" fill="currentColor" stroke="none"/>
+        </svg>
+      `;
+    } else {
+      // 两人一起：双人并肩依偎简笔画 + 甜蜜小小心动
+      return `
+        <svg class="bb-avatar-ico both" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" title="两人共同">
+          <path d="M4 13.5a4 4 0 0 0 6.5 3.2"/>
+          <path d="M4 13.5c0-2.2 1.6-4 3.8-4 1.3 0 2.4.6 3 1.6"/>
+          <path d="M4 12c1.2-.8 3-.8 4.2 0"/>
+          <circle cx="7" cy="13.5" r="0.8" fill="currentColor"/>
+          <path d="M13.2 12.8c.6-1 1.7-1.6 3-1.6 2.2 0 3.8 1.8 3.8 4 0 2.2-1.6 3.8-3.6 3.8-1.1 0-2.1-.5-2.8-1.2"/>
+          <path d="M14 11.2c1.2-1 3.5-1 4.8.4"/>
+          <circle cx="16.5" cy="13.5" r="0.8" fill="currentColor"/>
+          <path d="M12 4.2c-.4-.6-1.1-.8-1.7-.4-.6.5-.6 1.3 0 1.8L12 7.2l1.7-1.6c.6-.5.6-1.3 0-1.8-.6-.4-1.3-.2-1.7.4z" fill="currentColor" stroke="none"/>
+        </svg>
+      `;
+    }
+  }
+
+  // 渲染时段卡片：有安排时展开呈现便利贴墙，无安排时压缩收拢为极简细栏
+  renderSlotSection(slotKey, slotName, slotTime, slotIcon, notes, isMaster) {
+    const hasNotes = notes.length > 0;
+
+    if (hasNotes) {
+      return `
+        <div class="bb-slot-section has-notes" data-slot="${slotKey}">
+          <div class="bb-slot-head">
+            <div class="bb-slot-title-wrap">
+              <span class="bb-slot-icon">${slotIcon}</span>
+              <span class="bb-slot-name">${slotName}</span>
+              <span class="bb-slot-time">${slotTime}</span>
+              <span class="bb-slot-badge">${notes.length}项安排</span>
+            </div>
+            ${isMaster ? `
+              <button type="button" class="bb-slot-add-btn bb-col-quick-add" data-slot="${slotKey}" title="记录${slotName}事项">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
+                记一笔
+              </button>
+            ` : ''}
+          </div>
+          <div class="bb-slot-notes-grid">
+            ${notes.map(n => this.renderStickyNote(n, isMaster)).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      // 压缩态：紧凑细栏，不霸占大块空白
+      return `
+        <div class="bb-slot-section is-empty" data-slot="${slotKey}">
+          <div class="bb-slot-compressed bb-empty-hint" data-slot="${slotKey}" title="${isMaster ? '点击记录' + slotName + '事项' : '暂无安排'}">
+            <div class="bb-slot-comp-left">
+              <span class="bb-slot-icon">${slotIcon}</span>
+              <span class="bb-slot-name">${slotName}</span>
+              <span class="bb-slot-time">${slotTime}</span>
+              <span class="bb-slot-comp-status">· 暂无安排</span>
+            </div>
+            ${isMaster ? `
+              <button type="button" class="bb-slot-comp-btn bb-col-quick-add" data-slot="${slotKey}" title="记录${slotName}事项">
+                +
+              </button>
+            ` : ''}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  // 渲染单张手账便利贴 (Sticky Note)
+  renderStickyNote(n, isMaster) {
+    const isDone = n.status === 'completed';
+    const part = n.participant || 'both';
+    const partName = part === 'yan' ? '王岩' : (part === 'qiuhui' ? '秋慧' : '共同');
+
+    return `
+      <div class="bb-sticky-note ${part} ${isDone ? 'is-done' : ''}" data-id="${n.id}">
+        <!-- 胶带撕边质感小贴纸 -->
+        <div class="bb-note-tape"></div>
+
+        <!-- 头部：简笔画图案 + 姓名徽章 + 打卡勾选框 -->
+        <div class="bb-note-header">
+          <div class="bb-note-author">
+            ${this.getParticipantIcon(part)}
+            <span class="bb-note-author-name">${partName}</span>
+          </div>
+          <button type="button" class="bb-note-chk btn-toggle-status" data-id="${n.id}" title="${isDone ? '标记为未完成' : '打卡完成'}">
+            ${isDone ? '✓' : ''}
+          </button>
+        </div>
+
+        <!-- 事项内容标题 -->
+        <div class="bb-note-title">${this.escapeHtml(n.title)}</div>
+
+        <!-- 底部：地点标签 + 悬浮操作 -->
+        <div class="bb-note-footer">
+          ${n.location ? `
+            <span class="bb-note-loc" title="${this.escapeHtml(n.location)}">
+              <svg class="bb-ico-pin" viewBox="0 0 24 24"><path d="M12 21s-6-5.3-6-10a6 6 0 0 1 12 0c0 4.7-6 10-6 10z"/><circle cx="12" cy="11" r="2"/></svg>
+              ${this.escapeHtml(n.location)}
+            </span>
+          ` : '<span></span>'}
+
+          ${isMaster ? `
+            <div class="bb-note-actions">
+              <button type="button" class="bb-note-act-btn edit-note-btn" data-id="${n.id}" title="编辑">✎</button>
+              <button type="button" class="bb-note-act-btn del del-note-btn" data-id="${n.id}" title="删除">×</button>
+            </div>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }
+
   render(container) {
     if (!container) return;
     this.container = container;
@@ -119,7 +258,7 @@ class TimetableModule {
           <!-- 右侧极简文字按钮 -->
           <div class="bb-bar-actions">
             ${!currentMeta.isToday ? '<button type="button" class="bb-btn-link" id="tt-btn-today">今日</button>' : ''}
-            ${isMaster ? '<button type="button" class="bb-btn-link accent" id="tt-btn-add">+ 记事</button>' : ''}
+            ${isMaster ? '<button type="button" class="bb-btn-link accent" id="tt-btn-add">+ 记一笔</button>' : ''}
             <button type="button" class="bb-btn-link" id="tt-btn-archive">导出</button>
           </div>
         </div>
@@ -136,98 +275,21 @@ class TimetableModule {
           </div>
         </div>
 
-        <!-- 3. 极简白描画板主容器 (支持鼠标拖拽 / 触屏横向左右滑动切天) -->
+        <!-- 3. 手账便利贴画板主容器 (有安排展开便利贴，无安排自动压缩，支持横向拖拽切天) -->
         <div class="bb-board" id="bb-drag-board">
-          <!-- 晨光/上午 -->
-          <div class="bb-col" data-slot="morning">
-            <div class="bb-col-head">
-              <span class="bb-col-title">晨 · 上午</span>
-              <span class="bb-col-meta">08:00 - 12:00</span>
-              ${isMaster ? '<button type="button" class="bb-col-quick-add" data-slot="morning" title="记上午事项">+</button>' : ''}
-            </div>
-            <div class="bb-col-body">
-              ${morningNotes.length === 0 ? `
-                <div class="bb-empty-hint" data-slot="morning">
-                  ${isMaster ? '点击记录早间计划' : '无事项'}
-                </div>
-              ` : morningNotes.map(n => this.renderNoteRow(n, isMaster)).join('')}
-            </div>
-          </div>
-
-          <!-- 白昼/午后 -->
-          <div class="bb-col" data-slot="afternoon">
-            <div class="bb-col-head">
-              <span class="bb-col-title">昼 · 午后</span>
-              <span class="bb-col-meta">12:00 - 18:00</span>
-              ${isMaster ? '<button type="button" class="bb-col-quick-add" data-slot="afternoon" title="记午后事项">+</button>' : ''}
-            </div>
-            <div class="bb-col-body">
-              ${afternoonNotes.length === 0 ? `
-                <div class="bb-empty-hint" data-slot="afternoon">
-                  ${isMaster ? '点击记录午后专注' : '无事项'}
-                </div>
-              ` : afternoonNotes.map(n => this.renderNoteRow(n, isMaster)).join('')}
-            </div>
-          </div>
-
-          <!-- 晚风/暮色 -->
-          <div class="bb-col" data-slot="evening">
-            <div class="bb-col-head">
-              <span class="bb-col-title">暮 · 晚间</span>
-              <span class="bb-col-meta">18:00 - 24:00</span>
-              ${isMaster ? '<button type="button" class="bb-col-quick-add" data-slot="evening" title="记晚间事项">+</button>' : ''}
-            </div>
-            <div class="bb-col-body">
-              ${eveningNotes.length === 0 ? `
-                <div class="bb-empty-hint" data-slot="evening">
-                  ${isMaster ? '点击记录夜间时光' : '无事项'}
-                </div>
-              ` : eveningNotes.map(n => this.renderNoteRow(n, isMaster)).join('')}
-            </div>
-          </div>
+          ${this.renderSlotSection('morning', '晨 · 上午', '08:00 - 12:00', '☀️', morningNotes, isMaster)}
+          ${this.renderSlotSection('afternoon', '昼 · 午后', '12:00 - 18:00', '🌤️', afternoonNotes, isMaster)}
+          ${this.renderSlotSection('evening', '暮 · 晚间', '18:00 - 24:00', '🌙', eveningNotes, isMaster)}
         </div>
 
         <!-- 底部微弱手势指引 -->
         <div class="bb-hint-footer">
-          <span>‹ 横向拖动或按键盘 ← → 切换日期 ›</span>
+          <span>‹ 横向拖拽或按键盘 ← → 快速切换日期 ›</span>
         </div>
       </div>
     `;
 
     this.bindEvents(container);
-  }
-
-  // 极简单行待办呈现
-  renderNoteRow(n, isMaster) {
-    const isDone = n.status === 'completed';
-    const part = n.participant || 'both';
-    const partName = part === 'yan' ? '王岩' : (part === 'qiuhui' ? '秋慧' : '共同');
-
-    return `
-      <div class="bb-row ${isDone ? 'is-done' : ''}" data-id="${n.id}">
-        <!-- 打卡标记圈 -->
-        <button type="button" class="bb-chk ${isDone ? 'checked' : ''} btn-toggle-status" data-id="${n.id}" title="${isDone ? '标记为未做' : '打卡完成'}">
-          ${isDone ? '✓' : ''}
-        </button>
-
-        <!-- 极简身份圆点与姓名 -->
-        <span class="bb-part-dot ${part}" title="${partName}"></span>
-
-        <!-- 事项内容 -->
-        <div class="bb-row-content">
-          <span class="bb-row-title">${this.escapeHtml(n.title)}</span>
-          ${n.location ? `<span class="bb-row-loc">@${this.escapeHtml(n.location)}</span>` : ''}
-        </div>
-
-        <!-- 悬浮操作图标 -->
-        ${isMaster ? `
-          <div class="bb-row-actions">
-            <button type="button" class="bb-act-btn edit-note-btn" data-id="${n.id}" title="编辑">✎</button>
-            <button type="button" class="bb-act-btn del del-note-btn" data-id="${n.id}" title="删除">×</button>
-          </div>
-        ` : ''}
-      </div>
-    `;
   }
 
   bindEvents(container) {
