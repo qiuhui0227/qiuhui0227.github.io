@@ -52,14 +52,14 @@ class AlbumsModule {
     }
   }
 
-  // 1. 相簿列表页 (紧凑雅致书架目录 · 第一本为专属不可删改三餐手帐)
+  // 1. 相簿列表页 (日系小清新・实木陈列时光书架，秒开无延迟)
   async renderAlbumsList(container, isMaster) {
     const allAlbums = window.spaceStore.getAlbums();
     const visibleAlbums = allAlbums.filter(a => isMaster || a.visibility === 'living_room');
     const totalCount = visibleAlbums.length + 1; // +1 为专属三餐相册
 
     container.innerHTML = `
-      <div class="albums-wrap">
+      <div class="oasis-bookshelf-zone">
         <!-- 统一主模块标头栏 -->
         <div class="oasis-header-bar">
           <div class="oasis-header-main">
@@ -68,7 +68,7 @@ class AlbumsModule {
               <span>岁月光影 · 艺术展卷典藏</span>
             </div>
             <h2 class="oasis-header-title">🎞️ 岁月相册</h2>
-            <p class="oasis-header-sub">共计 ${totalCount} 本相册 · 记录生活的每帧细碎温柔 · 点击封面即刻翻阅</p>
+            <p class="oasis-header-sub">共计 ${totalCount} 本影集 · 点击书脊翻阅 · 沉淀朝夕细碎</p>
           </div>
           <div class="oasis-header-actions">
             ${isMaster ? `
@@ -82,10 +82,16 @@ class AlbumsModule {
           </div>
         </div>
 
-        <!-- 紧凑精致相册目录书架网格 -->
-        <div class="albums-grid">
-          ${this.renderSpecialMealAlbumCard()}
-          ${visibleAlbums.map(album => this.renderAlbumCard(album, isMaster)).join('')}
+        <!-- 日系小清新 · 实木温润陈列时光书架 -->
+        <div class="bookshelf-display-unit">
+          <div class="bookshelf-shelf-row">
+            <div class="albums-grid bookshelf-grid">
+              ${this.renderSpecialMealAlbumCard()}
+              ${visibleAlbums.map(album => this.renderAlbumCard(album, isMaster)).join('')}
+            </div>
+            <!-- 实木温润托架横梁 -->
+            <div class="bookshelf-ledge-wood"></div>
+          </div>
         </div>
       </div>
     `;
@@ -93,26 +99,25 @@ class AlbumsModule {
     this.bindAlbumsListEvents(container);
   }
 
-  // 专属三餐相册卡片 (系统保留 · 永久专属不可删除)
+  // 专属三餐相册 (系统永久手帐 · 书架第1本 · 18KB微缩秒开)
   renderSpecialMealAlbumCard() {
     const meals = window.spaceStore ? window.spaceStore.getMeals() : [];
-    const mealCoverUrl = (meals.length > 0 && meals[0].imageUrl) ? meals[0].imageUrl : './images/1001_1.jpg';
+    // 关键优化：优先使用真实照片微缩，兜底使用 18KB 本地极速图，杜绝3.7MB和外网慢速卡顿
+    const mealCoverUrl = (meals.length > 0 && meals[0].imageUrl) ? meals[0].imageUrl : './images/1001_1_thumb.jpg';
     return `
-      <div class="album-entry compact-book-card special-meal-album" id="album-card-special-meals" title="点击打开三餐手帐">
-        <div class="album-thumb-wrap meal-cover-wrap">
-          <img src="${mealCoverUrl}" alt="三餐相册封面" class="meal-book-cover-img" loading="lazy">
-          <span class="album-count-badge meal-badge">🍱 ${meals.length} 餐</span>
-          <span class="album-status-pill meal-sys-pill">🔒 永久专属</span>
+      <div class="shelf-photobook-card special-meal-book" id="album-card-special-meals" title="点击打开三餐手帐与拍照打卡">
+        <div class="photobook-cover-wrap">
+          <div class="photobook-spine-groove"></div>
+          <img src="${mealCoverUrl}" alt="三餐相册封面" class="photobook-cover-img" loading="eager" decoding="async">
+          <span class="photobook-silk-ribbon meal">🍱 三餐</span>
+          <span class="photobook-stamp-badge">🍱 ${meals.length} 餐</span>
         </div>
-        <div class="album-meta-compact">
-          <div class="album-title-line">
-            <h4 class="album-compact-title">🍱 三餐相册</h4>
-            <span class="meal-tag-sys">手帐</span>
-          </div>
-          <div class="album-sub-line">
+        <div class="photobook-spine-label">
+          <h4 class="photobook-title-txt">🍱 三餐相册</h4>
+          <div class="photobook-sub-txt">
             <span>人间烟火</span>
-            <span class="album-sub-sep">·</span>
-            <span>不可删除</span>
+            <span>·</span>
+            <span>手帐</span>
           </div>
         </div>
       </div>
@@ -122,31 +127,38 @@ class AlbumsModule {
   renderAlbumCard(album, isMaster) {
     const isLiving = album.visibility === 'living_room';
     const styleMeta = this.getStyleMeta(album.style);
-    const coverSrc = album.coverUrl || album.cover || (album.id === 'album_first_sight' ? './images/1001_1.jpg' : '');
+    
+    // 关键优化：杜绝 Unsplash 阻断网络，优先使用本地微缩图秒开
+    let coverSrc = album.coverUrl || album.cover;
+    if (!coverSrc || coverSrc.includes('unsplash.com') || album.id === 'album_first_sight') {
+      coverSrc = './images/1001_1_thumb.jpg';
+    }
 
     return `
-      <div class="album-entry compact-book-card" data-id="${album.id}">
-        <div class="album-thumb-wrap" id="album-cover-box-${album.id}">
-          ${coverSrc ? `<img src="${coverSrc}" alt="cover" loading="lazy" />` : `
-            <div class="album-placeholder">${styleMeta.icon}</div>
+      <div class="shelf-photobook-card" data-id="${album.id}">
+        <div class="photobook-cover-wrap" id="album-cover-box-${album.id}">
+          <div class="photobook-spine-groove"></div>
+          ${coverSrc ? `<img src="${coverSrc}" alt="cover" class="photobook-cover-img" loading="eager" decoding="async" />` : `
+            <div class="photobook-placeholder">
+              <span>${styleMeta.icon}</span>
+              <span style="font-size:10px; font-weight:600;">${styleMeta.name}</span>
+            </div>
           `}
-          <span class="album-count-badge" id="album-count-${album.id}">📷 ${album.count || 0}</span>
-          <span class="album-privacy-dot ${isLiving ? 'living' : 'bedroom'}" title="${isLiving ? '客厅公开' : '卧室私密'}"></span>
+          <span class="photobook-silk-ribbon ${isLiving ? 'living' : 'bedroom'}">${isLiving ? '客厅' : '私密'}</span>
+          <span class="photobook-stamp-badge" id="album-count-${album.id}">📷 ${album.count || 0}</span>
+          ${isMaster ? `
+            <div class="photobook-quick-acts">
+              <button class="photobook-mini-btn btn-edit-album" data-id="${album.id}" title="编辑相簿与封面">✎</button>
+              <button class="photobook-mini-btn del btn-del-album" data-id="${album.id}" title="删除相簿">×</button>
+            </div>
+          ` : ''}
         </div>
-        <div class="album-meta-compact">
-          <div class="album-title-line">
-            <h4 class="album-compact-title">${this.escapeHtml(album.title)}</h4>
-            ${isMaster ? `
-              <div class="album-quick-actions">
-                <button class="album-mini-act btn-edit-album" data-id="${album.id}" title="编辑相簿与封面">✎</button>
-                <button class="album-mini-act btn-del-album" data-id="${album.id}" title="删除相簿">×</button>
-              </div>
-            ` : ''}
-          </div>
-          <div class="album-sub-line">
+        <div class="photobook-spine-label">
+          <h4 class="photobook-title-txt">${this.escapeHtml(album.title)}</h4>
+          <div class="photobook-sub-txt">
             <span>${styleMeta.name}</span>
-            <span class="album-sub-sep">·</span>
-            <span>${album.createdAt ? album.createdAt.slice(5) : '相册'}</span>
+            <span>·</span>
+            <span>${album.createdAt ? album.createdAt.slice(5) : '影集'}</span>
           </div>
         </div>
       </div>
@@ -160,28 +172,11 @@ class AlbumsModule {
     });
 
     const albums = window.spaceStore.getAlbums();
-    albums.forEach(async (album) => {
-      const photos = await window.spaceStore.getPhotosByAlbum(album.id);
-      const countEl = container.querySelector(`#album-count-${album.id}`);
-      if (countEl) countEl.innerText = `📷 ${photos.length}`;
 
-      // 如果未指定自定义封面，且相册内有照片，则异步显示第一张
-      if (!album.coverUrl && !album.cover && photos.length > 0) {
-        const coverBox = container.querySelector(`#album-cover-box-${album.id}`);
-        if (coverBox && !coverBox.querySelector('img')) {
-          const img = document.createElement('img');
-          img.src = photos[0].dataUrl;
-          img.loading = 'lazy';
-          coverBox.prepend(img);
-          const ph = coverBox.querySelector('.album-placeholder');
-          if (ph) ph.remove();
-        }
-      }
-    });
-
-    container.querySelectorAll('.album-entry:not(.special-meal-album)').forEach(card => {
+    // 绑定普通相册点击
+    container.querySelectorAll('.shelf-photobook-card:not(.special-meal-book)').forEach(card => {
       card.addEventListener('click', (e) => {
-        if (e.target.closest('.album-quick-actions') || e.target.closest('.album-mini-act')) return;
+        if (e.target.closest('.photobook-quick-acts') || e.target.closest('.photobook-mini-btn')) return;
         this.currentAlbumId = card.dataset.id;
         this.render(container);
       });

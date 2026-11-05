@@ -81,10 +81,10 @@
     padding: 10px 12px;
   }
 
-  /* 手机端相册 */
+  /* 手机端相册 (小清新书架 · 3列紧凑精致陈列，绝不单列臃肿) */
   .albums-grid {
-    grid-template-columns: 1fr;
-    gap: 12px;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 12px 9px !important;
   }
   .photos-masonry {
     grid-template-columns: repeat(2, 1fr);

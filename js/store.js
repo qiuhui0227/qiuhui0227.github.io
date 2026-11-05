@@ -568,7 +568,7 @@ class SpaceStore {
           id: 'album_sweet_life',
           title: '日常漫步 · 诗意长卷',
           description: '从松花湖的微风到实验室的深夜，记录生活的每帧细碎温柔。',
-          cover: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?auto=format&fit=crop&w=600&q=80',
+          cover: './images/1001_1_thumb.jpg',
           style: 'scroll',
           visibility: 'bedroom',
           createdAt: '2026-10-01'
@@ -577,7 +577,7 @@ class SpaceStore {
           id: 'album_travel_notes',
           title: '山海远行 · 手账集',
           description: '跨越山川与城市的足迹，拍立得与胶带剪贴的情感信物。',
-          cover: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=600&q=80',
+          cover: './images/1001_1_thumb.jpg',
           style: 'scrapbook',
           visibility: 'living_room',
           createdAt: '2026-10-15'
@@ -586,7 +586,7 @@ class SpaceStore {
           id: 'album_accordion_memories',
           title: '光阴褶皱 · 经折典藏',
           description: '传统经折装风琴光影折痕，如屏风般展开属于两个人的岁月长歌。',
-          cover: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?auto=format&fit=crop&w=600&q=80',
+          cover: './images/1001_1_thumb.jpg',
           style: 'accordion',
           visibility: 'bedroom',
           createdAt: '2026-10-25'
@@ -650,13 +650,19 @@ class SpaceStore {
     }
   }
 
-  // --- 相簿操作 ---
+  // --- 相簿操作 (自动规避 Unsplash 阻断网络，秒开零延迟) ---
   getAlbums() {
     try {
       const albums = JSON.parse(localStorage.getItem('oasis_albums')) || [];
       return albums.map(a => {
         if (!a.style) {
           a.style = (a.id === 'album_sweet_life') ? 'scroll' : 'scrapbook';
+        }
+        if (a.cover && a.cover.includes('unsplash.com')) {
+          a.cover = './images/1001_1_thumb.jpg';
+        }
+        if (a.coverUrl && a.coverUrl.includes('unsplash.com')) {
+          a.coverUrl = './images/1001_1_thumb.jpg';
         }
         return a;
       });
