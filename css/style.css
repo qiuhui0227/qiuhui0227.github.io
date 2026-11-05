@@ -494,216 +494,487 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ==========================================================================
-   3. 共享时刻表网格 (Schedule Grid)
+   3. 朝夕小黑板 (Blackboard / Day Board System)
+   清晰、明了、好看的两人便签小黑板系统：
+   - 聚焦单日，一目了然无需纵向下划
+   - 晨光、白昼、暮色三时段横向并列
+   - 男主(王岩)、女主(杜秋慧)、两人共同事项一眼清晰分辨
+   - 左右翻页、滑动手势、日期轨道一键触达未来天数
+   - 历史备忘归档与导出
    ========================================================================== */
 
-/* 日期切换器 (Pill Switcher) */
-.week-switcher-wrap {
-  margin-bottom: 18px;
+/* 小黑板主画板容器 */
+.bb-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
 }
-.week-switcher {
+
+/* 顶部日期翻页控制器 (Sleek Day Turner) */
+.bb-date-controller {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  background: #eef4f7;
-  padding: 6px 10px;
+  gap: 14px;
+  background: #ffffff;
+  border: 1px solid #e1ebf0;
   border-radius: 14px;
+  padding: 12px 18px;
+  box-shadow: 0 2px 10px rgba(24, 53, 74, 0.03);
+  user-select: none;
 }
-.date-nav-controls {
+
+.bb-nav-arrow-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 10px;
+  border: 1px solid #d5e2e8;
+  background: #f7fafc;
+  color: #1e4757;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.bb-nav-arrow-btn:hover {
+  background: #1b7659;
+  color: #ffffff;
+  border-color: #1b7659;
+  transform: translateY(-1px);
+}
+
+.bb-center-date-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.bb-date-label-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.bb-date-chinese {
+  font-size: 19px;
+  font-weight: 800;
+  color: #143244;
+  letter-spacing: -0.3px;
+}
+
+.bb-day-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.bb-day-badge.today {
+  background: #eaf6f1;
+  color: #1b7659;
+  border: 1px solid #c8ebd8;
+}
+.bb-day-badge.future {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+}
+.bb-day-badge.past {
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #e5e7eb;
+}
+
+.bb-quick-date-picker-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+.bb-hidden-date-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+  width: 1px;
+  height: 1px;
+}
+.bb-date-picker-trigger {
+  font-size: 11.5px;
+  color: #6a8594;
+  cursor: pointer;
+  padding: 2px 8px;
+  border-radius: 6px;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.bb-date-picker-trigger:hover {
+  color: #1b7659;
+  background: #f0f6f4;
+}
+
+/* 快捷日期胶囊轨道 (Quick Date Strip) */
+.bb-date-chips-strip {
   display: flex;
   align-items: center;
   gap: 8px;
+  overflow-x: auto;
+  padding: 4px 2px 6px;
+  scrollbar-width: thin;
+}
+.bb-date-chips-strip::-webkit-scrollbar {
+  height: 4px;
+}
+.bb-date-chips-strip::-webkit-scrollbar-thumb {
+  background: #d8e4eb;
+  border-radius: 4px;
 }
 
-.schedule-heading {
-  display: grid;
-  grid-template-columns: 84px 1fr 1fr 1fr;
-  gap: 12px;
-  color: #7d939e;
-  font-size: 12px;
+.bb-date-chip {
+  flex: 1;
+  min-width: 68px;
+  padding: 8px 6px;
+  border-radius: 11px;
+  border: 1px solid #e1ebef;
+  background: #ffffff;
+  color: #557280;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  transition: all 0.15s ease;
+}
+.bb-date-chip:hover {
+  border-color: #a4dbc7;
+  color: #18354a;
+  background: #fbfdfc;
+}
+.bb-date-chip.active {
+  background: #183d51;
+  border-color: #183d51;
+  color: #ffffff;
+  box-shadow: 0 3px 10px rgba(24, 61, 81, 0.2);
+  transform: translateY(-1px);
+}
+.bb-date-chip.is-today:not(.active) {
+  border-color: #1b7659;
+  color: #1b7659;
+  background: #f0f9f5;
+}
+.bb-chip-weekday {
+  font-size: 11px;
   font-weight: 700;
-  padding: 0 14px 9px;
-  text-align: center;
+  opacity: 0.85;
 }
-.schedule-heading > :first-child {
-  text-align: left;
+.bb-chip-day {
+  font-size: 15px;
+  font-weight: 800;
+}
+.bb-date-chip.active .bb-chip-weekday,
+.bb-date-chip.active .bb-chip-day {
+  color: #ffffff;
 }
 
-.schedule-list {
-  display: grid;
-  gap: 12px;
+/* ================== 小黑板三时段三列画板 ================== */
+.bb-board-card {
+  background: #ffffff;
+  border: 1.5px solid #dce8ee;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 4px 20px rgba(24, 53, 74, 0.04);
 }
-.schedule-row {
+
+.bb-slots-grid {
   display: grid;
-  grid-template-columns: 84px 1fr 1fr 1fr;
-  gap: 12px;
-  background: #fff;
-  border: 1px solid #e5ecef;
-  border-radius: 14px;
-  padding: 12px 14px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
   align-items: stretch;
 }
 
-.day-label {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 4px;
-}
-.day-label strong {
-  font-size: 15px;
-  color: #2d4959;
-  font-weight: 750;
-}
-.day-label small {
-  font-size: 11px;
-  color: #96aab4;
+@media (max-width: 860px) {
+  .bb-slots-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-/* 时段卡槽 (.slot) - 纯净交互容器 */
-.slot {
-  border: 1px solid #eef2f5;
-  min-height: 90px;
-  text-align: left;
-  border-radius: 12px;
-  padding: 10px 12px;
-  position: relative;
+.bb-slot-column {
+  background: #f9fbfd;
+  border: 1px solid #e5edf1;
+  border-radius: 14px;
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  background: #f8fafc;
-  transition: all .16s ease;
-  cursor: pointer;
+  gap: 12px;
+  min-height: 280px;
 }
-.slot:hover {
-  background: #ffffff;
-  border-color: #c9dde5;
-  box-shadow: 0 3px 12px rgba(24, 53, 74, 0.08);
-  transform: translateY(-1px);
-}
-.slot-main {
+
+/* 三时段个性化标头 */
+.bb-slot-header {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 780;
 }
-.slot-period-tag {
+
+.bb-slot-header.morning {
+  background: linear-gradient(135deg, #fff9ee 0%, #fff4df 100%);
+  border: 1px solid #fae5be;
+  color: #b45309;
+}
+.bb-slot-header.afternoon {
+  background: linear-gradient(135deg, #f0f7ff 0%, #e6f1fc 100%);
+  border: 1px solid #cde1f7;
+  color: #0369a1;
+}
+.bb-slot-header.evening {
+  background: linear-gradient(135deg, #f5f3ff 0%, #ece9fe 100%);
+  border: 1px solid #ddd6fe;
+  color: #5b21b6;
+}
+
+.bb-slot-header-left {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.bb-slot-badge-count {
+  font-size: 10.5px;
+  font-weight: 750;
+  padding: 2px 6px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.bb-btn-slot-quick-add {
+  border: none;
+  background: rgba(255, 255, 255, 0.9);
+  color: inherit;
   font-size: 11.5px;
   font-weight: 750;
-  color: #647d8c;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-.slot-count-badge {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: #1b7659;
-  background: #e3f4e8;
-  padding: 1px 6px;
-  border-radius: 999px;
-}
-
-/* 事项胶囊 (.slot-topic) - 极简工整卡片 */
-.slot-topic {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 11.5px;
-  font-weight: 650;
-  line-height: 1.35;
-  color: #184257;
-  background: #ffffff;
-  border: 1px solid #e2eaee;
-  border-radius: 8px;
-  padding: 5px 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
-  transition: all .15s ease;
-}
-.slot-topic:hover {
-  border-color: #3d9a80;
-  box-shadow: 0 2px 8px rgba(61, 154, 128, 0.12);
-}
-.slot-topic.is-done {
-  background: #f4f7f8;
-  border-color: #e5ecef;
-  color: #8c9ea7;
-}
-.slot-topic.is-done .slot-topic-text {
-  text-decoration: line-through;
-  opacity: 0.75;
-}
-.slot-topic-text {
-  flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.slot-topic-actions {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  opacity: 0.7;
-  transition: opacity .15s;
-}
-.slot-topic:hover .slot-topic-actions {
-  opacity: 1;
-}
-.action-icon-btn {
-  background: none;
-  border: none;
-  padding: 2px;
+  padding: 3px 8px;
+  border-radius: 6px;
   cursor: pointer;
-  color: #718894;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-}
-.action-icon-btn:hover {
-  background: rgba(0, 0, 0, 0.06);
-  color: #1b3442;
-}
-.action-icon-btn.is-checked {
-  color: #207b54;
-}
-.action-icon-btn.btn-del:hover {
-  color: #a7464c;
-  background: #fee2e2;
-}
-
-/* 空时段指引占位 */
-.slot-topic.empty {
-  font-size: 11px;
-  font-weight: 550;
-  color: #8fa2ad;
-  background: transparent;
-  border: 1px dashed #cfdbe1;
-  box-shadow: none;
-  justify-content: center;
-  padding: 6px;
-}
-.slot-topic.empty:hover {
-  border-color: #1b7659;
-  color: #1b7659;
-  background: #f0f7f4;
-}
-
-/* 参加人微型徽标 (清晰典雅) */
-.part-pill {
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
   gap: 3px;
-  font-size: 10px;
-  font-weight: 750;
+}
+.bb-btn-slot-quick-add:hover {
+  background: #ffffff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+/* 时段内部便签列表 */
+.bb-notes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1;
+}
+
+/* 空白占位 */
+.bb-empty-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 30px 14px;
+  color: #8da4b0;
+  text-align: center;
+  border: 1px dashed #dce7ec;
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.5);
+  flex: 1;
+  font-size: 12.5px;
+}
+.bb-empty-slot .hint {
+  font-size: 11px;
+  color: #a4b8c2;
+}
+
+/* ================== 单张便签卡片 (Note Card) ================== */
+.bb-note-card {
+  background: #ffffff;
+  border: 1px solid #e1ebef;
+  border-radius: 11px;
+  padding: 11px 13px;
+  box-shadow: 0 2px 7px rgba(24, 53, 74, 0.03);
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  overflow: hidden;
+}
+.bb-note-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px rgba(24, 53, 74, 0.08);
+}
+
+/* 参加人区分色标 (左侧纵线与徽章) */
+.bb-note-card.participant-yan {
+  border-left: 4px solid #2563eb;
+}
+.bb-note-card.participant-qiuhui {
+  border-left: 4px solid #e11d48;
+}
+.bb-note-card.participant-both {
+  border-left: 4px solid #059669;
+}
+
+/* 便签顶栏：参加人标签与私密/地点标签 */
+.bb-note-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.bb-person-badge {
+  font-size: 11px;
+  font-weight: 780;
+  padding: 2.5px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.bb-person-badge.yan {
+  background: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #dbeafe;
+}
+.bb-person-badge.qiuhui {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid #ffe4e6;
+}
+.bb-person-badge.both {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #d1fae5;
+}
+
+.bb-tag-pill {
+  font-size: 10.5px;
+  color: #627d8c;
+  background: #f1f5f7;
   padding: 2px 6px;
   border-radius: 4px;
-  flex-shrink: 0;
 }
-.part-yan { background: var(--part-yan-bg); color: var(--part-yan-text); }
-.part-qiuhui { background: var(--part-qiuhui-bg); color: var(--part-qiuhui-text); }
-.part-both { background: var(--part-both-bg); color: var(--part-both-text); }
+
+/* 便签正文 */
+.bb-note-text {
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.45;
+  color: #17374b;
+  word-break: break-word;
+}
+.bb-note-card.is-completed .bb-note-text {
+  text-decoration: line-through;
+  color: #92a4ad;
+  opacity: 0.8;
+}
+
+/* 便签底栏：打卡开关与操作按钮 */
+.bb-note-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #f1f5f7;
+  padding-top: 7px;
+  margin-top: 2px;
+}
+
+.bb-btn-toggle-status {
+  border: none;
+  background: transparent;
+  color: #5a7786;
+  font-size: 11.5px;
+  font-weight: 650;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 5px;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.bb-btn-toggle-status:hover {
+  background: #eaf6f1;
+  color: #1b7659;
+}
+.bb-note-card.is-completed .bb-btn-toggle-status {
+  color: #1b7659;
+}
+
+.bb-note-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.bb-note-action-btn {
+  border: none;
+  background: transparent;
+  color: #8da4b0;
+  font-size: 11.5px;
+  padding: 3px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.bb-note-action-btn:hover {
+  background: #f0f4f7;
+  color: #18354a;
+}
+.bb-note-action-btn.del:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* 历史归档弹窗样式 */
+.bb-archive-modal-box {
+  max-width: 650px !important;
+  width: 95vw;
+}
+.bb-archive-stats-bar {
+  background: #f6faf8;
+  border: 1px solid #cce8dc;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: #174233;
+}
+.bb-archive-preview-box {
+  background: #18354a;
+  color: #e5f0f5;
+  border-radius: 10px;
+  padding: 14px;
+  max-height: 280px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  margin-bottom: 16px;
+}
 
 /* ==========================================================================
    4. 岁月相簿 (Albums in USV Lab Admin Card Style)

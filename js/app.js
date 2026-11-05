@@ -77,7 +77,7 @@ class SpaceApp {
 
     const today = new Date().toISOString().split('T')[0];
     const timetables = window.spaceStore.getTimetables();
-    const visibleEvents = timetables.filter(e => e.date === today && (isMaster || e.visibility === 'living_room'));
+    const visibleEvents = timetables.filter(e => e.date === today && (isMaster || e.visibility === 'living_room' || e.visibility === 'living'));
     const allAlbums = window.spaceStore.getAlbums();
     const visibleAlbums = allAlbums.filter(a => isMaster || a.visibility === 'living_room');
 
