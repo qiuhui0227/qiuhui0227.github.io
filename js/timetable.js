@@ -148,8 +148,8 @@ class TimetableModule {
             </div>
             ${isMaster ? `
               <button type="button" class="bb-slot-add-btn bb-col-quick-add" data-slot="${slotKey}" title="记录${slotName}事项">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 5v14M5 12h14"/></svg>
-                记一笔
+                <svg class="bb-add-btn-ico" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+                <span>记一笔</span>
               </button>
             ` : ''}
           </div>
