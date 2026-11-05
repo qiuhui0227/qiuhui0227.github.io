@@ -1,84 +1,258 @@
-/* ==========================================================================
-   OASIS | 简历编辑器与标准 A4 导出引擎 (USV Lab 工整秩序排版)
-   支持双人简历切换 (Yan & Qiuhui) + 证件照上传与标准排版
-   ========================================================================== */
+/**
+ * OASIS | Qiuhui & Yan
+ * 履历文库与 A4 简历书房样式表
+ * 包含：书架视图 (Bookshelf)、蓝本复制弹窗 (Blueprint Modal)、双栏工作台 (Editor/Preview)、以及三种风格与 A4 打印规则
+ */
 
+/* ================== 1. 履历书房外层容器 ================== */
 .resume-wrapper {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  width: 100%;
 }
 
+/* 顶部通用导航工具栏 */
 .resume-toolbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-  background: #f8fafb;
-  border: 1px solid #e3ebef;
+  gap: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  padding: 12px 18px;
   border-radius: 14px;
-  padding: 14px 18px;
-}
-.toolbar-title-group h3 {
-  font-size: 15px;
-  font-weight: 780;
-  color: #18354a;
-  margin: 0 0 3px;
+  border: 1px solid rgba(220, 230, 235, 0.85);
+  box-shadow: 0 4px 18px rgba(18, 53, 74, 0.04);
+  flex-wrap: wrap;
 }
 
-/* 双人身份切换器 (Person Switcher) */
-.person-switcher {
-  display: flex;
-  gap: 4px;
-  background: #eef3f5;
-  padding: 4px;
-  border-radius: 11px;
-}
-.person-tab {
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: #627d89;
-  font-size: 12.5px;
-  font-weight: 740;
-  padding: 6px 14px;
-  transition: all .16s ease;
-  cursor: pointer;
-}
-.person-tab:hover {
-  color: #18354a;
-}
-.person-tab.active {
-  background: #ffffff;
-  color: #18354a;
-  box-shadow: 0 1px 4px rgba(24, 53, 74, 0.12);
+.toolbar-title-group h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #15354a;
+  letter-spacing: -0.2px;
 }
 
 .toolbar-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
-}
-.save-indicator {
-  color: #207b54;
-  font-weight: 600;
-  font-size: 11.5px;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-/* 分屏模式 (PC 默认) */
+.person-switcher {
+  display: inline-flex;
+  background: #edf3f6;
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid #dce6eb;
+}
+
+.person-tab {
+  border: none;
+  background: transparent;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #557180;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.person-tab:hover {
+  color: #18354a;
+}
+
+.person-tab.active {
+  background: #ffffff;
+  color: #18354a;
+  box-shadow: 0 2px 8px rgba(24, 53, 74, 0.08);
+}
+
+.save-indicator {
+  font-size: 11.5px;
+  color: #1b7659;
+  background: #eaf6f1;
+  padding: 3px 8px;
+  border-radius: 6px;
+  border: 1px solid #c9ebd8;
+}
+
+/* ================== 2. 简历书架视图 (Bookshelf View) ================== */
+.resume-shelf-banner {
+  background: linear-gradient(135deg, #f4f8fb 0%, #eef5f8 100%);
+  border: 1px solid #d8e5ec;
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.shelf-stats-info h4 {
+  margin: 0 0 4px 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #18354a;
+}
+
+.shelf-stats-info p {
+  margin: 0;
+  font-size: 12px;
+  color: #627d8c;
+}
+
+.resume-bookshelf-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 18px;
+}
+
+/* 仿精装书卷卡片 */
+.resume-book-card {
+  position: relative;
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e1ebf0;
+  box-shadow: 0 4px 14px rgba(18, 53, 74, 0.04);
+  padding: 18px 20px 18px 26px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  overflow: hidden;
+}
+
+.resume-book-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 24px rgba(18, 53, 74, 0.09);
+  border-color: #cbdce4;
+}
+
+/* 书脊艺术色带 (不同风格不同颜色) */
+.book-spine-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 7px;
+}
+
+.style-job .book-spine-line { background: #1e3a8a; }
+.style-scholarship .book-spine-line { background: #881337; }
+.style-advisor .book-spine-line { background: #0f766e; }
+
+.book-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.book-style-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 20px;
+  letter-spacing: 0.3px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.style-job .book-style-badge {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+.style-scholarship .book-style-badge {
+  background: #fdf2f8;
+  color: #9d174d;
+  border: 1px solid #fbcfe8;
+}
+.style-advisor .book-style-badge {
+  background: #f0fdfa;
+  color: #0f766e;
+  border: 1px solid #99f6e4;
+}
+
+.book-date-text {
+  font-size: 11px;
+  color: #8da2ad;
+}
+
+.book-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #18354a;
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.book-card-target {
+  font-size: 12px;
+  color: #476272;
+  margin-bottom: 14px;
+  line-height: 1.45;
+  background: #f8fafb;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border-left: 3px solid #cbdde6;
+}
+
+.book-card-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.book-pill-tag {
+  font-size: 11px;
+  color: #557180;
+  background: #f0f4f7;
+  padding: 2px 7px;
+  border-radius: 4px;
+}
+
+.book-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #edf2f5;
+  padding-top: 12px;
+  margin-top: auto;
+  gap: 8px;
+}
+
+/* ================== 3. 双栏工作台视图 (Editor Workspace) ================== */
 .resume-workspace {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 460px 1fr;
   gap: 20px;
   align-items: start;
 }
 
+/* 左侧配置面板 */
 .resume-editor-panel {
-  max-height: calc(100vh - 220px);
+  background: #ffffff;
+  border-radius: 14px;
+  border: 1px solid #e1ebf0;
+  box-shadow: 0 4px 18px rgba(18, 53, 74, 0.04);
+  padding: 16px;
+  max-height: calc(100vh - 170px);
   overflow-y: auto;
-  padding-right: 6px;
 }
+
 .resume-form-flow {
   display: flex;
   flex-direction: column;
@@ -86,305 +260,282 @@
 }
 
 .form-section-card {
-  background: #ffffff;
-  border: 1px solid #e3ebef;
-  border-radius: 13px;
-  padding: 16px;
+  background: #fdfefe;
+  border: 1px solid #e5ecef;
+  border-radius: 10px;
+  padding: 12px 14px;
 }
+
 .section-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
+
 .section-title {
-  font-size: 13.5px;
-  font-weight: 760;
-  color: #18354a;
+  font-size: 13px;
+  font-weight: 700;
+  color: #1b3d52;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-/* 证件照上传操作区 */
-.avatar-uploader-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 12px 14px;
-  background: #f8fafb;
-  border: 1px dashed #cedde4;
+/* 证件照与云端持久化上传组件 */
+.avatar-manager-card {
+  background: #f9fbfd;
+  border: 1px dashed #cedfe7;
   border-radius: 10px;
-  margin-bottom: 14px;
+  padding: 12px;
+  display: flex;
+  gap: 14px;
+  align-items: center;
 }
+
 .avatar-preview-box {
   width: 72px;
   height: 96px;
-  background: #ffffff;
-  border: 1px solid #dce5e9;
   border-radius: 6px;
+  background: #edf3f6;
+  border: 1px solid #d4e2e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
+
 .avatar-real-img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
 }
+
 .avatar-placeholder-box {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  color: #9cb0ba;
-  font-size: 10px;
+  font-size: 28px;
+  color: #9cb5c1;
   text-align: center;
 }
-.avatar-actions-wrap {
+
+.avatar-controls {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.avatar-url-input-wrap {
+  display: flex;
+  gap: 6px;
+}
+
+.avatar-url-input-wrap input {
+  font-size: 11.5px;
+  height: 32px;
 }
 
 .sub-form-item {
   background: #f8fafb;
-  border: 1px solid #e5ecef;
-  border-radius: 9px;
-  padding: 12px;
-  margin-bottom: 10px;
+  border: 1px solid #e6edf0;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 8px;
 }
+
 .sub-item-header {
   display: flex;
   justify-content: space-between;
-  font-size: 11px;
-  font-weight: 700;
-  color: #718894;
-  margin-bottom: 8px;
+  align-items: center;
+  margin-bottom: 6px;
 }
+
 .btn-text-del {
   background: none;
   border: none;
-  color: #a7464c;
-  font-size: 11px;
-  font-weight: 600;
+  color: #b05252;
+  font-size: 11.5px;
   cursor: pointer;
+  padding: 0;
 }
+
 .btn-text-del:hover {
   text-decoration: underline;
 }
 
-/* 右侧 A4 真实比例预览 */
+/* ================== 4. 右侧 A4 真实比例页面预览 (A4 Sheet) ================== */
 .resume-preview-panel {
   display: flex;
   justify-content: center;
-  max-height: calc(100vh - 220px);
+  background: #eaeff2;
+  border-radius: 14px;
+  border: 1px solid #dce5ea;
+  padding: 24px;
   overflow-y: auto;
-  padding-bottom: 30px;
+  max-height: calc(100vh - 170px);
 }
 
 .a4-page-sheet {
-  width: 100%;
-  max-width: 210mm;
+  width: 210mm;
   min-height: 297mm;
   background: #ffffff;
-  padding: 20mm 18mm;
-  box-shadow: 0 4px 20px rgba(24, 53, 74, 0.08);
-  border: 1px solid #dce5e9;
-  border-radius: 4px;
-  color: #1b3442;
-  font-size: 9.5pt;
-  line-height: 1.55;
+  padding: 16mm 18mm;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  border-radius: 2px;
   box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Microsoft YaHei", SimSun, sans-serif;
+  color: #1f2937;
+  font-size: 10pt;
+  line-height: 1.5;
 }
 
-/* A4 内容内部排版 */
-.resume-paper {
-  display: flex;
-  flex-direction: column;
-  gap: 13pt;
-}
-
-/* A4 Header (包含证件照布局) */
+/* 顶部标头 */
 .rp-header {
-  border-bottom: 1.5pt solid #18354a;
-  padding-bottom: 8pt;
-}
-.rp-header.has-avatar {
+  border-bottom: 2pt solid #18354a;
+  padding-bottom: 10pt;
+  margin-bottom: 12pt;
   display: flex;
-  align-items: flex-start;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 16pt;
 }
+
+.style-job .rp-header { border-bottom-color: #1e3a8a; }
+.style-scholarship .rp-header { border-bottom-color: #881337; }
+.style-advisor .rp-header { border-bottom-color: #0f766e; }
+
 .rp-header-main {
   flex: 1;
 }
-.rp-avatar-box {
-  width: 26mm;
-  height: 35mm;
-  flex-shrink: 0;
-  border: 1pt solid #cbd8df;
-  border-radius: 3pt;
-  overflow: hidden;
-  box-shadow: 0 2pt 6pt rgba(0,0,0,0.06);
-}
-.rp-avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
+
+.rp-name-row {
+  display: flex;
+  align-items: baseline;
+  gap: 12pt;
+  margin-bottom: 4pt;
 }
 
 .rp-name {
-  font-size: 19pt;
-  font-weight: 820;
-  color: #15354a;
-  letter-spacing: -0.02em;
-  margin: 0 0 3pt;
-}
-.rp-title {
-  font-size: 10.5pt;
+  font-size: 20pt;
   font-weight: 700;
-  color: #1b7659;
-  margin-bottom: 5pt;
-}
-.rp-contact-bar {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10pt;
-  font-size: 8.5pt;
-  color: #557180;
-}
-.rp-summary {
-  margin-top: 7pt;
-  font-size: 8.5pt;
-  color: #203b49;
-  text-align: justify;
-  line-height: 1.5;
-  background: #f4f7f8;
-  padding: 5pt 9pt;
-  border-radius: 4px;
+  color: #111827;
+  margin: 0;
+  letter-spacing: 0.5px;
 }
 
-.rp-section {
-  display: flex;
-  flex-direction: column;
-  gap: 5pt;
-  page-break-inside: avoid;
+.rp-target-badge {
+  font-size: 10pt;
+  font-weight: 600;
+  color: #1b7659;
 }
+.style-job .rp-target-badge { color: #1e40af; }
+.style-scholarship .rp-target-badge { color: #9d174d; }
+.style-advisor .rp-target-badge { color: #0f766e; }
+
+.rp-contact-row {
+  font-size: 8.5pt;
+  color: #4b5563;
+  line-height: 1.6;
+  margin-top: 4pt;
+}
+
+.rp-header-avatar {
+  width: 28mm;
+  height: 38mm;
+  border-radius: 2px;
+  border: 1px solid #d1d5db;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.rp-header-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 模块小标题 */
 .rp-section-title {
-  font-size: 10.5pt;
-  font-weight: 780;
+  font-size: 11pt;
+  font-weight: 700;
   color: #18354a;
-  border-bottom: 1pt solid #dce5e9;
-  padding-bottom: 2pt;
-  margin: 0;
-  letter-spacing: 0.03em;
-}
-.rp-section-content {
+  border-bottom: 1pt solid #e5e7eb;
+  padding-bottom: 3pt;
+  margin-top: 12pt;
+  margin-bottom: 6pt;
   display: flex;
-  flex-direction: column;
-  gap: 7pt;
+  align-items: center;
+  justify-content: space-between;
 }
+
+.style-job .rp-section-title { color: #1e3a8a; border-bottom-color: #dbeafe; }
+.style-scholarship .rp-section-title { color: #881337; border-bottom-color: #fce7f3; }
+.style-advisor .rp-section-title { color: #0f766e; border-bottom-color: #ccfbf1; }
 
 .rp-item-row {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   font-size: 9.5pt;
+  margin-bottom: 2pt;
 }
-.rp-item-bold {
-  font-weight: 750;
-  color: #15354a;
+
+.rp-bold {
+  font-weight: 700;
+  color: #111827;
 }
-.rp-item-mid {
-  font-weight: 550;
-  color: #557180;
-  margin-left: 6pt;
-  margin-right: auto;
-}
-.rp-item-date {
+
+.rp-meta {
+  color: #6b7280;
   font-size: 8.5pt;
-  color: #718894;
 }
-.rp-item-desc {
-  font-size: 8.5pt;
-  color: #344c59;
-  line-height: 1.45;
+
+.rp-bullets {
+  margin: 3pt 0 6pt 16pt;
+  padding: 0;
+}
+
+.rp-bullets li {
+  font-size: 9pt;
+  color: #374151;
+  line-height: 1.55;
+  margin-bottom: 2pt;
   text-align: justify;
 }
-.rp-skills-list {
-  list-style-type: square;
-  margin-left: 14pt;
-  margin-top: 2pt;
-  margin-bottom: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 3pt;
-  font-size: 8.5pt;
-  color: #344c59;
+
+.rp-desc-text {
+  font-size: 9pt;
+  color: #4b5563;
+  margin: 2pt 0 6pt 0;
+  line-height: 1.5;
+  text-align: justify;
 }
 
-/* 医学学术简历专有样式 (Medical Academic CV Styling) */
-.rp-badge-rank {
-  display: inline-block;
-  background: #e8f4ec;
-  color: #1b7659;
-  font-weight: 750;
-  padding: 1.5pt 5.5pt;
-  border-radius: 3pt;
-  font-size: 8.5pt;
-  margin-right: 4pt;
-}
-.rp-badge-tag {
-  display: inline-block;
-  background: #e8f0fe;
-  color: #1a73e8;
-  font-weight: 700;
-  padding: 1.5pt 5.5pt;
-  border-radius: 3pt;
-  font-size: 8.5pt;
-}
-.rp-intent-bar {
-  display: flex;
-  align-items: center;
-  gap: 6pt;
-  background: #f1f6f8;
-  border-left: 2.5pt solid #18354a;
-  padding: 3.5pt 8pt;
-  border-radius: 0 4pt 4pt 0;
-  margin: 4pt 0;
-  font-size: 8.8pt;
-}
-.rp-intent-label {
-  font-weight: 750;
-  color: #18354a;
-}
-.rp-intent-mentor {
-  font-weight: 750;
-  color: #1b7659;
-}
-.btn-text-del {
-  border: 0;
-  background: transparent;
-  color: #b05252;
-  font-size: 11.5px;
-  cursor: pointer;
-}
-.btn-text-del:hover {
-  text-decoration: underline;
+/* ================== 5. 蓝本创建弹窗 (Blueprint Modal) ================== */
+.blueprint-modal-box {
+  max-width: 540px;
 }
 
-/* 打印 PDF 引擎 */
+.blueprint-tip-banner {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #166534;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+/* ================== 6. 打印 PDF 引擎 (@media print) ================== */
 @page {
   size: A4 portrait;
   margin: 10mm 10mm;
 }
+
 @media print {
   body {
-    background: #fff !important;
+    background: #ffffff !important;
   }
   .login-layout,
   .topline,
@@ -410,6 +561,9 @@
     display: block !important;
     max-height: none !important;
     overflow: visible !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
   }
   .a4-page-sheet {
     box-shadow: none !important;
@@ -417,5 +571,20 @@
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+  }
+}
+
+/* 响应式断点适配 */
+@media (max-width: 900px) {
+  .resume-workspace {
+    grid-template-columns: 1fr;
+  }
+  .resume-preview-panel {
+    padding: 10px;
+  }
+  .a4-page-sheet {
+    width: 100%;
+    min-height: auto;
+    padding: 12px;
   }
 }

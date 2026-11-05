@@ -175,6 +175,7 @@ class SpaceApp {
       } else if (window.spaceAuth.isQiuhui()) {
         window.resumeModule.currentPerson = 'qiuhui';
       }
+      window.resumeModule.viewMode = 'bookshelf';
       window.resumeModule.render(containers.resume);
     } else if (tabName === 'settings') {
       this.renderSettings(containers.settings);
@@ -397,6 +398,7 @@ class SpaceApp {
         version: '3.0',
         timetables: window.spaceStore.getTimetables(),
         albums: window.spaceStore.getAlbums(),
+        resumeBooks: window.spaceStore.getResumeBooks(),
         resumes: window.spaceStore.getDualResumes(),
         authConfig: window.spaceStore.getAuthConfig(),
         exportAt: new Date().toISOString()
@@ -419,7 +421,9 @@ class SpaceApp {
           const data = JSON.parse(ev.target.result);
           if (data.timetables) window.spaceStore.saveTimetables(data.timetables);
           if (data.albums) window.spaceStore.saveAlbums(data.albums);
-          if (data.resumes) {
+          if (data.resumeBooks) {
+            window.spaceStore.saveResumeBooks(data.resumeBooks);
+          } else if (data.resumes) {
             if (data.resumes.qiuhui) window.spaceStore.saveResume('qiuhui', data.resumes.qiuhui);
             if (data.resumes.yan) window.spaceStore.saveResume('yan', data.resumes.yan);
           } else if (data.resume) {

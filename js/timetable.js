@@ -318,8 +318,8 @@ class TimetableModule {
                   </div>
                   <div>
                     <select name="visibility" class="select" style="height:39px; font-size:12px;">
+                      <option value="bedroom" selected>🛏️ 卧室私密</option>
                       <option value="living_room">🛋️ 客厅开放</option>
-                      <option value="bedroom">🛏️ 卧室私密</option>
                     </select>
                   </div>
                 </div>
@@ -378,7 +378,7 @@ class TimetableModule {
         slot: slotKey,
         title: fd.get('title'),
         participant: fd.get('participant'),
-        visibility: fd.get('visibility'),
+        visibility: fd.get('visibility') || 'bedroom',
         location: '',
         status: 'pending'
       };
@@ -436,8 +436,8 @@ class TimetableModule {
               <div>
                 <label class="form-label">开放权限</label>
                 <select name="visibility" class="select">
+                  <option value="bedroom" ${(!item || item.visibility === 'bedroom' || !item.visibility) ? 'selected' : ''}>🛏️ 卧室私密 (仅主人可见)</option>
                   <option value="living_room" ${item?.visibility === 'living_room' ? 'selected' : ''}>🛋️ 客厅开放 (来宾可见)</option>
-                  <option value="bedroom" ${item?.visibility === 'bedroom' ? 'selected' : ''}>🛏️ 卧室私密 (仅主人可见)</option>
                 </select>
               </div>
             </div>
@@ -485,8 +485,8 @@ class TimetableModule {
           slot: fd.get('slot'),
           title: fd.get('title'),
           participant: fd.get('participant'),
-          visibility: fd.get('visibility'),
-          location: fd.get('location'),
+          visibility: fd.get('visibility') || 'bedroom',
+          location: fd.get('location') || '',
           status: 'pending'
         });
       }
