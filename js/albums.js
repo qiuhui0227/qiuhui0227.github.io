@@ -82,7 +82,7 @@ class AlbumsModule {
         </div>
 
         <!-- 日系小清新 · 实木温润陈列时光书架 -->
-        <div class="bookshelf-display-unit">
+        <div class="bookshelf-display-unit" id="bookshelf-unit">
           <div class="bookshelf-shelf-row">
             <div class="albums-grid bookshelf-grid">
               ${this.renderSpecialMealAlbumCard()}
@@ -90,6 +90,16 @@ class AlbumsModule {
             </div>
             <!-- 实木温润托架横梁 -->
             <div class="bookshelf-ledge-wood"></div>
+          </div>
+
+          <!-- 需求 3：独立位于下方开阔空白处的放回书架控制栏，大气、优雅、美观 -->
+          <div class="bookshelf-floating-retract-zone" id="bookshelf-retract-zone">
+            <button type="button" class="bookshelf-floating-retract-btn" id="btn-bookshelf-retract" title="将放大的相册放回书架">
+              <svg class="retract-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v12M18 11l-6 6-6-6M4 20h16"/>
+              </svg>
+              <span>放回书架</span>
+            </button>
           </div>
         </div>
       </div>
@@ -119,10 +129,6 @@ class AlbumsModule {
               <span>·</span>
               <span>手帐</span>
             </div>
-            <button type="button" class="photobook-retract-btn" title="放回书架">
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M18 13l-6 6-6-6"/></svg>
-              <span>放回书架</span>
-            </button>
           </div>
         </div>
       </div>
@@ -166,10 +172,6 @@ class AlbumsModule {
               <span>·</span>
               <span>${album.createdAt ? album.createdAt.slice(5) : '影集'}</span>
             </div>
-            <button type="button" class="photobook-retract-btn" title="放回书架">
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M18 13l-6 6-6-6"/></svg>
-              <span>放回书架</span>
-            </button>
           </div>
         </div>
       </div>
@@ -177,7 +179,9 @@ class AlbumsModule {
   }
 
   bindAlbumsListEvents(container) {
+    const bookshelfUnit = container.querySelector('#bookshelf-unit');
     const bookshelfGrid = container.querySelector('.bookshelf-grid');
+    const retractBtn = container.querySelector('#btn-bookshelf-retract');
     let activePinnedCard = null;
 
     // 核心函数：固定挺住相册并放大，向中间靠拢
@@ -193,7 +197,6 @@ class AlbumsModule {
       const diffX = shelfCenterX - cardCenterX;
 
       // 核心需求：“以自己的位置向中间靠拢，注意，不是直接居中”
-      // 适度向中心靠拢偏移约 44%，确保左右两侧书本向内聚拢，但保留原始站位
       let nudgeX = 0;
       if (diffX > 15) {
         nudgeX = Math.min(diffX * 0.44, 52);
@@ -201,32 +204,45 @@ class AlbumsModule {
         nudgeX = Math.max(diffX * 0.44, -52);
       }
 
-      // 放大倍数提升至 1.68 倍，上浮 36px（超出书架依然美观，霸气压住周围相册）
+      // 放大 1.68 倍，上浮 36px，压住周围相册
       card.style.transform = `translate3d(${nudgeX.toFixed(1)}px, -36px, 0) scale(1.68)`;
       card.classList.add('card-pinned');
       card.classList.remove('touch-pressing');
       bookshelfGrid?.classList.add('bookshelf-has-pinned');
+      bookshelfUnit?.classList.add('has-pinned-card');
       activePinnedCard = card;
     };
 
-    // 核心函数：收回挺住的相册
+    // 核心函数：收回挺住的相册，绝对水平平整归位，杜绝高出书架 bug
     const unpinCard = () => {
       if (!activePinnedCard) return;
-      activePinnedCard.style.transform = '';
+      activePinnedCard.style.transform = 'none';
       activePinnedCard.classList.remove('card-pinned');
       activePinnedCard.classList.remove('touch-pressing');
       bookshelfGrid?.classList.remove('bookshelf-has-pinned');
+      bookshelfUnit?.classList.remove('has-pinned-card');
+      const tempCard = activePinnedCard;
       activePinnedCard = null;
+      setTimeout(() => {
+        if (tempCard && !tempCard.classList.contains('card-pinned')) {
+          tempCard.style.transform = '';
+        }
+      }, 300);
     };
+
+    // 绑定独立大气放回书架按钮
+    retractBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      unpinCard();
+    });
 
     // 点空白处收回
     const handleOutsideTap = (e) => {
       if (!activePinnedCard) return;
 
-      // 如果点击的是收回按钮，立即收回放回书架
-      if (e.target.closest('.photobook-retract-btn')) {
+      if (e.target.closest('#btn-bookshelf-retract')) {
         e.stopPropagation();
-        e.preventDefault();
         unpinCard();
         return;
       }
@@ -256,15 +272,6 @@ class AlbumsModule {
       e.preventDefault();
       return false;
     }, { passive: false });
-
-    // 独立绑定所有相册卡片内的收回按钮点击
-    container.querySelectorAll('.photobook-retract-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        unpinCard();
-      });
-    });
 
     const albums = window.spaceStore.getAlbums();
 

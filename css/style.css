@@ -1296,10 +1296,13 @@ a { color: inherit; text-decoration: none; }
   will-change: transform;
 }
 
-/* 鼠标悬停明显放大 (桌面端未锁定状态) */
-.bookshelf-grid:not(.bookshelf-has-pinned) .shelf-photobook-card:hover {
-  transform: translateY(-8px) scale(1.08);
-  z-index: 25;
+/* 鼠标悬停 (仅在桌面精细指针且未锁定时加深微阴影，不改变任何 transform，彻底杜绝手机触控残留与收回后相册高出一块的 bug) */
+@media (hover: hover) and (pointer: fine) {
+  .bookshelf-grid:not(.bookshelf-has-pinned) .shelf-photobook-card:hover .photobook-cover-wrap {
+    box-shadow: 
+      0 10px 22px -2px rgba(60, 48, 38, 0.28),
+      0 4px 10px rgba(0, 0, 0, 0.08);
+  }
 }
 
 /* 手指按住初始微触感响应 */
@@ -1337,7 +1340,7 @@ a { color: inherit; text-decoration: none; }
   pointer-events: auto !important;
 }
 
-/* 挺住放大后相册文字内容：浮空无界透白高斯模糊水滴质感，脱离网格流，书架背景纹丝不动 */
+/* 挺住放大后相册文字内容：浮空无界半透明质感，脱离网格流，书架背景纹丝不动 */
 .shelf-photobook-card.card-pinned .photobook-spine-label {
   height: 34px !important;
   min-height: 34px !important;
@@ -1351,22 +1354,20 @@ a { color: inherit; text-decoration: none; }
 
 .shelf-photobook-card.card-pinned .photobook-spine-content {
   position: absolute;
-  top: 2px;
+  top: 4px;
   left: 50%;
   transform: translateX(-50%);
   width: max-content;
-  max-width: 145%;
-  min-width: 92px;
-  /* 去除生硬线框边界，采用柔和、无界、微透明有机日系质感 */
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(250, 248, 245, 0.88) 100%);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  max-width: 150%;
+  min-width: 90px;
+  /* 需求 2：半透明，不要圆角矩形，纯净日系有机通透质感 */
+  background: rgba(255, 255, 255, 0.70) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   border: none !important;
-  border-radius: 14px;
-  padding: 5px 12px 6px;
-  box-shadow: 
-    0 8px 24px -4px rgba(50, 35, 20, 0.10),
-    0 2px 8px rgba(0, 0, 0, 0.04);
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  padding: 4px 12px 5px;
   z-index: 30;
   pointer-events: auto;
   gap: 1.5px;
@@ -1386,50 +1387,78 @@ a { color: inherit; text-decoration: none; }
 
 .shelf-photobook-card.card-pinned .photobook-sub-txt {
   font-size: 9px;
-  color: #6a7f8e;
+  color: #556c7d;
   font-weight: 600;
   white-space: nowrap;
 }
 
-/* 优雅精致的放回书架收回按钮 */
-.photobook-retract-btn {
-  display: none;
+/* 需求 3：独立位于下方开阔空白处的放回书架控制栏，大气、优雅、美观 */
+.bookshelf-floating-retract-zone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 20px;
+  height: 48px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px) scale(0.96);
+  transition: opacity 0.28s ease, transform 0.28s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+
+.bookshelf-display-unit.has-pinned-card .bookshelf-floating-retract-zone {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0) scale(1);
+}
+
+.bookshelf-floating-retract-btn {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  margin-top: 3px;
-  padding: 2.5px 8px 2.5px 7px;
+  gap: 8px;
+  padding: 10px 28px;
   border-radius: 999px;
-  background: rgba(240, 236, 228, 0.92);
-  border: none;
-  color: #6b5c4d;
-  font-size: 8.5px;
-  font-weight: 600;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(210, 200, 185, 0.85);
+  box-shadow: 
+    0 8px 26px -2px rgba(60, 45, 30, 0.14),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  color: #443322;
+  font-size: 13.5px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
   cursor: pointer;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  transition: all 0.15s ease;
-  pointer-events: auto;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.2, 0.9, 0.3, 1.1);
   user-select: none;
   -webkit-user-select: none;
   touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.photobook-retract-btn svg {
-  stroke-width: 2.6;
+.bookshelf-floating-retract-btn .retract-ico {
+  color: #7d6b5b;
+  transition: transform 0.2s ease;
 }
 
-.photobook-retract-btn:hover {
-  background: #e5ded2;
-  color: #3b2f24;
+.bookshelf-floating-retract-btn:hover {
+  background: #ffffff;
+  color: #1a120b;
+  box-shadow: 
+    0 12px 32px -2px rgba(60, 45, 30, 0.20),
+    0 4px 10px rgba(0, 0, 0, 0.06);
+  transform: translateY(-1px);
 }
 
-.photobook-retract-btn:active {
-  background: #dbd2c4;
-  transform: scale(0.94);
+.bookshelf-floating-retract-btn:hover .retract-ico {
+  transform: translateY(2px);
 }
 
-.shelf-photobook-card.card-pinned .photobook-retract-btn {
-  display: inline-flex;
+.bookshelf-floating-retract-btn:active {
+  background: #f5efe6;
+  transform: scale(0.96);
 }
 
 /* 当某本相册被挺住时，其他相册柔和半透明后退，突显主角感 */
