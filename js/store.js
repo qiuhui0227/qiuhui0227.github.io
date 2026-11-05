@@ -710,10 +710,53 @@ class SpaceStore {
   getMeals() {
     try {
       const data = localStorage.getItem("oasis_meals");
-      return data ? JSON.parse(data) : [];
+      const list = data ? JSON.parse(data) : [];
+      if (Array.isArray(list) && list.length > 0) {
+        return list;
+      }
+      // 首次初始化与兜底保护：自动恢复第一张初遇美餐记忆，杜绝空白 0 餐与意外清空
+      const defaultCommemorativeMeal = [
+        {
+          id: "meal_init_01",
+          title: "初遇味道 · 人间烟火",
+          imageUrl: "./images/1001_1.jpg",
+          thumbUrl: "./images/1001_1_thumb.jpg",
+          mealType: "dinner",
+          time: "2024-02-14T18:00:00.000Z",
+          location: "长春 · 两人时光",
+          author: "both",
+          filter: "warm",
+          createdAt: 1707904800000
+        }
+      ];
+      localStorage.setItem("oasis_meals", JSON.stringify(defaultCommemorativeMeal));
+      return defaultCommemorativeMeal;
     } catch (e) {
       return [];
     }
+  }
+
+  // 双向智能合并三餐手帐，杜绝云端空覆盖与丢失
+  mergeMeals(localMeals, cloudMeals) {
+    const map = new Map();
+    (localMeals || []).forEach(m => {
+      if (m && m.id) map.set(m.id, m);
+    });
+    (cloudMeals || []).forEach(m => {
+      if (m && m.id) {
+        if (!map.has(m.id)) {
+          map.set(m.id, m);
+        } else {
+          const existing = map.get(m.id);
+          map.set(m.id, { ...existing, ...m });
+        }
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => {
+      const tA = new Date(a.time || a.createdAt || 0).getTime();
+      const tB = new Date(b.time || b.createdAt || 0).getTime();
+      return tB - tA;
+    });
   }
 
   saveMeals(meals) {
@@ -1060,7 +1103,9 @@ class SpaceStore {
             hasUpdated = true;
           }
           if (cloud.meals && Array.isArray(cloud.meals)) {
-            localStorage.setItem('oasis_meals', JSON.stringify(cloud.meals));
+            const localList = this.getMeals();
+            const merged = this.mergeMeals(localList, cloud.meals);
+            localStorage.setItem('oasis_meals', JSON.stringify(merged));
             hasUpdated = true;
           }
           if (cloud.auth_config && (cloud.auth_config.masterPasswords || cloud.auth_config.guestAccounts)) {

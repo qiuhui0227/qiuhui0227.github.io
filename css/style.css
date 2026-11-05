@@ -1337,44 +1337,105 @@ a { color: inherit; text-decoration: none; }
   pointer-events: auto !important;
 }
 
-/* 挺住放大后相册文字标签：加浅色半透明高斯模糊背景，防止与其余相册重叠 */
+/* 挺住放大后相册文字内容：浮空无界透白高斯模糊水滴质感，脱离网格流，书架背景纹丝不动 */
 .shelf-photobook-card.card-pinned .photobook-spine-label {
-  background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
+  height: 34px !important;
+  min-height: 34px !important;
+  max-height: 34px !important;
+  margin-top: 6px !important;
+  padding: 0 !important;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.shelf-photobook-card.card-pinned .photobook-spine-content {
+  position: absolute;
+  top: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 145%;
+  min-width: 92px;
+  /* 去除生硬线框边界，采用柔和、无界、微透明有机日系质感 */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.94) 0%, rgba(250, 248, 245, 0.88) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: none !important;
+  border-radius: 14px;
   padding: 5px 12px 6px;
-  border-radius: 8px;
-  border: 1px solid rgba(222, 216, 206, 0.92);
   box-shadow: 
-    0 8px 20px -3px rgba(40, 30, 20, 0.20),
-    0 2px 6px rgba(0, 0, 0, 0.08);
-  margin-top: 8px;
-  width: fit-content;
-  max-width: 140%;
-  align-self: center;
-  position: relative;
-  z-index: 20;
+    0 8px 24px -4px rgba(50, 35, 20, 0.10),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  z-index: 30;
+  pointer-events: auto;
+  gap: 1.5px;
   transition: all 0.25s ease;
 }
 
 .shelf-photobook-card.card-pinned .photobook-title-txt {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 750;
   color: #18354a;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
 }
 
 .shelf-photobook-card.card-pinned .photobook-sub-txt {
-  font-size: 9.5px;
-  color: #557585;
+  font-size: 9px;
+  color: #6a7f8e;
   font-weight: 600;
+  white-space: nowrap;
+}
+
+/* 优雅精致的放回书架收回按钮 */
+.photobook-retract-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 3px;
+  padding: 2.5px 8px 2.5px 7px;
+  border-radius: 999px;
+  background: rgba(240, 236, 228, 0.92);
+  border: none;
+  color: #6b5c4d;
+  font-size: 8.5px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  transition: all 0.15s ease;
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+
+.photobook-retract-btn svg {
+  stroke-width: 2.6;
+}
+
+.photobook-retract-btn:hover {
+  background: #e5ded2;
+  color: #3b2f24;
+}
+
+.photobook-retract-btn:active {
+  background: #dbd2c4;
+  transform: scale(0.94);
+}
+
+.shelf-photobook-card.card-pinned .photobook-retract-btn {
+  display: inline-flex;
 }
 
 /* 当某本相册被挺住时，其他相册柔和半透明后退，突显主角感 */
 .bookshelf-grid.bookshelf-has-pinned .shelf-photobook-card:not(.card-pinned) {
-  opacity: 0.68;
+  opacity: 0.65;
   transition: opacity 0.25s ease;
-  filter: blur(0.3px);
 }
 
 /* 精装书封面盒 (3:4.1 经典摄影手账比例) */
@@ -1504,14 +1565,26 @@ a { color: inherit; text-decoration: none; }
   z-index: 5;
 }
 
-/* 书名与细微注记 (极简宋体/衬线风，小清新质感) */
+/* 书名与细微注记占位区：高度绝对恒定，确保书架网格流与木质托架纹丝不动 */
 .photobook-spine-label {
   margin-top: 6px;
+  height: 34px;
+  min-height: 34px;
+  max-height: 34px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.photobook-spine-content {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 2px;
+  width: 100%;
 }
 .photobook-title-txt {
   font-family: -apple-system, BlinkMacSystemFont, "Noto Serif SC", "Source Han Serif SC", "Songti SC", serif;

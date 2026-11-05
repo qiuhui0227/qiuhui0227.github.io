@@ -112,11 +112,17 @@ class AlbumsModule {
           <span class="photobook-stamp-badge">🍱 ${meals.length} 餐</span>
         </div>
         <div class="photobook-spine-label">
-          <h4 class="photobook-title-txt">🍱 三餐相册</h4>
-          <div class="photobook-sub-txt">
-            <span>人间烟火</span>
-            <span>·</span>
-            <span>手帐</span>
+          <div class="photobook-spine-content">
+            <h4 class="photobook-title-txt">🍱 三餐相册</h4>
+            <div class="photobook-sub-txt">
+              <span>人间烟火</span>
+              <span>·</span>
+              <span>手帐</span>
+            </div>
+            <button type="button" class="photobook-retract-btn" title="放回书架">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M18 13l-6 6-6-6"/></svg>
+              <span>放回书架</span>
+            </button>
           </div>
         </div>
       </div>
@@ -153,11 +159,17 @@ class AlbumsModule {
           ` : ''}
         </div>
         <div class="photobook-spine-label">
-          <h4 class="photobook-title-txt">${this.escapeHtml(album.title)}</h4>
-          <div class="photobook-sub-txt">
-            <span>${styleMeta.name}</span>
-            <span>·</span>
-            <span>${album.createdAt ? album.createdAt.slice(5) : '影集'}</span>
+          <div class="photobook-spine-content">
+            <h4 class="photobook-title-txt">${this.escapeHtml(album.title)}</h4>
+            <div class="photobook-sub-txt">
+              <span>${styleMeta.name}</span>
+              <span>·</span>
+              <span>${album.createdAt ? album.createdAt.slice(5) : '影集'}</span>
+            </div>
+            <button type="button" class="photobook-retract-btn" title="放回书架">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M18 13l-6 6-6-6"/></svg>
+              <span>放回书架</span>
+            </button>
           </div>
         </div>
       </div>
@@ -210,6 +222,15 @@ class AlbumsModule {
     // 点空白处收回
     const handleOutsideTap = (e) => {
       if (!activePinnedCard) return;
+
+      // 如果点击的是收回按钮，立即收回放回书架
+      if (e.target.closest('.photobook-retract-btn')) {
+        e.stopPropagation();
+        e.preventDefault();
+        unpinCard();
+        return;
+      }
+
       // 如果点击的是已经被锁定的卡片自身
       if (e.target.closest('.shelf-photobook-card') === activePinnedCard) {
         if (e.target.closest('.photobook-mini-btn')) return; // 让编辑/删除按钮自己处理
@@ -236,6 +257,15 @@ class AlbumsModule {
       return false;
     }, { passive: false });
 
+    // 独立绑定所有相册卡片内的收回按钮点击
+    container.querySelectorAll('.photobook-retract-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        unpinCard();
+      });
+    });
+
     const albums = window.spaceStore.getAlbums();
 
     // 绑定相册交互：按住震动挺住，否则直接进入
@@ -248,7 +278,7 @@ class AlbumsModule {
 
       // 触摸开始
       card.addEventListener('touchstart', (e) => {
-        if (e.target.closest('.photobook-mini-btn')) return;
+        if (e.target.closest('.photobook-mini-btn') || e.target.closest('.photobook-retract-btn')) return;
 
         if (activePinnedCard && activePinnedCard !== card) {
           unpinCard();
@@ -285,6 +315,13 @@ class AlbumsModule {
 
       // 触摸结束
       card.addEventListener('touchend', (e) => {
+        if (e.target.closest('.photobook-retract-btn')) {
+          e.stopPropagation();
+          e.preventDefault();
+          unpinCard();
+          return;
+        }
+
         if (e.target.closest('.photobook-mini-btn')) return;
         clearTimeout(pressTimer);
         card.classList.remove('touch-pressing');
@@ -318,7 +355,7 @@ class AlbumsModule {
       let mouseVibrated = false;
 
       card.addEventListener('mousedown', (e) => {
-        if (e.button !== 0 || e.target.closest('.photobook-mini-btn')) return;
+        if (e.button !== 0 || e.target.closest('.photobook-mini-btn') || e.target.closest('.photobook-retract-btn')) return;
         if (activePinnedCard && activePinnedCard !== card) {
           unpinCard();
         }
@@ -331,7 +368,13 @@ class AlbumsModule {
       });
 
       card.addEventListener('mouseup', (e) => {
-        if (e.button !== 0 || e.target.closest('.photobook-mini-btn')) return;
+        if (e.button !== 0) return;
+        if (e.target.closest('.photobook-retract-btn')) {
+          e.stopPropagation();
+          unpinCard();
+          return;
+        }
+        if (e.target.closest('.photobook-mini-btn')) return;
         clearTimeout(mouseTimer);
         card.classList.remove('touch-pressing');
         if (!mouseVibrated) {
