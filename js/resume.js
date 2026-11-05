@@ -88,24 +88,16 @@ class ResumeModule {
 
     container.innerHTML = `
       <div class="resume-wrapper">
-        <!-- 顶部操作导航栏 -->
-        <div class="resume-toolbar">
-          <div class="toolbar-title-group">
-            <h3>履历文库 · A4 简历书房</h3>
-            <span class="fine">像书本一样管理与创作不同风格的求职、奖学金与联系导师简历</span>
+        <!-- 统一主模块标头栏 -->
+        <div class="oasis-header-bar">
+          <div class="oasis-header-main">
+            <div class="oasis-header-kicker">
+              <span>📜 研途与职业 · 男女主人双轨履历文库</span>
+            </div>
+            <h2 class="oasis-header-title">📖 履历文库</h2>
+            <p class="oasis-header-sub">名企招聘、奖学金评优、联系导师学术自述多场景管理 · 支持蓝本继承与云端持久留存</p>
           </div>
-
-          <!-- 双人身份书架切换器 -->
-          <div class="person-switcher">
-            <button class="person-tab ${this.currentPerson === 'yan' ? 'active' : ''}" data-person="yan">
-              👦 王岩的简历文集 (${yanList.length})
-            </button>
-            <button class="person-tab ${this.currentPerson === 'qiuhui' ? 'active' : ''}" data-person="qiuhui">
-              👧 杜秋慧的简历文集 (${qhList.length})
-            </button>
-          </div>
-
-          <div class="toolbar-actions">
+          <div class="oasis-header-actions">
             <button class="btn btn-primary btn-sm" id="btn-create-new-resume">
               ➕ 创建新简历 (基于蓝本)
             </button>
@@ -119,14 +111,20 @@ class ResumeModule {
           </div>
         </div>
 
-        <!-- 书架统计与导读横幅 -->
-        <div class="resume-shelf-banner">
-          <div class="shelf-stats-info">
-            <h4>📖 ${this.currentPerson === 'yan' ? '王岩' : '杜秋慧'} 的专属档案库 (共 ${currentList.length} 份简历档案)</h4>
-            <p>可针对不同目标场景（名企求职、评优评奖、联系名师课题组）维护独立简历。新建时可选择已有简历为蓝本，自动填入姓名、高校、联系方式等基础资料。</p>
+        <!-- 统一二级控制栏：男女主人切换与快速入口 -->
+        <div class="oasis-sub-bar">
+          <div class="oasis-sub-bar-left">
+            <div class="person-switcher" style="margin-bottom:0;">
+              <button class="person-tab ${this.currentPerson === 'yan' ? 'active' : ''}" data-person="yan">
+                👦 王岩的简历文集 (${yanList.length})
+              </button>
+              <button class="person-tab ${this.currentPerson === 'qiuhui' ? 'active' : ''}" data-person="qiuhui">
+                👧 杜秋慧的简历文集 (${qhList.length})
+              </button>
+            </div>
           </div>
-          <div>
-            <button class="btn btn-outline btn-sm" id="btn-quick-new-resume">
+          <div class="oasis-sub-bar-right">
+            <button class="btn btn-outline btn-sm" id="btn-quick-new-resume" style="font-size:12px; height:32px; padding:0 12px;">
               ⚡ 快速以第一份为蓝本新建
             </button>
           </div>
@@ -443,32 +441,23 @@ class ResumeModule {
 
     container.innerHTML = `
       <div class="resume-wrapper">
-        <!-- 顶部工作台导航条 -->
-        <div class="resume-toolbar">
-          <div style="display:flex; align-items:center; gap:10px;">
-            <button class="btn btn-outline btn-sm" id="btn-back-to-shelf">
-              ← 返回简历书架
-            </button>
-            <div>
-              <h3 style="display:inline-flex; align-items:center; gap:6px;">
-                <span>${this.escapeHtml(d.title)}</span>
-                <span class="book-style-badge" style="font-size:10px;">${styleMeta.name}</span>
-              </h3>
+        <!-- 统一主模块标头栏 (编辑工作台模式) -->
+        <div class="oasis-header-bar">
+          <div class="oasis-header-main">
+            <div class="oasis-header-kicker">
+              <span>✍️ 履历工作台 · ${this.currentPerson === 'yan' ? '王岩' : '杜秋慧'} 专属</span>
             </div>
+            <h2 class="oasis-header-title">
+              <span>${this.escapeHtml(d.title)}</span>
+              <span class="book-style-badge" style="font-size:11px; padding:2px 8px; border-radius:4px; font-weight:600;">${styleMeta.name}</span>
+            </h2>
+            <p class="oasis-header-sub">左侧实时配置，右侧 1:1 标准 A4 纸张排版即时渲染 · 自动双向同步</p>
           </div>
-
-          <!-- 风格即时切换 -->
-          <div style="display:inline-flex; align-items:center; gap:6px;">
-            <span class="fine">风格场景:</span>
-            <select id="select-editor-style" class="select" style="height:32px; font-size:11.5px; padding:2px 8px;">
-              <option value="job" ${d.style === 'job' ? 'selected' : ''}>💼 校园/名企求职</option>
-              <option value="scholarship" ${d.style === 'scholarship' ? 'selected' : ''}>🎓 申请奖学金申报</option>
-              <option value="advisor" ${d.style === 'advisor' ? 'selected' : ''}>🔬 找导师学术自述</option>
-            </select>
-          </div>
-
-          <div class="toolbar-actions">
-            <span class="fine save-indicator" id="resume-save-indicator">${this.saveStatusText}</span>
+          <div class="oasis-header-actions">
+            <button class="btn btn-outline btn-sm" id="btn-back-to-shelf">
+              ← 返回文库
+            </button>
+            <span class="fine save-indicator" id="resume-save-indicator" style="margin-right:4px;">${this.saveStatusText}</span>
             <button class="btn btn-primary btn-sm" id="btn-save-manual">
               💾 保存
             </button>
@@ -481,6 +470,21 @@ class ResumeModule {
             <button class="btn btn-outline btn-sm" id="btn-export-pdf" title="调用浏览器高清矢量打印 A4 PDF">
               🖨️ 打印 / 存为 PDF
             </button>
+          </div>
+        </div>
+
+        <!-- 统一二级控制栏 -->
+        <div class="oasis-sub-bar">
+          <div class="oasis-sub-bar-left">
+            <span class="fine" style="font-weight:700; color:#18354a;">🎨 风格模板：</span>
+            <select id="select-editor-style" class="select" style="height:32px; font-size:12px; padding:2px 10px; width:auto;">
+              <option value="job" ${d.style === 'job' ? 'selected' : ''}>💼 校园/名企招聘求职风格</option>
+              <option value="scholarship" ${d.style === 'scholarship' ? 'selected' : ''}>🎓 申请奖学金/评优申报风格</option>
+              <option value="advisor" ${d.style === 'advisor' ? 'selected' : ''}>🔬 联系名师课题组学术风格</option>
+            </select>
+          </div>
+          <div class="oasis-sub-bar-right fine" style="color:#627d8c;">
+            📷 证件照及文本数据均自动离线与云端双轨留存
           </div>
         </div>
 

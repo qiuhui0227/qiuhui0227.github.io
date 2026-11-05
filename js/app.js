@@ -204,6 +204,34 @@ class SpaceApp {
 
     container.innerHTML = `
       <div class="settings-wrap">
+        <!-- 统一主模块标头栏 -->
+        <div class="oasis-header-bar">
+          <div class="oasis-header-main">
+            <div class="oasis-header-kicker">
+              <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>空间安全 · 账号权限与独立通行管控</span>
+            </div>
+            <h2 class="oasis-header-title">⚙️ 空间管理</h2>
+            <p class="oasis-header-sub">卧室主人独立密码、访客无上限通行凭证及全站安全配置</p>
+          </div>
+          <div class="oasis-header-actions">
+            <button class="btn btn-primary btn-sm" id="btn-create-guest-acc-top">
+              <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              创建访客账号
+            </button>
+          </div>
+        </div>
+
+        <!-- 统一二级控制栏 -->
+        <div class="oasis-sub-bar">
+          <div class="oasis-sub-bar-left fine" style="color:#627d8c;">
+            当前登录身份：<strong style="color:#1b7659;">${this.escapeHtml(currentUser?.name || '主人')}</strong> · 活跃访客码：<strong>${guestAccounts.length}</strong> 个
+          </div>
+          <div class="oasis-sub-bar-right fine" style="color:#627d8c;">
+            🔐 支持随时撤销访客码与重设主密码 · 记住设备免密入内
+          </div>
+        </div>
+
         <!-- 1. 访客通行证多账号管理 (不限数量) -->
         <div class="admin-card">
           <div class="card-title">
@@ -211,11 +239,14 @@ class SpaceApp {
               <span class="badge-icon">
                 <svg class="ico" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </span>
-              <span>访客通行证管理 (支持创建不限数量独立访客码)</span>
+              <div>
+                <strong>访客通行码管理</strong>
+                <div class="fine">可为不同亲朋生成独立通行码，不限数量，支持使用额度控制</div>
+              </div>
             </div>
-            <button class="btn btn-primary btn-sm" id="btn-create-guest-acc">
+            <button class="btn btn-outline btn-sm" id="btn-create-guest-acc">
               <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-              创建新访客账号
+              添加访客码
             </button>
           </div>
           <p class="field-help" style="margin-bottom:16px;">
@@ -262,7 +293,10 @@ class SpaceApp {
               <span class="badge-icon">
                 <svg class="ico" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
               </span>
-              <span>主人专属密码管理 (男女主独立密码)</span>
+              <div>
+                <strong>主人专属密码管理 (男女主独立分权)</strong>
+                <div class="fine">王岩（男主）与杜秋慧（女主）各自维护独立私密钥匙，互不影响</div>
+              </div>
             </div>
             <span class="pill good">当前操作人: ${currentUser?.avatar} ${currentUser?.name}</span>
           </div>
@@ -322,7 +356,10 @@ class SpaceApp {
               <span class="badge-icon">
                 <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               </span>
-              <span>全量数据离线备份与还原</span>
+              <div>
+                <strong>全量数据离线备份与还原</strong>
+                <div class="fine">将时刻表、相簿元数据、双人简历档案及全部安全账户配置导出为标准 JSON 文件</div>
+              </div>
             </div>
           </div>
           <p class="field-help">将时刻表、相簿元数据、双人简历档案及全部安全账户配置导出为标准 JSON 文件，防止数据丢失。</p>
@@ -338,6 +375,9 @@ class SpaceApp {
     `;
 
     // 绑定访客账号管理事件
+    container.querySelector('#btn-create-guest-acc-top')?.addEventListener('click', () => {
+      this.openGuestAccountModal();
+    });
     container.querySelector('#btn-create-guest-acc')?.addEventListener('click', () => {
       this.openGuestAccountModal();
     });

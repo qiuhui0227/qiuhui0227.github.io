@@ -64,15 +64,17 @@ class TimetableModule {
 
     container.innerHTML = `
       <div class="timetable-wrap">
-        <!-- 顶部导引与日期切换 (复刻 USV Lab week-switcher) -->
-        <div class="week-switcher-wrap">
-          <div class="week-switcher">
-            <div class="date-nav-controls">
-              <button class="btn btn-outline btn-sm" id="tt-btn-prev">‹ 前一天</button>
-              <input type="date" id="tt-date-input" value="${this.selectedDate}" class="input sm" style="width: auto;">
-              <button class="btn btn-outline btn-sm" id="tt-btn-next">后一天 ›</button>
-              <button class="btn btn-outline btn-sm" id="tt-btn-today">回到今天</button>
+        <!-- 统一主模块标头栏 -->
+        <div class="oasis-header-bar">
+          <div class="oasis-header-main">
+            <div class="oasis-header-kicker">
+              ${this.icon('clock', 12)}
+              <span>朝夕相伴 · 晨昏三时生活备忘</span>
             </div>
+            <h2 class="oasis-header-title">📅 共享时刻表</h2>
+            <p class="oasis-header-sub">早中晚精细时段排期 · 默认仅两人私密可见 · 点击时段卡槽即可即时添加</p>
+          </div>
+          <div class="oasis-header-actions">
             ${isMaster ? `
               <button class="btn btn-primary btn-sm" id="tt-btn-add">
                 ${this.icon('plus', 13)}
@@ -84,9 +86,20 @@ class TimetableModule {
           </div>
         </div>
 
-        <div class="section-heading">
-          <h2>时段预约看板与事项安排</h2>
-          <p>早中晚三级时段 · 点击时段卡槽即可查看详情或新增安排</p>
+        <!-- 统一二级日期控制栏 -->
+        <div class="oasis-sub-bar">
+          <div class="oasis-sub-bar-left">
+            <span class="fine" style="font-weight:700; color:#18354a;">🗓️ 日期导航：</span>
+            <div class="date-nav-controls" style="display:inline-flex; align-items:center; gap:6px;">
+              <button class="btn btn-outline btn-sm" id="tt-btn-prev">‹ 前一天</button>
+              <input type="date" id="tt-date-input" value="${this.selectedDate}" class="input sm" style="width: auto; height:32px; font-size:12px;">
+              <button class="btn btn-outline btn-sm" id="tt-btn-next">后一天 ›</button>
+              <button class="btn btn-outline btn-sm" id="tt-btn-today">回到今天</button>
+            </div>
+          </div>
+          <div class="oasis-sub-bar-right fine" style="color:#627d8c;">
+            连续 4 天时段看板 · 🛏️ 默认卧室私密
+          </div>
         </div>
 
         <!-- USV Lab 经典表头 -->

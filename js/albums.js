@@ -58,31 +58,45 @@ class AlbumsModule {
     const visibleAlbums = allAlbums.filter(a => isMaster || a.visibility === 'living_room');
 
     container.innerHTML = `
-      <div class="admin-card">
-        <div class="card-title">
-          <div class="card-title-left">
-            <span class="badge-icon">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-            </span>
-            <span>岁月相簿 · 一本一本的时光档案</span>
+      <div class="albums-wrap">
+        <!-- 统一主模块标头栏 -->
+        <div class="oasis-header-bar">
+          <div class="oasis-header-main">
+            <div class="oasis-header-kicker">
+              <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              <span>岁月光影 · 艺术展卷典藏</span>
+            </div>
+            <h2 class="oasis-header-title">🎞️ 岁月相册</h2>
+            <p class="oasis-header-sub">记录生活的每帧细碎温柔 · 支持手账、拍立得挂绳墙、诗意长卷、电影胶卷与经折装等多套艺术风格</p>
           </div>
-          ${isMaster ? `
-            <button class="btn btn-primary btn-sm" id="btn-create-album">
-              <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-              新建相簿一本
-            </button>
-          ` : `
-            <span class="pill good">🛋️ 客厅模式 · 仅展示主人开放相簿</span>
-          `}
+          <div class="oasis-header-actions">
+            ${isMaster ? `
+              <button class="btn btn-primary btn-sm" id="btn-create-album">
+                <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                新建相册
+              </button>
+            ` : `
+              <span class="pill good">🛋️ 客厅来宾模式 · 仅展示开放相册</span>
+            `}
+          </div>
         </div>
 
-        <p class="fine" style="margin-bottom: 16px;">
-          创建相簿时可选择<strong>【↕️ 竖屏手账 / 挂绳墙】</strong>或<strong>【↔️ 横屏长卷 / 胶卷】</strong>等多种艺术风格。点击相簿封面即可进入翻阅。
-        </p>
+        <!-- 统一二级风格导读栏 -->
+        <div class="oasis-sub-bar">
+          <div class="oasis-sub-bar-left">
+            <span class="fine" style="font-weight:700; color:#18354a;">🎨 艺术展卷风格：</span>
+            <span class="orientation-guide v">↕️ 竖屏手账/挂绳墙</span>
+            <span class="orientation-guide h">↔️ 横屏长卷/电影胶卷</span>
+            <span class="orientation-guide m">📑 典藏立体经折装</span>
+          </div>
+          <div class="oasis-sub-bar-right fine" style="color:#627d8c;">
+            共计 <strong>${visibleAlbums.length}</strong> 本相册 · 点击封面即刻翻阅
+          </div>
+        </div>
 
         <div class="albums-grid">
           ${visibleAlbums.length === 0 ? `
-            <div class="empty" style="grid-column: 1/-1;">暂无公开相簿展示</div>
+            <div class="empty" style="grid-column: 1/-1;">暂无公开相册展示</div>
           ` : visibleAlbums.map(album => this.renderAlbumCard(album, isMaster)).join('')}
         </div>
       </div>
@@ -219,29 +233,33 @@ class AlbumsModule {
     }
 
     container.innerHTML = `
-      <div class="admin-card">
-        <div class="card-title">
-          <div class="card-title-left">
-            <button class="btn btn-outline btn-sm" id="btn-back-to-albums">‹ 返回所有相簿</button>
-            <span>${this.escapeHtml(album.title)}</span>
-            <span class="pill ${album.visibility === 'living_room' ? 'good' : 'off'}">
-              ${album.visibility === 'living_room' ? '🛋️ 客厅开放' : '🛏️ 卧室私密'}
-            </span>
-            ${guideHtml}
+      <div class="album-detail-wrap">
+        <!-- 统一主模块标头栏 -->
+        <div class="oasis-header-bar">
+          <div class="oasis-header-main">
+            <div class="oasis-header-kicker">
+              <button class="btn btn-outline btn-xs" id="btn-back-to-albums" style="margin-right:6px;">← 返回相册列表</button>
+              <span>${album.visibility === 'living_room' ? '🛋️ 客厅开放相册' : '🛏️ 卧室私密相册'}</span>
+            </div>
+            <h2 class="oasis-header-title">
+              <span>📖 ${this.escapeHtml(album.title)}</span>
+              <span class="pill ${album.visibility === 'living_room' ? 'good' : 'off'}" style="font-size:11.5px; font-weight:600;">
+                ${album.visibility === 'living_room' ? '客厅公开' : '卧室私密'}
+              </span>
+            </h2>
+            <p class="oasis-header-sub">${this.escapeHtml(album.desc || '点滴记录我们的美好时刻')}</p>
           </div>
-          ${isMaster ? `
-            <div style="display:flex; gap:8px;">
-              <button class="btn btn-outline btn-sm" id="btn-edit-current-album">⚙️ 修改风格/信息</button>
+          <div class="oasis-header-actions">
+            ${isMaster ? `
+              <button class="btn btn-outline btn-sm" id="btn-edit-current-album">⚙️ 修改相册信息</button>
               <label class="btn btn-primary btn-sm" style="margin: 0; cursor: pointer;">
                 <input type="file" id="input-upload-photos" accept="image/*" multiple style="display:none;">
-                <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                上传照片
+                <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                上传新照片
               </label>
-            </div>
-          ` : ''}
+            ` : ''}
+          </div>
         </div>
-
-        <p class="fine">${this.escapeHtml(album.desc || '点滴记录我们的美好时刻')}</p>
 
         <!-- 相簿艺术呈递风格切换器 (分类呈现横屏与竖屏) -->
         <div class="album-style-bar">
