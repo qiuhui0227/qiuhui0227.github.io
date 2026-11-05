@@ -927,11 +927,26 @@ class ResumeModule {
       const file = e.target.files[0];
       if (!file) return;
       try {
-        const base64 = await this.compressAvatar(file);
-        this.resumeData.avatar = base64;
-        this.saveCurrent();
-        this.render(container);
-        window.spaceApp?.showToast('本地证件照已压缩并安全保存！');
+        window.spaceApp?.showToast('正在上传证件照至 Cloudflare 云端...', false);
+        let cloudUrl = null;
+        try {
+          cloudUrl = await window.spaceStore.uploadPhoto(file, 'resume_avatar', file.name);
+        } catch (uploadErr) {
+          console.warn('Cloud photo upload failed, fallback to base64:', uploadErr);
+        }
+
+        if (cloudUrl) {
+          this.resumeData.avatar = cloudUrl;
+          this.saveCurrent();
+          this.render(container);
+          window.spaceApp?.showToast('证件照已永久保存至 Cloudflare 云端，换设备永不丢失！');
+        } else {
+          const base64 = await this.compressAvatar(file);
+          this.resumeData.avatar = base64;
+          this.saveCurrent();
+          this.render(container);
+          window.spaceApp?.showToast('证件照已压缩保存！');
+        }
       } catch (err) {
         window.spaceApp?.showToast('图片处理失败，请重试。', true);
       }

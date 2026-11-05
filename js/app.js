@@ -134,6 +134,29 @@ class SpaceApp {
     document.getElementById('btn-switch-master')?.addEventListener('click', () => {
       this.openMasterUpgradeModal();
     });
+
+    document.getElementById('header-cloud-badge')?.addEventListener('click', async () => {
+      this.showToast('正在与 Cloudflare 全球云端双向同步...', false);
+      await window.spaceStore.pullFromCloud(false);
+    });
+  }
+
+  refreshCurrentModule() {
+    const containers = {
+      timetable: document.getElementById('content-timetable'),
+      albums: document.getElementById('content-albums'),
+      resume: document.getElementById('content-resume'),
+      settings: document.getElementById('content-settings')
+    };
+    if (this.currentTab === 'timetable' && window.timetableModule) {
+      window.timetableModule.render(containers.timetable);
+    } else if (this.currentTab === 'albums' && window.albumsModule) {
+      window.albumsModule.render(containers.albums);
+    } else if (this.currentTab === 'resume' && window.resumeModule) {
+      window.resumeModule.render(containers.resume);
+    } else if (this.currentTab === 'settings') {
+      this.renderSettings(containers.settings);
+    }
   }
 
   switchTab(tabName) {
@@ -229,6 +252,29 @@ class SpaceApp {
           </div>
           <div class="oasis-sub-bar-right fine" style="color:#627d8c;">
             🔐 支持随时撤销访客码与重设主密码 · 记住设备免密入内
+          </div>
+        </div>
+
+        <!-- 0. Cloudflare 全球云端实时双向同步中枢 -->
+        <div class="admin-card" style="margin-bottom: 20px; border-left: 4px solid #16a34a; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 120px);">
+          <div class="admin-card-head" style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+            <div>
+              <div style="display:flex; align-items:center; gap:8px;">
+                <h3 style="margin:0; font-size:16px; color:#14532d;">☁️ Cloudflare 全球云端实时同步中枢</h3>
+                <span class="pill good" style="font-size:11px;">🟢 实时双向互通</span>
+              </div>
+              <p class="fine" style="margin:4px 0 0; color:#166534;">男主与女主在不同设备上实时互通小黑板日程、多份简历与相册照片，换设备永不丢失</p>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button type="button" class="btn btn-outline btn-sm" id="btn-cloud-pull-now">🔄 从云端拉取</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-cloud-push-now">⬆️ 备份至云端</button>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; font-size:12px; color:#374151; background:#ffffff; border:1px solid #dcfce7; border-radius:10px; padding:12px 16px;">
+            <div><strong>云端引擎：</strong><span style="font-family:monospace; color:#2563eb;">Cloudflare Worker (全球边缘节点)</span></div>
+            <div><strong>存储配额：</strong><span style="font-family:monospace; color:#16a34a;">Cloudflare KV (100% 永久免费)</span></div>
+            <div><strong>主站接入：</strong><span style="font-family:monospace; color:#0f766e;">iqiuqiu.me/api/*</span></div>
+            <div><strong>绑定账号：</strong><span style="font-family:monospace; color:#4b5563;">Yanwang0227@gmail.com</span></div>
           </div>
         </div>
 
@@ -373,6 +419,21 @@ class SpaceApp {
         </div>
       </div>
     `;
+
+    // 绑定 Cloudflare 云端同步按钮事件
+    container.querySelector('#btn-cloud-pull-now')?.addEventListener('click', async () => {
+      this.showToast('正在从 Cloudflare 云端拉取全量数据...', false);
+      await window.spaceStore.pullFromCloud(false);
+      this.renderSettings(container);
+      this.showToast('云端数据拉取并同步完成！');
+    });
+
+    container.querySelector('#btn-cloud-push-now')?.addEventListener('click', async () => {
+      this.showToast('正在向 Cloudflare 云端全量备份数据...', false);
+      await window.spaceStore.pushToCloud(false);
+      this.renderSettings(container);
+      this.showToast('本地数据已全量备份至 Cloudflare 云端！');
+    });
 
     // 绑定访客账号管理事件
     container.querySelector('#btn-create-guest-acc-top')?.addEventListener('click', () => {

@@ -1,0 +1,14 @@
+name = "oasis-backend"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+account_id = "34336c65f09d7200e072384581abce31"
+workers_dev = true
+
+routes = [
+  { pattern = "iqiuqiu.me/api/*", zone_id = "9d089977166433e45ebdae600683ed69" },
+  { pattern = "www.iqiuqiu.me/api/*", zone_id = "9d089977166433e45ebdae600683ed69" }
+]
+
+[[kv_namespaces]]
+binding = "OASIS_KV"
+id = "47a913fe8270451caef649eed9fa514f"

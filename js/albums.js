@@ -599,19 +599,32 @@ class AlbumsModule {
 
       window.spaceApp?.showToast(`正在前端轻量视网膜压缩 (${files.length} 张)...`);
 
+      window.spaceApp?.showToast('正在上传并同步至 Cloudflare 云端...', false);
       for (const file of files) {
         try {
           const compressed = await this.compressImage(file);
+          let cloudUrl = null;
+          try {
+            cloudUrl = await window.spaceStore.uploadPhoto(file, album.id, file.name);
+          } catch (e) {
+            console.warn('Cloud photo upload failed, using local:', e);
+          }
+
           const photoData = {
             id: 'photo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5),
             albumId: album.id,
             title: file.name.replace(/\.[^/.]+$/, ''),
             date: new Date().toISOString().split('T')[0],
-            dataUrl: compressed.dataUrl
+            dataUrl: cloudUrl || compressed.dataUrl,
+            cloudUrl: cloudUrl || ''
           };
           await window.spaceStore.savePhoto(photoData);
+
+          if (!album.cover || album.cover.includes('unsplash')) {
+            album.cover = cloudUrl || compressed.dataUrl;
+          }
         } catch (err) {
-          console.error('压缩失败:', err);
+          console.error('上传处理失败:', err);
         }
       }
 

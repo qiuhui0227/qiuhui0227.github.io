@@ -21,8 +21,13 @@ const PHOTO_STORE = 'photos';
 class SpaceStore {
   constructor() {
     this.db = null;
+    this.cloudBaseUrl = 'https://oasis-backend.yanwang0227.workers.dev';
+    this.syncStatus = 'idle';
+    this.lastSyncTime = null;
+    this.syncDebounceTimer = null;
     this.dbReady = this.initIndexedDB();
     this.initDefaultStorage();
+    this.initCloudSync();
   }
 
   // --- IndexedDB 媒体离线引擎 ---
@@ -660,6 +665,7 @@ class SpaceStore {
 
   saveAlbums(albums) {
     localStorage.setItem('oasis_albums', JSON.stringify(albums));
+    this.scheduleCloudSync();
   }
 
   // --- 排期时刻表操作 (无样例纯净日程) ---
@@ -681,6 +687,7 @@ class SpaceStore {
 
   saveTimetables(timetables) {
     localStorage.setItem('oasis_timetables', JSON.stringify(timetables));
+    this.scheduleCloudSync();
   }
 
   // --- 履历文库 / 多简历体系 (Resume Books) ---
@@ -706,6 +713,7 @@ class SpaceStore {
       };
       localStorage.setItem('oasis_resumes_dual', JSON.stringify(dual));
     } catch (e) {}
+    this.scheduleCloudSync();
   }
 
   getResumeBook(owner, id) {
@@ -780,6 +788,7 @@ class SpaceStore {
 
   saveAuthConfig(config) {
     localStorage.setItem('oasis_auth_config', JSON.stringify(config));
+    this.scheduleCloudSync();
   }
 
   // --- 访客多账号管理 ---
@@ -792,6 +801,196 @@ class SpaceStore {
     const config = this.getAuthConfig();
     config.guestAccounts = accounts;
     this.saveAuthConfig(config);
+  }
+
+  // ==========================================================================
+  // Cloudflare 全球云端实时双向同步中枢 (OASIS Cloud Sync Engine)
+  // ==========================================================================
+
+  initCloudSync() {
+    // 1. 启动延迟从云端拉取最新全量数据
+    setTimeout(() => {
+      this.pullFromCloud(true);
+    }, 300);
+
+    // 2. 页面切回前台时自动静默检查同步
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', () => {
+        this.pullFromCloud(false);
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.pullFromCloud(false);
+        }
+      });
+
+      // 3. 定时每 30 秒静默无感轮询拉取
+      setInterval(() => {
+        this.pullFromCloud(false);
+      }, 30000);
+    }
+  }
+
+  // 从 Cloudflare 云端拉取全量数据并合并
+  async pullFromCloud(isInitial = false) {
+    try {
+      this.syncStatus = 'syncing';
+      this.notifyCloudStateChanged('syncing');
+
+      const res = await fetch(`${this.cloudBaseUrl}/api/sync`, {
+        headers: { 'Cache-Control': 'no-cache' }
+      });
+      if (!res.ok) throw new Error(`Cloud HTTP ${res.status}`);
+      const json = await res.json();
+
+      if (json.exists && json.data) {
+        const cloud = json.data;
+        const localSavedAt = parseInt(localStorage.getItem('oasis_last_saved_at') || '0', 10);
+        const cloudSavedAt = cloud.savedAt || 0;
+
+        // 如果云端更新，或者本地从未标记过同步，则合并到本地
+        if (cloudSavedAt > localSavedAt || !localStorage.getItem('oasis_has_synced')) {
+          let hasUpdated = false;
+          if (cloud.timetables && Array.isArray(cloud.timetables)) {
+            localStorage.setItem('oasis_timetables', JSON.stringify(cloud.timetables));
+            hasUpdated = true;
+          }
+          if (cloud.resume_books && cloud.resume_books.yan) {
+            localStorage.setItem('oasis_resume_books', JSON.stringify(cloud.resume_books));
+            hasUpdated = true;
+          }
+          if (cloud.albums && Array.isArray(cloud.albums)) {
+            localStorage.setItem('oasis_albums', JSON.stringify(cloud.albums));
+            hasUpdated = true;
+          }
+          if (cloud.auth_config && (cloud.auth_config.users || cloud.auth_config.masterPassword)) {
+            localStorage.setItem('oasis_auth_config', JSON.stringify(cloud.auth_config));
+            hasUpdated = true;
+          }
+
+          localStorage.setItem('oasis_last_saved_at', String(cloudSavedAt));
+          localStorage.setItem('oasis_has_synced', 'true');
+
+          if (hasUpdated && !isInitial && window.spaceApp) {
+            window.spaceApp.refreshCurrentModule();
+          }
+        }
+        this.lastSyncTime = new Date(cloudSavedAt || Date.now());
+        this.syncStatus = 'synced';
+        this.notifyCloudStateChanged('synced');
+      } else {
+        // 云端为空，立即将当前本地数据全量推送至云端存档
+        await this.pushToCloud(true);
+      }
+    } catch (err) {
+      console.warn('Cloud sync error or offline:', err);
+      this.syncStatus = 'error';
+      this.notifyCloudStateChanged('error');
+    }
+  }
+
+  // 将本地全量数据推送到 Cloudflare 云端
+  async pushToCloud(silent = false) {
+    try {
+      this.syncStatus = 'syncing';
+      this.notifyCloudStateChanged('syncing');
+
+      const payload = {
+        timetables: this.getTimetables(),
+        resume_books: this.getResumeBooks(),
+        albums: this.getAlbums(),
+        auth_config: this.getAuthConfig(),
+        clientTimestamp: Date.now()
+      };
+
+      const res = await fetch(`${this.cloudBaseUrl}/api/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) throw new Error(`Push HTTP ${res.status}`);
+      const json = await res.json();
+      if (json.success) {
+        localStorage.setItem('oasis_last_saved_at', String(json.savedAt));
+        localStorage.setItem('oasis_has_synced', 'true');
+        this.lastSyncTime = new Date(json.savedAt);
+        this.syncStatus = 'synced';
+        this.notifyCloudStateChanged('synced');
+        if (!silent && window.spaceApp) {
+          window.spaceApp.showToast('☁️ 已实时同步至 Cloudflare 云端');
+        }
+      }
+    } catch (err) {
+      console.error('pushToCloud error:', err);
+      this.syncStatus = 'error';
+      this.notifyCloudStateChanged('error');
+    }
+  }
+
+  // 防抖调度同步（避免高频保存刷屏）
+  scheduleCloudSync() {
+    this.syncStatus = 'syncing';
+    this.notifyCloudStateChanged('syncing');
+    clearTimeout(this.syncDebounceTimer);
+    this.syncDebounceTimer = setTimeout(() => {
+      this.pushToCloud();
+    }, 1000);
+  }
+
+  // 状态指示通知
+  notifyCloudStateChanged(status) {
+    const badge = document.getElementById('header-cloud-badge');
+    if (!badge) return;
+    badge.className = `name-tag cloud-tag ${status}`;
+    const textEl = badge.querySelector('.cloud-text');
+    if (!textEl) return;
+    if (status === 'syncing') {
+      textEl.innerText = '☁️ 正在同步...';
+    } else if (status === 'synced') {
+      textEl.innerText = '☁️ 云端已同步';
+    } else if (status === 'error') {
+      textEl.innerText = '⚠️ 离线缓存中';
+    }
+  }
+
+  // 上传图片至 Cloudflare 存储，返回永久 CDN 链接
+  async uploadPhoto(fileOrBase64, albumId = '', name = '') {
+    try {
+      let body;
+      let headers = {};
+
+      if (fileOrBase64 instanceof File || fileOrBase64 instanceof Blob) {
+        const fd = new FormData();
+        fd.append('file', fileOrBase64);
+        fd.append('albumId', albumId);
+        body = fd;
+      } else if (typeof fileOrBase64 === 'string') {
+        body = JSON.stringify({
+          base64: fileOrBase64,
+          albumId,
+          name: name || 'photo.jpg'
+        });
+        headers['Content-Type'] = 'application/json';
+      }
+
+      const res = await fetch(`${this.cloudBaseUrl}/api/upload`, {
+        method: 'POST',
+        headers,
+        body
+      });
+
+      if (!res.ok) throw new Error(`Upload HTTP ${res.status}`);
+      const data = await res.json();
+      if (data.success && data.url) {
+        return `${this.cloudBaseUrl}${data.url}`;
+      }
+      return null;
+    } catch (e) {
+      console.error('uploadPhoto error:', e);
+      throw e;
+    }
   }
 }
 
