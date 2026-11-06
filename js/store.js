@@ -21,9 +21,15 @@ const PHOTO_STORE = 'photos';
 class SpaceStore {
   constructor() {
     this.db = null;
-    this.cloudBaseUrl = 'https://api.iqiuqiu.me';
+    const isCustomDomain = typeof window !== 'undefined' && window.location && (
+      window.location.hostname.includes('iqiuqiu.me') ||
+      window.location.hostname === '8.220.209.101' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+    );
+    this.cloudBaseUrl = isCustomDomain ? window.location.origin : 'https://api.iqiuqiu.me';
     this.cloudFallbackUrl = 'https://oasis-backend.yanwang0227.workers.dev';
-    this.activeCloudUrl = 'https://api.iqiuqiu.me';
+    this.activeCloudUrl = this.cloudBaseUrl;
     this.syncStatus = 'idle';
     this.lastSyncTime = null;
     this.syncDebounceTimer = null;
@@ -1424,10 +1430,13 @@ class SpaceStore {
     const separator = path.includes('?') ? '&' : '?';
     const cacheBustedPath = isGetOrHead ? `${path}${separator}_t=${Date.now()}` : path;
 
-    const urls = [
-      `${this.cloudBaseUrl}${cacheBustedPath}`,
-      `${this.cloudFallbackUrl}${cacheBustedPath}`
-    ];
+    const candidateUrls = [];
+    if (this.cloudBaseUrl) candidateUrls.push(`${this.cloudBaseUrl}${cacheBustedPath}`);
+    if (this.cloudBaseUrl !== 'https://api.iqiuqiu.me') {
+      candidateUrls.push(`https://api.iqiuqiu.me${cacheBustedPath}`);
+    }
+    candidateUrls.push(`${this.cloudFallbackUrl}${cacheBustedPath}`);
+    const urls = [...new Set(candidateUrls)];
     let lastError = null;
 
     const fetchOptions = {
