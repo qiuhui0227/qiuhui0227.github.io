@@ -1,0 +1,893 @@
+/* ==========================================================================
+   OASIS | 人生ToDo · 愿望清单与星光印记 (Life Bucket List & Dreams)
+   美学风格：继承 USV Lab 秩序美学与浪漫时光质感
+   ========================================================================== */
+
+/* 核心容器 */
+.todo-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* 顶部统揽进度与数据卡片 (Hero Stats Dashboard) */
+.todo-hero-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f4fbf7 60%, #eaf7f0 100%);
+  border: 1px solid #d8ede0;
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 4px 18px rgba(27, 118, 89, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex-wrap: wrap;
+  position: relative;
+  overflow: hidden;
+}
+
+.todo-hero-card::after {
+  content: "";
+  position: absolute;
+  right: -30px;
+  top: -30px;
+  width: 140px;
+  height: 140px;
+  background: radial-gradient(circle, rgba(39, 167, 121, 0.12) 0%, rgba(39, 167, 121, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.todo-hero-main {
+  flex: 1;
+  min-width: 260px;
+}
+
+.todo-hero-kicker {
+  font-size: 11.5px;
+  font-weight: 750;
+  color: #1b7659;
+  letter-spacing: 0.06em;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.todo-hero-quote {
+  font-size: 19px;
+  font-weight: 800;
+  color: #15354a;
+  letter-spacing: -0.3px;
+  line-height: 1.35;
+  margin: 0 0 10px;
+}
+
+.todo-hero-sub {
+  font-size: 13px;
+  color: #557280;
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+
+/* 进度条与点亮率 */
+.todo-progress-box {
+  max-width: 460px;
+}
+
+.todo-progress-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: #18354a;
+  margin-bottom: 7px;
+}
+
+.todo-progress-pct {
+  color: #1b7659;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.todo-progress-track {
+  width: 100%;
+  height: 9px;
+  background: #e2efe7;
+  border-radius: 99px;
+  overflow: hidden;
+  position: relative;
+}
+
+.todo-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #27a779 0%, #10b981 50%, #34d399 100%);
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 8px rgba(39, 167, 121, 0.4);
+}
+
+/* 右侧核心指标方块 */
+.todo-stats-grid {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.todo-stat-cell {
+  background: #ffffff;
+  border: 1px solid #dcece2;
+  border-radius: 12px;
+  padding: 12px 18px;
+  min-width: 100px;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(24, 53, 74, 0.03);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.todo-stat-cell:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(24, 53, 74, 0.07);
+}
+
+.todo-stat-num {
+  font-size: 26px;
+  font-weight: 850;
+  color: #18354a;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.todo-stat-num.achieved {
+  color: #1b7659;
+}
+
+.todo-stat-num.in-progress {
+  color: #0284c7;
+}
+
+.todo-stat-num.pending {
+  color: #f59e0b;
+}
+
+.todo-stat-desc {
+  font-size: 11px;
+  font-weight: 700;
+  color: #718894;
+  margin-top: 4px;
+}
+
+/* 多维度筛选与搜索工具栏 */
+.todo-filter-panel {
+  background: #ffffff;
+  border: 1px solid #e1ebf0;
+  border-radius: 14px;
+  padding: 14px 18px;
+  box-shadow: 0 2px 10px rgba(24, 53, 74, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.todo-filter-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.todo-pill-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.todo-pill-label {
+  font-size: 11.5px;
+  font-weight: 750;
+  color: #849ca9;
+  margin-right: 4px;
+  white-space: nowrap;
+}
+
+.todo-pill {
+  border: 1px solid #e0e8ed;
+  background: #f7fafb;
+  color: #4f6875;
+  border-radius: 99px;
+  padding: 5px 12px;
+  font-size: 12px;
+  font-weight: 650;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.18s ease;
+  user-select: none;
+}
+
+.todo-pill:hover {
+  background: #ebf3f7;
+  color: #1b3d52;
+  border-color: #cbdbe3;
+}
+
+.todo-pill.active {
+  background: #18354a;
+  color: #ffffff;
+  border-color: #18354a;
+  box-shadow: 0 2px 8px rgba(24, 53, 74, 0.2);
+}
+
+.todo-pill.active.mint {
+  background: #1b7659;
+  border-color: #1b7659;
+  box-shadow: 0 2px 8px rgba(27, 118, 89, 0.25);
+}
+
+/* 搜索栏与排序 */
+.todo-search-wrap {
+  position: relative;
+  min-width: 220px;
+  flex: 1;
+  max-width: 320px;
+}
+
+.todo-search-input {
+  width: 100%;
+  height: 34px;
+  background: #f7fafb;
+  border: 1px solid #dce5e9;
+  border-radius: 20px;
+  padding: 0 12px 0 32px;
+  font-size: 12.5px;
+  color: #18354a;
+  transition: all 0.2s ease;
+}
+
+.todo-search-input:focus {
+  background: #ffffff;
+  border-color: #27a779;
+  box-shadow: 0 0 0 3px rgba(39, 167, 121, 0.15);
+  outline: none;
+}
+
+.todo-search-ico {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  color: #8fa5b0;
+  pointer-events: none;
+}
+
+/* 心愿卡片网格列表 (Bucket List Grid) */
+.todo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 16px;
+}
+
+/* 单个心愿卡片 */
+.todo-card {
+  background: #ffffff;
+  border: 1px solid #e2eaee;
+  border-radius: 15px;
+  padding: 18px 20px;
+  box-shadow: 0 2px 10px rgba(24, 53, 74, 0.03);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.todo-card:hover {
+  transform: translateY(-3px);
+  border-color: #cbdbe3;
+  box-shadow: 0 8px 24px rgba(24, 53, 74, 0.08);
+}
+
+/* 状态对应微色条 */
+.todo-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: #cbd5e1;
+  transition: background 0.2s ease;
+}
+
+.todo-card.status-pending::before {
+  background: #f59e0b;
+}
+
+.todo-card.status-in_progress::before {
+  background: #0284c7;
+}
+
+.todo-card.status-completed {
+  background: linear-gradient(180deg, #f9fdfa 0%, #ffffff 100%);
+  border-color: #bbf0d0;
+}
+
+.todo-card.status-completed::before {
+  background: #10b981;
+}
+
+/* 卡片头部信息 */
+.todo-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.todo-card-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+/* 归属人徽章 */
+.todo-owner-tag {
+  font-size: 11px;
+  font-weight: 750;
+  border-radius: 99px;
+  padding: 2px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.todo-owner-tag.both {
+  background: var(--part-both-bg, #e5f6ed);
+  color: var(--part-both-text, #186e49);
+}
+
+.todo-owner-tag.qiuhui {
+  background: var(--part-qiuhui-bg, #fbebee);
+  color: var(--part-qiuhui-text, #963845);
+}
+
+.todo-owner-tag.yan {
+  background: var(--part-yan-bg, #e6f1f8);
+  color: var(--part-yan-text, #1d5573);
+}
+
+/* 分类徽章 */
+.todo-cat-tag {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 99px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+}
+
+/* 优先级星级 */
+.todo-stars {
+  color: #f59e0b;
+  font-size: 12px;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+
+/* 卡片标题与描述 */
+.todo-card-title {
+  font-size: 16px;
+  font-weight: 780;
+  color: #15354a;
+  line-height: 1.45;
+  margin: 0 0 8px;
+  letter-spacing: -0.2px;
+  word-break: break-word;
+}
+
+.todo-card-desc {
+  font-size: 12.5px;
+  color: #607987;
+  line-height: 1.55;
+  margin: 0 0 14px;
+  word-break: break-word;
+}
+
+/* 目标时间预期 */
+.todo-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11.5px;
+  color: #7b93a0;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.todo-target-time {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: #f3f7f9;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.todo-visibility-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 11px;
+  color: #8aa1ad;
+}
+
+/* 已圆梦专属：荣耀印章与回忆区块 */
+.todo-achieved-box {
+  background: #f0fdf4;
+  border: 1px dashed #86efac;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin: 8px 0 14px;
+  position: relative;
+}
+
+.todo-achieved-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.todo-stamp {
+  font-size: 11px;
+  font-weight: 850;
+  color: #15803d;
+  background: #dcfce7;
+  border: 1px solid #bbf7d0;
+  padding: 2px 7px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.todo-achieved-date {
+  font-size: 11px;
+  font-weight: 650;
+  color: #166534;
+}
+
+.todo-memory-quote {
+  font-size: 12.5px;
+  color: #14532d;
+  line-height: 1.5;
+  margin: 0;
+  font-style: italic;
+  position: relative;
+  padding-left: 14px;
+}
+
+.todo-memory-quote::before {
+  content: "“";
+  position: absolute;
+  left: 0;
+  top: -2px;
+  font-size: 16px;
+  color: #22c55e;
+  font-weight: bold;
+}
+
+.todo-memory-photo-thumb {
+  margin-top: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+  max-height: 140px;
+  cursor: pointer;
+  border: 1px solid #bbf7d0;
+  position: relative;
+}
+
+.todo-memory-photo-thumb img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.3s ease;
+}
+
+.todo-memory-photo-thumb:hover img {
+  transform: scale(1.04);
+}
+
+.todo-photo-badge {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  background: rgba(0, 0, 0, 0.65);
+  color: #ffffff;
+  font-size: 10.5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
+}
+
+/* 卡片底部操作按钮栏 */
+.todo-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  border-top: 1px solid #f0f4f6;
+  padding-top: 12px;
+  margin-top: auto;
+}
+
+.todo-foot-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.todo-foot-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-achieve {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff !important;
+  border: none;
+  font-size: 12px;
+  font-weight: 750;
+  padding: 6px 13px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.2s ease;
+}
+
+.btn-achieve:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.btn-status-toggle {
+  background: #f0f5f8;
+  color: #2e556b;
+  border: 1px solid #dce7ed;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-status-toggle:hover {
+  background: #e2edf2;
+  color: #18354a;
+}
+
+.btn-icon-soft {
+  background: transparent;
+  border: none;
+  color: #8aa1ad;
+  padding: 5px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.btn-icon-soft:hover {
+  background: #f1f6f8;
+  color: #18354a;
+}
+
+.btn-icon-soft.delete:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+/* 空状态 */
+.todo-empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  background: #ffffff;
+  border: 1px dashed #d8e5ec;
+  border-radius: 16px;
+  grid-column: 1 / -1;
+}
+
+.todo-empty-icon {
+  font-size: 48px;
+  margin-bottom: 14px;
+}
+
+.todo-empty-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #18354a;
+  margin: 0 0 6px;
+}
+
+.todo-empty-text {
+  font-size: 13px;
+  color: #718894;
+  margin: 0 0 20px;
+  max-width: 400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ==========================================================================
+   愿望灵感库 (Inspiration Idea Bank Modal)
+   ========================================================================== */
+.todo-inspo-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.todo-inspo-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.todo-inspo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 12px;
+  max-height: 58vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.todo-inspo-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.todo-inspo-card:hover {
+  background: #ffffff;
+  border-color: #27a779;
+  box-shadow: 0 4px 14px rgba(39, 167, 121, 0.08);
+  transform: translateY(-2px);
+}
+
+.todo-inspo-card-title {
+  font-size: 14.5px;
+  font-weight: 750;
+  color: #18354a;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.todo-inspo-card-desc {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.todo-inspo-card-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+}
+
+.btn-adopt-inspo {
+  background: #e6f6ee;
+  color: #1b7659;
+  border: 1px solid #c7ebd7;
+  font-size: 11.5px;
+  font-weight: 750;
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.15s ease;
+}
+
+.btn-adopt-inspo:hover {
+  background: #1b7659;
+  color: #ffffff;
+  border-color: #1b7659;
+}
+
+/* ==========================================================================
+   圆梦打卡庆祝弹窗 (Achieve Celebration Modal)
+   ========================================================================== */
+.achieve-modal-hero {
+  text-align: center;
+  padding: 16px 10px 20px;
+  background: radial-gradient(circle, #f0fdf4 0%, #ffffff 80%);
+  border-radius: 14px;
+  margin-bottom: 16px;
+}
+
+.achieve-modal-icon {
+  font-size: 44px;
+  line-height: 1;
+  margin-bottom: 8px;
+  animation: bounceCelebrate 1s ease infinite alternate;
+}
+
+@keyframes bounceCelebrate {
+  0% { transform: scale(1) translateY(0); }
+  100% { transform: scale(1.1) translateY(-4px); }
+}
+
+.achieve-modal-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #14532d;
+  margin: 0 0 4px;
+}
+
+.achieve-modal-sub {
+  font-size: 12.5px;
+  color: #16a34a;
+  margin: 0;
+}
+
+/* 上传图片预览框 */
+.todo-photo-uploader {
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+  cursor: pointer;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.todo-photo-uploader:hover {
+  border-color: #27a779;
+  background: #f0fdf4;
+}
+
+.todo-photo-preview-wrap {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+}
+
+.todo-photo-preview-wrap img {
+  max-height: 180px;
+  border-radius: 8px;
+  display: block;
+}
+
+.btn-remove-photo {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: #ef4444;
+  color: #ffffff;
+  border: none;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+}
+
+/* 全屏大图 Lightbox */
+.todo-lightbox-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(8px);
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.todo-lightbox-box {
+  max-width: 90vw;
+  max-height: 90vh;
+  position: relative;
+  text-align: center;
+}
+
+.todo-lightbox-img {
+  max-width: 100%;
+  max-height: 85vh;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  object-fit: contain;
+}
+
+.todo-lightbox-close {
+  position: absolute;
+  top: -40px;
+  right: 0;
+  color: #ffffff;
+  font-size: 32px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+/* 响应式调整 */
+@media (max-width: 767px) {
+  .todo-hero-card {
+    padding: 18px 16px;
+    gap: 16px;
+  }
+  .todo-hero-quote {
+    font-size: 17px;
+  }
+  .todo-stats-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .todo-stat-cell {
+    min-width: unset;
+    padding: 10px 8px;
+  }
+  .todo-stat-num {
+    font-size: 20px;
+  }
+  .todo-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  .todo-card {
+    padding: 16px;
+  }
+  .todo-filter-panel {
+    padding: 12px;
+  }
+  .todo-search-wrap {
+    max-width: 100%;
+    width: 100%;
+  }
+  .todo-inspo-grid {
+    grid-template-columns: 1fr;
+  }
+}

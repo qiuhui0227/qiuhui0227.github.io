@@ -641,6 +641,12 @@ class SpaceStore {
         localStorage.setItem('oasis_resume_books', JSON.stringify(defaultBooks));
       }
     }
+
+    // 5. 人生ToDo / 星光愿景与心愿清单初始化 (oasis_todos)
+    const existingTodos = localStorage.getItem('oasis_todos');
+    if (!existingTodos) {
+      localStorage.setItem('oasis_todos', JSON.stringify(this.getDefaultTodos()));
+    }
   }
 
   // --- 相簿操作 (自动规避 Unsplash 阻断网络，秒开零延迟) ---
@@ -880,6 +886,336 @@ class SpaceStore {
     return this.formatLocalDate(new Date());
   }
 
+  // ==========================================================================
+  // 人生ToDo / 星光愿景与人生心愿清单 (Life Bucket List & Dreams)
+  // ==========================================================================
+
+  getDefaultTodos() {
+    return [
+      {
+        id: 'todo_seed_01',
+        title: '去冰岛追一场欧若拉极光',
+        category: 'travel',
+        owner: 'both',
+        priority: 3,
+        status: 'pending',
+        targetDate: '2027年冬天',
+        desc: '在极夜星空与冰原下，牵手看漫天舞动的绿色光带。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-01T10:00:00Z',
+        updatedAt: '2026-11-01T10:00:00Z'
+      },
+      {
+        id: 'todo_seed_02',
+        title: '在海边并肩等一场日出与晚霞',
+        category: 'romantic',
+        owner: 'both',
+        priority: 2,
+        status: 'completed',
+        targetDate: '2025年夏',
+        desc: '听着海浪，从晨曦微露坐到夕阳西下。',
+        visibility: 'living_room',
+        completedAt: '2025-08-15',
+        completedLocation: '青岛石老人海滩',
+        memoryNote: '清晨微凉的海风与初升的太阳，橘红色的海浪涌来，那一刻时间仿佛静止。',
+        memoryPhoto: '',
+        createdAt: '2025-08-01T10:00:00Z',
+        updatedAt: '2025-08-15T18:00:00Z'
+      },
+      {
+        id: 'todo_seed_03',
+        title: '自驾穿越独库公路与伊犁空中草原',
+        category: 'travel',
+        owner: 'both',
+        priority: 3,
+        status: 'pending',
+        targetDate: '2027年夏天',
+        desc: '一天领略四季，从雪山峡谷穿行至无垠的绿色花海。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-02T10:00:00Z',
+        updatedAt: '2026-11-02T10:00:00Z'
+      },
+      {
+        id: 'todo_seed_04',
+        title: '去看一场五月天或陈奕迅的现场演唱会',
+        category: 'romantic',
+        owner: 'both',
+        priority: 2,
+        status: 'in_progress',
+        targetDate: '2027年',
+        desc: '在荧光棒的海洋里并肩大声合唱青春的歌。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-03T10:00:00Z',
+        updatedAt: '2026-11-03T10:00:00Z'
+      },
+      {
+        id: 'todo_seed_05',
+        title: '拥有一间带着大落地窗和落地书架的温馨小家',
+        category: 'home',
+        owner: 'both',
+        priority: 3,
+        status: 'in_progress',
+        targetDate: '2028年前',
+        desc: '阳光洒满木地板，有舒适的独立咖啡角、大书桌和毛茸茸的地毯。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-03T11:00:00Z',
+        updatedAt: '2026-11-03T11:00:00Z'
+      },
+      {
+        id: 'todo_seed_06',
+        title: '发表高水平 SCI 学术论文并在全国口腔年会汇报',
+        category: 'growth',
+        owner: 'qiuhui',
+        priority: 3,
+        status: 'in_progress',
+        targetDate: '2027年春',
+        desc: '踏实推进大创与临床科研课题，展现口腔医学学术风采。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-04T09:00:00Z',
+        updatedAt: '2026-11-04T09:00:00Z'
+      },
+      {
+        id: 'todo_seed_07',
+        title: '成为一名温和且医术卓越的口腔临床正畸专家',
+        category: 'growth',
+        owner: 'qiuhui',
+        priority: 3,
+        status: 'in_progress',
+        targetDate: '终身追求',
+        desc: '用专业与耐心为每一位患者重塑健康自信的笑容。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-04T09:30:00Z',
+        updatedAt: '2026-11-04T09:30:00Z'
+      },
+      {
+        id: 'todo_seed_08',
+        title: '独立主导研发一套智能自主无人系统并在实装验证',
+        category: 'growth',
+        owner: 'yan',
+        priority: 3,
+        status: 'in_progress',
+        targetDate: '2026年',
+        desc: '攻克运动规划与感知融合底层核心算法，打造稳定优雅的智能控制架构。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-04T10:00:00Z',
+        updatedAt: '2026-11-04T10:00:00Z'
+      },
+      {
+        id: 'todo_seed_09',
+        title: '考取 PADI 进阶潜水员执照 (AOW) 探访神秘沉船',
+        category: 'experience',
+        owner: 'yan',
+        priority: 2,
+        status: 'pending',
+        targetDate: '2027年',
+        desc: '潜入蔚蓝的深海世界，在静谧的海洋深处感受水流与生命的律动。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-04T10:30:00Z',
+        updatedAt: '2026-11-04T10:30:00Z'
+      },
+      {
+        id: 'todo_seed_10',
+        title: '在小家里领养一只可爱温顺的小布偶猫',
+        category: 'home',
+        owner: 'both',
+        priority: 2,
+        status: 'pending',
+        targetDate: '新家入住后',
+        desc: '给它取个可爱的名字，每天下班回到家都有呼噜呼噜的小猫蹭蹭。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-05T10:00:00Z',
+        updatedAt: '2026-11-05T10:00:00Z'
+      },
+      {
+        id: 'todo_seed_11',
+        title: '带双方父母去一次惬意舒适的度假疗养旅行',
+        category: 'home',
+        owner: 'both',
+        priority: 3,
+        status: 'pending',
+        targetDate: '2027年秋',
+        desc: '安排全程无忧的慢节奏行程，给长辈拍美美的合照，陪伴是最好的心意。',
+        visibility: 'living_room',
+        completedAt: null,
+        completedLocation: '',
+        memoryNote: '',
+        memoryPhoto: '',
+        createdAt: '2026-11-05T11:00:00Z',
+        updatedAt: '2026-11-05T11:00:00Z'
+      },
+      {
+        id: 'todo_seed_12',
+        title: '两人共同完成一次城市 10km 晨跑或彩色跑',
+        category: 'experience',
+        owner: 'both',
+        priority: 1,
+        status: 'completed',
+        targetDate: '2025年秋',
+        desc: '迎着晨光冲过终点线，挂上闪亮奖牌击掌庆祝！',
+        visibility: 'living_room',
+        completedAt: '2025-10-20',
+        completedLocation: '长春南湖公园',
+        memoryNote: '虽然最后两公里腿像灌了铅，但牵着手冲过终点的那一刻，多巴胺彻底爆棚！',
+        memoryPhoto: '',
+        createdAt: '2025-10-01T10:00:00Z',
+        updatedAt: '2025-10-20T12:00:00Z'
+      }
+    ];
+  }
+
+  getTodos() {
+    try {
+      const data = localStorage.getItem('oasis_todos');
+      let list = data ? JSON.parse(data) : null;
+      if (!list || !Array.isArray(list)) {
+        list = this.getDefaultTodos();
+        localStorage.setItem('oasis_todos', JSON.stringify(list));
+      }
+      return list;
+    } catch (e) {
+      return this.getDefaultTodos();
+    }
+  }
+
+  saveTodos(todos) {
+    localStorage.setItem('oasis_todos', JSON.stringify(todos));
+    try { this.scheduleCloudPush(); } catch (_) {}
+  }
+
+  recordDeletedTodoId(id) {
+    try {
+      const deleted = JSON.parse(localStorage.getItem('oasis_deleted_todo_ids') || '[]');
+      if (!deleted.includes(id)) {
+        deleted.unshift(id);
+        if (deleted.length > 200) deleted.pop();
+        localStorage.setItem('oasis_deleted_todo_ids', JSON.stringify(deleted));
+      }
+    } catch (e) {}
+  }
+
+  getDeletedTodoIds() {
+    try {
+      return new Set(JSON.parse(localStorage.getItem('oasis_deleted_todo_ids') || '[]'));
+    } catch (e) {
+      return new Set();
+    }
+  }
+
+  addTodo(todo) {
+    const list = this.getTodos();
+    const item = {
+      id: 'todo_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+      title: todo.title || '新心愿',
+      category: todo.category || 'romantic',
+      owner: todo.owner || 'both',
+      priority: Number(todo.priority) || 2,
+      status: todo.status || 'pending',
+      targetDate: todo.targetDate || '',
+      desc: todo.desc || '',
+      visibility: todo.visibility || 'living_room',
+      completedAt: todo.completedAt || null,
+      completedLocation: todo.completedLocation || '',
+      memoryNote: todo.memoryNote || '',
+      memoryPhoto: todo.memoryPhoto || '',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      ...todo
+    };
+    list.unshift(item);
+    this.saveTodos(list);
+    return item;
+  }
+
+  updateTodo(id, patch) {
+    const list = this.getTodos();
+    const nowIso = new Date().toISOString();
+    const updated = list.map(item => {
+      if (item.id === id) {
+        return { ...item, ...patch, updatedAt: nowIso };
+      }
+      return item;
+    });
+    this.saveTodos(updated);
+    return updated;
+  }
+
+  deleteTodo(id) {
+    this.recordDeletedTodoId(id);
+    const list = this.getTodos().filter(item => item.id !== id);
+    this.saveTodos(list);
+    return list;
+  }
+
+  mergeTodos(localList = [], cloudList = []) {
+    const deletedIds = this.getDeletedTodoIds();
+    const map = new Map();
+
+    for (const item of (cloudList || [])) {
+      if (item && item.id && !deletedIds.has(item.id)) {
+        map.set(item.id, item);
+      }
+    }
+
+    for (const item of (localList || [])) {
+      if (item && item.id) {
+        if (!map.has(item.id)) {
+          if (!deletedIds.has(item.id)) {
+            map.set(item.id, item);
+          }
+        } else {
+          const cloudItem = map.get(item.id);
+          const localTime = new Date(item.updatedAt || item.createdAt || 0).getTime();
+          const cloudTime = new Date(cloudItem.updatedAt || cloudItem.createdAt || 0).getTime();
+          if (localTime >= cloudTime) {
+            map.set(item.id, item);
+          }
+        }
+      }
+    }
+
+    return Array.from(map.values()).sort((a, b) => {
+      const tA = new Date(a.createdAt || 0).getTime();
+      const tB = new Date(b.createdAt || 0).getTime();
+      return tB - tA;
+    });
+  }
+
   // --- 履历文库 / 多简历体系 (Resume Books) ---
   getResumeBooks() {
     try {
@@ -1094,6 +1430,12 @@ class SpaceStore {
             localStorage.setItem('oasis_meals', JSON.stringify(merged));
             hasUpdated = true;
           }
+          if (cloud.todos && Array.isArray(cloud.todos)) {
+            const localList = this.getTodos();
+            const merged = this.mergeTodos(localList, cloud.todos);
+            localStorage.setItem('oasis_todos', JSON.stringify(merged));
+            hasUpdated = true;
+          }
           if (cloud.auth_config && (cloud.auth_config.masterPasswords || cloud.auth_config.guestAccounts)) {
             localStorage.setItem('oasis_auth_config', JSON.stringify(cloud.auth_config));
             hasUpdated = true;
@@ -1142,6 +1484,7 @@ class SpaceStore {
         resume_books: this.getResumeBooks(),
         albums: this.getAlbums(),
         meals: this.getMeals(),
+        todos: this.getTodos(),
         auth_config: this.getAuthConfig(),
         clientTimestamp: Date.now()
       };

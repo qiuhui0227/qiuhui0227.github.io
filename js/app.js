@@ -145,6 +145,7 @@ class SpaceApp {
     const containers = {
       timetable: document.getElementById('content-timetable'),
       albums: document.getElementById('content-albums'),
+      todo: document.getElementById('content-todo'),
       resume: document.getElementById('content-resume'),
       settings: document.getElementById('content-settings')
     };
@@ -152,6 +153,8 @@ class SpaceApp {
       window.timetableModule.render(containers.timetable);
     } else if (this.currentTab === 'albums' && window.albumsModule) {
       window.albumsModule.render(containers.albums);
+    } else if (this.currentTab === 'todo' && window.todoModule) {
+      window.todoModule.render(containers.todo);
     } else if (this.currentTab === 'resume' && window.resumeModule) {
       window.resumeModule.render(containers.resume);
     } else if (this.currentTab === 'settings') {
@@ -178,6 +181,7 @@ class SpaceApp {
     const containers = {
       timetable: document.getElementById('content-timetable'),
       albums: document.getElementById('content-albums'),
+      todo: document.getElementById('content-todo'),
       resume: document.getElementById('content-resume'),
       settings: document.getElementById('content-settings')
     };
@@ -192,6 +196,8 @@ class SpaceApp {
       window.timetableModule.render(containers.timetable);
     } else if (tabName === 'albums' && window.albumsModule) {
       window.albumsModule.render(containers.albums);
+    } else if (tabName === 'todo' && window.todoModule) {
+      window.todoModule.render(containers.todo);
     } else if (tabName === 'resume' && window.resumeModule) {
       // 自动定位到当前登录人的专属简历
       if (!window.resumeModule.currentPerson) {
