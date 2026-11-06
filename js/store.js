@@ -1532,6 +1532,13 @@ class SpaceStore {
           localStorage.setItem('oasis_has_synced', 'true');
         }
 
+        // 关键机制：如果本地存在云端尚未知晓的已删除心愿/日程（如秋慧之前删除的条目），主动将其回推云端
+        const localDeletedTodos = [...this.getDeletedTodoIds()];
+        const cloudDeletedTodos = Array.isArray(cloud.deleted_todo_ids) ? cloud.deleted_todo_ids : [];
+        if (localDeletedTodos.some(id => !cloudDeletedTodos.includes(id))) {
+          this.scheduleCloudPush();
+        }
+
         // 触发 UI 刷新（meals 合并在条件外，故 hasUpdated 可能在条件内为 true）
         if (hasUpdated) {
           if (window.spaceApp) {
