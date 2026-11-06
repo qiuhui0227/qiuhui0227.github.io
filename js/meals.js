@@ -119,6 +119,9 @@ class MealCameraModule {
     this.renderGallery();
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    // 唤起时主动向云端拉取最新美食，拉取完成后若有新数据将自动无感重绘
+    window.spaceStore?.pullFromCloud?.(false);
   }
 
   closeMealAlbumModal() {
@@ -185,6 +188,11 @@ class MealCameraModule {
             <p class="meal-header-sub">一粥一饭，三餐四季 · 记录彼此的人间烟火</p>
           </div>
           <div class="meal-header-right">
+            <button class="meal-btn-refresh" id="btn-refresh-meal-album" title="从云端刷新最新三餐">
+              <svg class="meal-ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2"/>
+              </svg>
+            </button>
             <button class="meal-btn-shoot" id="btn-meal-shoot-trigger">
               <svg class="meal-ico-sm" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
@@ -246,6 +254,20 @@ class MealCameraModule {
     modal.querySelector('#btn-close-meal-album')?.addEventListener('click', () => this.closeMealAlbumModal());
     modal.addEventListener('click', (e) => {
       if (e.target === modal) this.closeMealAlbumModal();
+    });
+
+    modal.querySelector('#btn-refresh-meal-album')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.classList.add('rotating');
+      try {
+        await window.spaceStore?.pullFromCloud?.(false);
+        this.renderGallery();
+        window.spaceApp?.showToast('三餐手帐已同步至云端最新状态');
+      } catch (err) {
+        console.warn('Refresh meals error:', err);
+      } finally {
+        setTimeout(() => btn.classList.remove('rotating'), 600);
+      }
     });
 
     modal.querySelector('#btn-meal-shoot-trigger')?.addEventListener('click', () => this.showCaptureSourceSheet());

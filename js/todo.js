@@ -13,11 +13,69 @@
 class TodoModule {
   constructor() {
     this.container = null;
+    this.isOpen = false;
     this.currentOwner = 'all';     // 'all' | 'both' | 'qiuhui' | 'yan'
     this.currentCategory = 'all';  // 'all' | 'romantic' | 'travel' | 'experience' | 'growth' | 'home' | 'other'
     this.currentStatus = 'all';    // 'all' | 'pending' | 'in_progress' | 'completed'
     this.searchKeyword = '';
     this.activeModal = null;
+    this.init();
+  }
+
+  init() {
+    // 监听顶部左侧快捷按钮中“人生ToDo”入口点击
+    document.addEventListener('click', (e) => {
+      const btn = e.target.closest('#btn-top-todo');
+      if (btn) {
+        e.preventDefault();
+        this.openTodoModal();
+      }
+    });
+
+    // 监听 ESC 键关闭独立弹层
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.isOpen) {
+        // 如果页面上有二层弹窗（如添加、打卡、灵感、大图），优先让子弹窗响应
+        const innerModal = document.querySelector('.todo-modal-backdrop, .todo-lightbox-overlay');
+        if (innerModal) return;
+        this.closeTodoModal();
+      }
+    });
+  }
+
+  // 打开人生ToDo独立页面弹层
+  openTodoModal() {
+    this.isOpen = true;
+    let modal = document.getElementById('modal-todo-page');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'modal-todo-page';
+      modal.className = 'todo-modal-overlay';
+      document.body.appendChild(modal);
+    }
+    this.render();
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+
+    // 唤起时主动向云端拉取最新待办，拉取完成后若有新数据将自动无感重绘
+    window.spaceStore?.pullFromCloud?.(false);
+  }
+
+  // 关闭独立页面弹层
+  closeTodoModal() {
+    this.isOpen = false;
+    const modal = document.getElementById('modal-todo-page');
+    if (modal) {
+      modal.classList.remove('active');
+    }
+    document.body.style.overflow = '';
+  }
+
+  // 云端同步后静默刷新当前开启的独立页面
+  renderIfOpen() {
+    if (this.isOpen) {
+      this.render();
+    }
   }
 
   // --- 分类字典元数据 ---
@@ -97,7 +155,6 @@ class TodoModule {
   // --- 主渲染入口 ---
   render(container) {
     if (container) this.container = container;
-    if (!this.container) return;
 
     const isMaster = window.spaceAuth ? window.spaceAuth.isMaster() : true;
     const allTodos = window.spaceStore ? window.spaceStore.getTodos() : [];
@@ -115,128 +172,179 @@ class TodoModule {
     // 筛选过滤
     const filteredTodos = this.getFilteredTodos(visibleTodos);
 
-    this.container.innerHTML = `
-      <div class="todo-container">
-        
-        <!-- 1. 统一主模块标头栏 -->
-        <div class="oasis-header-bar">
-          <div class="oasis-header-main">
-            <div class="oasis-header-kicker">
-              <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <span>星光愿景 · 两个人的奔赴与一生的期许</span>
-            </div>
-            <h2 class="oasis-header-title">🌟 人生ToDo · 愿望清单</h2>
-            <p class="oasis-header-sub">记录想一起看的世界、想共同实现的约定与彼此的人生追求</p>
+    const bodyContentHtml = `
+      <!-- 2. 顶部统揽进度与数据卡片 (Hero Stats Card) -->
+      <div class="todo-hero-card">
+        <div class="todo-hero-main">
+          <div class="todo-hero-kicker">
+            <span>💫 BUCKET LIST PROGRESS</span>
           </div>
-          <div class="oasis-header-actions">
-            <button type="button" class="btn btn-outline btn-sm" id="btn-todo-inspiration">
-              💡 愿望灵感库
-            </button>
-            <button type="button" class="btn btn-outline btn-sm" id="btn-todo-export" title="导出为美观文档">
-              📥 导出清单
-            </button>
-            ${isMaster ? `
-              <button type="button" class="btn btn-primary btn-sm" id="btn-todo-add">
-                <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-                记下新愿望
+          <h3 class="todo-hero-quote">步履不停，心愿会一个一个变成温暖的现实 ✨</h3>
+          <p class="todo-hero-sub">已共同点亮 <strong>${completedCount}</strong> 个美好心愿，还有 <strong>${totalCount - completedCount}</strong> 处风景等待探寻</p>
+          
+          <div class="todo-progress-box">
+            <div class="todo-progress-label">
+              <span>总体圆梦进度</span>
+              <span class="todo-progress-pct">${pct}% (${completedCount}/${totalCount})</span>
+            </div>
+            <div class="todo-progress-track">
+              <div class="todo-progress-fill" style="width: ${pct}%;"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="todo-stats-grid">
+          <div class="todo-stat-cell" data-filter-status="completed" title="点击筛选已圆梦">
+            <span class="todo-stat-num achieved">${completedCount}</span>
+            <span class="todo-stat-desc">🎉 已圆梦</span>
+          </div>
+          <div class="todo-stat-cell" data-filter-status="in_progress" title="点击筛选筹备中">
+            <span class="todo-stat-num in-progress">${inProgressCount}</span>
+            <span class="todo-stat-desc">🚀 筹备中</span>
+          </div>
+          <div class="todo-stat-cell" data-filter-status="pending" title="点击筛选待实现">
+            <span class="todo-stat-num pending">${pendingCount}</span>
+            <span class="todo-stat-desc">🌟 期待中</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. 多维度筛选器与实时搜索工具栏 -->
+      <div class="todo-filter-panel">
+        <!-- 归属行 (Who) -->
+        <div class="todo-filter-row">
+          <div class="todo-pill-group">
+            <span class="todo-pill-label">归属：</span>
+            ${this.owners.map(o => `
+              <button type="button" class="todo-pill ${this.currentOwner === o.id ? 'active' : ''}" data-owner="${o.id}">
+                <span>${o.avatar}</span>
+                <span>${o.name}</span>
               </button>
-            ` : ''}
+            `).join('')}
+          </div>
+
+          <!-- 搜索框 -->
+          <div class="todo-search-wrap">
+            <svg class="todo-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input type="text" class="todo-search-input" id="todo-search-input" placeholder="搜索心愿关键词/序号..." value="${this.escapeHtml(this.searchKeyword)}">
           </div>
         </div>
 
-        <!-- 2. 顶部统揽进度与数据卡片 (Hero Stats Card) -->
-        <div class="todo-hero-card">
-          <div class="todo-hero-main">
-            <div class="todo-hero-kicker">
-              <span>💫 BUCKET LIST PROGRESS</span>
-            </div>
-            <h3 class="todo-hero-quote">步履不停，心愿会一个一个变成温暖的现实 ✨</h3>
-            <p class="todo-hero-sub">已共同点亮 <strong>${completedCount}</strong> 个美好心愿，还有 <strong>${totalCount - completedCount}</strong> 处风景等待探寻</p>
-            
-            <div class="todo-progress-box">
-              <div class="todo-progress-label">
-                <span>总体圆梦进度</span>
-                <span class="todo-progress-pct">${pct}% (${completedCount}/${totalCount})</span>
-              </div>
-              <div class="todo-progress-track">
-                <div class="todo-progress-fill" style="width: ${pct}%;"></div>
-              </div>
-            </div>
+        <!-- 分类与状态行 -->
+        <div class="todo-filter-row">
+          <div class="todo-pill-group">
+            <span class="todo-pill-label">分类：</span>
+            ${this.categories.map(c => `
+              <button type="button" class="todo-pill ${this.currentCategory === c.id ? 'active' : ''}" data-category="${c.id}">
+                <span>${c.icon}</span>
+                <span>${c.name}</span>
+              </button>
+            `).join('')}
           </div>
 
-          <div class="todo-stats-grid">
-            <div class="todo-stat-cell" data-filter-status="completed" title="点击筛选已圆梦">
-              <span class="todo-stat-num achieved">${completedCount}</span>
-              <span class="todo-stat-desc">🎉 已圆梦</span>
-            </div>
-            <div class="todo-stat-cell" data-filter-status="in_progress" title="点击筛选筹备中">
-              <span class="todo-stat-num in-progress">${inProgressCount}</span>
-              <span class="todo-stat-desc">🚀 筹备中</span>
-            </div>
-            <div class="todo-stat-cell" data-filter-status="pending" title="点击筛选待实现">
-              <span class="todo-stat-num pending">${pendingCount}</span>
-              <span class="todo-stat-desc">🌟 期待中</span>
-            </div>
+          <div class="todo-pill-group">
+            <span class="todo-pill-label">状态：</span>
+            <button type="button" class="todo-pill mint ${this.currentStatus === 'all' ? 'active' : ''}" data-status="all">全部</button>
+            <button type="button" class="todo-pill mint ${this.currentStatus === 'pending' ? 'active' : ''}" data-status="pending">🌟 期待中</button>
+            <button type="button" class="todo-pill mint ${this.currentStatus === 'in_progress' ? 'active' : ''}" data-status="in_progress">🚀 筹备中</button>
+            <button type="button" class="todo-pill mint ${this.currentStatus === 'completed' ? 'active' : ''}" data-status="completed">🎉 已圆梦</button>
           </div>
         </div>
+      </div>
 
-        <!-- 3. 多维度筛选器与实时搜索工具栏 -->
-        <div class="todo-filter-panel">
-          <!-- 归属行 (Who) -->
-          <div class="todo-filter-row">
-            <div class="todo-pill-group">
-              <span class="todo-pill-label">归属：</span>
-              ${this.owners.map(o => `
-                <button type="button" class="todo-pill ${this.currentOwner === o.id ? 'active' : ''}" data-owner="${o.id}">
-                  <span>${o.avatar}</span>
-                  <span>${o.name}</span>
-                </button>
-              `).join('')}
-            </div>
-
-            <!-- 搜索框 -->
-            <div class="todo-search-wrap">
-              <svg class="todo-search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-              <input type="text" class="todo-search-input" id="todo-search-input" placeholder="搜索心愿关键词..." value="${this.escapeHtml(this.searchKeyword)}">
-            </div>
-          </div>
-
-          <!-- 分类与状态行 -->
-          <div class="todo-filter-row">
-            <div class="todo-pill-group">
-              <span class="todo-pill-label">分类：</span>
-              ${this.categories.map(c => `
-                <button type="button" class="todo-pill ${this.currentCategory === c.id ? 'active' : ''}" data-category="${c.id}">
-                  <span>${c.icon}</span>
-                  <span>${c.name}</span>
-                </button>
-              `).join('')}
-            </div>
-
-            <div class="todo-pill-group">
-              <span class="todo-pill-label">状态：</span>
-              <button type="button" class="todo-pill mint ${this.currentStatus === 'all' ? 'active' : ''}" data-status="all">全部</button>
-              <button type="button" class="todo-pill mint ${this.currentStatus === 'pending' ? 'active' : ''}" data-status="pending">🌟 期待中</button>
-              <button type="button" class="todo-pill mint ${this.currentStatus === 'in_progress' ? 'active' : ''}" data-status="in_progress">🚀 筹备中</button>
-              <button type="button" class="todo-pill mint ${this.currentStatus === 'completed' ? 'active' : ''}" data-status="completed">🎉 已圆梦</button>
-            </div>
-          </div>
-        </div>
-
-        <!-- 4. 心愿卡片网格列表 (Bucket List Grid) -->
-        <div class="todo-grid">
-          ${filteredTodos.length > 0 ? filteredTodos.map(todo => this.renderCard(todo, isMaster)).join('') : this.renderEmptyState(isMaster)}
-        </div>
-
+      <!-- 4. 心愿卡片网格列表 (Bucket List Grid) -->
+      <div class="todo-grid">
+        ${filteredTodos.length > 0 ? filteredTodos.map((todo, idx) => this.renderCard(todo, isMaster, idx)).join('') : this.renderEmptyState(isMaster)}
       </div>
     `;
 
-    this.bindEvents(isMaster);
+    // 1. 若弹层处于开启状态，优先渲染独立页面弹层
+    let modal = document.getElementById('modal-todo-page');
+    if (this.isOpen) {
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'modal-todo-page';
+        modal.className = 'todo-modal-overlay active';
+        document.body.appendChild(modal);
+      }
+      modal.innerHTML = `
+        <div class="todo-modal-dialog">
+          <div class="todo-modal-header">
+            <div class="todo-modal-header-left">
+              <button type="button" class="todo-modal-back-btn" id="btn-close-todo-modal" title="返回主空间">
+                <svg class="ico" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <span>返回</span>
+              </button>
+              <div class="todo-modal-header-info">
+                <h2 class="todo-modal-header-title">
+                  <svg class="ico" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span>人生ToDo · 心愿清单</span>
+                </h2>
+                <p class="todo-modal-header-sub">星光愿景 · 两个人的奔赴与一生的期许 · 共点亮 ${completedCount} 个心愿</p>
+              </div>
+            </div>
+
+            <div class="todo-modal-header-actions">
+              <button type="button" class="btn btn-outline btn-sm" id="btn-todo-inspiration">
+                💡 愿望灵感库
+              </button>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-todo-export" title="导出为美观文档">
+                📥 导出清单
+              </button>
+              ${isMaster ? `
+                <button type="button" class="btn btn-primary btn-sm" id="btn-todo-add">
+                  <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                  记下新愿望
+                </button>
+              ` : ''}
+              <button type="button" class="todo-modal-close-btn" id="btn-close-todo-modal-x" title="关闭页面">✕</button>
+            </div>
+          </div>
+
+          <div class="todo-modal-body">
+            ${bodyContentHtml}
+          </div>
+        </div>
+      `;
+      this.bindEvents(isMaster, modal);
+    }
+
+    // 2. 兼容保留嵌入式容器（如果页面存在挂载点）
+    if (this.container) {
+      this.container.innerHTML = `
+        <div class="todo-container">
+          <div class="oasis-header-bar">
+            <div class="oasis-header-main">
+              <div class="oasis-header-kicker">
+                <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                <span>星光愿景 · 两个人的奔赴与一生的期许</span>
+              </div>
+              <h2 class="oasis-header-title">🌟 人生ToDo · 愿望清单</h2>
+              <p class="oasis-header-sub">记录想一起看的世界、想共同实现的约定与彼此的人生追求</p>
+            </div>
+            <div class="oasis-header-actions">
+              <button type="button" class="btn btn-outline btn-sm" id="btn-todo-inspiration">💡 愿望灵感库</button>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-todo-export" title="导出为美观文档">📥 导出清单</button>
+              ${isMaster ? `
+                <button type="button" class="btn btn-primary btn-sm" id="btn-todo-add">
+                  <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+                  记下新愿望
+                </button>
+              ` : ''}
+            </div>
+          </div>
+          ${bodyContentHtml}
+        </div>
+      `;
+      if (!this.isOpen) {
+        this.bindEvents(isMaster, this.container);
+      }
+    }
   }
 
   // --- 过滤逻辑 ---
   getFilteredTodos(list) {
-    return list.filter(item => {
+    const filtered = list.filter(item => {
       // 归属过滤
       if (this.currentOwner !== 'all') {
         if (item.owner !== this.currentOwner) return false;
@@ -257,23 +365,34 @@ class TodoModule {
         const matchDesc = (item.desc || '').toLowerCase().includes(kw);
         const matchLoc = (item.completedLocation || '').toLowerCase().includes(kw);
         const matchNote = (item.memoryNote || '').toLowerCase().includes(kw);
-        if (!matchTitle && !matchDesc && !matchLoc && !matchNote) return false;
+        const matchNum = (item.orderNum ? String(item.orderNum) : '').toLowerCase().includes(kw);
+        if (!matchTitle && !matchDesc && !matchLoc && !matchNote && !matchNum) return false;
       }
       return true;
-    }).sort((a, b) => {
-      // 已圆梦排在后面，或按完成时间倒序
-      if (a.status === 'completed' && b.status !== 'completed') return 1;
-      if (a.status !== 'completed' && b.status === 'completed') return -1;
-      // 待办/进行中按优先级倒序 (3星优先)
+    });
+
+    return filtered.sort((a, b) => {
+      // 1. 如果都有自定义有效数字编号，优先按编号大小升序排序
+      const numA = (a.orderNum !== undefined && a.orderNum !== null && a.orderNum !== '') ? parseFloat(a.orderNum) : NaN;
+      const numB = (b.orderNum !== undefined && b.orderNum !== null && b.orderNum !== '') ? parseFloat(b.orderNum) : NaN;
+      if (!isNaN(numA) && !isNaN(numB) && numA !== numB) {
+        return numA - numB;
+      }
+      // 2. 状态：筹备中 > 期待中 > 已圆梦
+      const statusWeight = { in_progress: 3, pending: 2, completed: 1 };
+      const swA = statusWeight[a.status] || 2;
+      const swB = statusWeight[b.status] || 2;
+      if (swA !== swB) return swB - swA;
+      // 3. 优先级高低
       const pDiff = (b.priority || 2) - (a.priority || 2);
       if (pDiff !== 0) return pDiff;
-      // 相同优先级按创建时间倒序
+      // 4. 创建时间倒序
       return (b.createdAt || '').localeCompare(a.createdAt || '');
     });
   }
 
-  // --- 单个心愿卡片渲染 ---
-  renderCard(todo, isMaster) {
+  // --- 单个心愿卡片渲染 (带顺序编号与自定义修改编号) ---
+  renderCard(todo, isMaster, idx = 0) {
     const isCompleted = todo.status === 'completed';
     const isInProgress = todo.status === 'in_progress';
     const statusClass = isCompleted ? 'status-completed' : (isInProgress ? 'status-in_progress' : 'status-pending');
@@ -282,11 +401,16 @@ class TodoModule {
     const catMeta = this.getCategoryMeta(todo.category);
     const stars = '⭐'.repeat(Math.max(1, Math.min(3, todo.priority || 2)));
 
+    // 编号计算：优先使用用户自定义编号，否则默认使用列表自然顺序编号（01, 02...）
+    const customNum = todo.orderNum && String(todo.orderNum).trim();
+    const displayNum = customNum ? customNum : String(idx + 1).padStart(2, '0');
+
     return `
       <div class="todo-card ${statusClass}" data-id="${todo.id}">
         <!-- 头部徽章栏 -->
         <div class="todo-card-head">
           <div class="todo-card-tags">
+            <span class="todo-number-badge" title="心愿编号 #${displayNum}">#${displayNum}</span>
             <span class="todo-owner-tag ${ownerMeta.tagClass}">
               <span>${ownerMeta.avatar}</span>
               <span>${ownerMeta.short}</span>
@@ -400,11 +524,27 @@ class TodoModule {
   }
 
   // --- 事件绑定 ---
-  bindEvents(isMaster) {
-    if (!this.container) return;
+  bindEvents(isMaster, rootEl = null) {
+    const root = rootEl || this.container || document.getElementById('modal-todo-page');
+    if (!root) return;
+
+    // 0. 关闭独立弹层事件
+    root.querySelector('#btn-close-todo-modal')?.addEventListener('click', () => {
+      this.closeTodoModal();
+    });
+    root.querySelector('#btn-close-todo-modal-x')?.addEventListener('click', () => {
+      this.closeTodoModal();
+    });
+    if (root.classList.contains('todo-modal-overlay')) {
+      root.addEventListener('click', (e) => {
+        if (e.target === root) {
+          this.closeTodoModal();
+        }
+      });
+    }
 
     // 1. 归属切换
-    this.container.querySelectorAll('[data-owner]').forEach(btn => {
+    root.querySelectorAll('[data-owner]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.currentOwner = btn.dataset.owner;
         this.render();
@@ -412,7 +552,7 @@ class TodoModule {
     });
 
     // 2. 分类切换
-    this.container.querySelectorAll('[data-category]').forEach(btn => {
+    root.querySelectorAll('[data-category]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.currentCategory = btn.dataset.category;
         this.render();
@@ -420,7 +560,7 @@ class TodoModule {
     });
 
     // 3. 状态切换
-    this.container.querySelectorAll('[data-status]').forEach(btn => {
+    root.querySelectorAll('[data-status]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.currentStatus = btn.dataset.status;
         this.render();
@@ -428,7 +568,7 @@ class TodoModule {
     });
 
     // 3.1 点击 Hero 数据方块快捷筛选状态
-    this.container.querySelectorAll('[data-filter-status]').forEach(cell => {
+    root.querySelectorAll('[data-filter-status]').forEach(cell => {
       cell.addEventListener('click', () => {
         this.currentStatus = cell.dataset.filterStatus;
         this.render();
@@ -436,13 +576,14 @@ class TodoModule {
     });
 
     // 4. 实时搜索输入 (带轻微防抖)
-    const searchInput = this.container.querySelector('#todo-search-input');
+    const searchInput = root.querySelector('#todo-search-input');
     if (searchInput) {
       searchInput.addEventListener('input', (e) => {
         this.searchKeyword = e.target.value;
         this.render();
         // 重新聚焦搜索框
-        const newInp = this.container.querySelector('#todo-search-input');
+        const activeRoot = rootEl || this.container || document.getElementById('modal-todo-page');
+        const newInp = activeRoot?.querySelector('#todo-search-input');
         if (newInp) {
           newInp.focus();
           newInp.setSelectionRange(newInp.value.length, newInp.value.length);
@@ -451,24 +592,24 @@ class TodoModule {
     }
 
     // 5. 顶部按钮事件
-    this.container.querySelector('#btn-todo-inspiration')?.addEventListener('click', () => {
+    root.querySelector('#btn-todo-inspiration')?.addEventListener('click', () => {
       this.openInspirationModal();
     });
-    this.container.querySelector('#btn-empty-inspo')?.addEventListener('click', () => {
+    root.querySelector('#btn-empty-inspo')?.addEventListener('click', () => {
       this.openInspirationModal();
     });
-    this.container.querySelector('#btn-todo-add')?.addEventListener('click', () => {
+    root.querySelector('#btn-todo-add')?.addEventListener('click', () => {
       this.openEditModal();
     });
-    this.container.querySelector('#btn-empty-add')?.addEventListener('click', () => {
+    root.querySelector('#btn-empty-add')?.addEventListener('click', () => {
       this.openEditModal();
     });
-    this.container.querySelector('#btn-todo-export')?.addEventListener('click', () => {
+    root.querySelector('#btn-todo-export')?.addEventListener('click', () => {
       this.exportTodos();
     });
 
     // 6. 卡片点击与操作事件
-    this.container.querySelectorAll('.todo-card').forEach(card => {
+    root.querySelectorAll('.todo-card').forEach(card => {
       const todoId = card.dataset.id;
       const allTodos = window.spaceStore ? window.spaceStore.getTodos() : [];
       const todo = allTodos.find(t => t.id === todoId);
@@ -482,7 +623,8 @@ class TodoModule {
       // 切换待办 / 筹备中
       card.querySelector('[data-action="toggle-progress"]')?.addEventListener('click', () => {
         const nextStatus = todo.status === 'in_progress' ? 'pending' : 'in_progress';
-        window.spaceStore.updateTodo(todoId, { status: nextStatus });
+        window.spaceStore.updateTodo(todoId, { status: nextStatus, updatedAt: new Date().toISOString() });
+        try { window.spaceStore.pushToCloud(false); } catch (_) {}
         this.showToast(nextStatus === 'in_progress' ? '🚀 已将心愿设为“筹备中”' : '🌟 已重置为“期待中”');
         this.render();
       });
@@ -545,9 +687,15 @@ class TodoModule {
           </div>
 
           <form id="form-todo-edit" style="display:flex; flex-direction:column; gap:14px;">
-            <div>
-              <label class="form-label" for="edit-todo-title">心愿名称 *</label>
-              <input type="text" class="input" id="edit-todo-title" required placeholder="如：去冰岛追一场欧若拉极光" value="${this.escapeHtml(item.title)}">
+            <div style="display:grid; grid-template-columns: 2fr 1fr; gap:12px;">
+              <div>
+                <label class="form-label" for="edit-todo-title">心愿名称 *</label>
+                <input type="text" class="input" id="edit-todo-title" required placeholder="如：去冰岛追一场欧若拉极光" value="${this.escapeHtml(item.title)}">
+              </div>
+              <div>
+                <label class="form-label" for="edit-todo-ordernum">心愿编号 (可选)</label>
+                <input type="text" class="input" id="edit-todo-ordernum" placeholder="如 01, 100, 留空按顺序" value="${this.escapeHtml(item.orderNum || '')}">
+              </div>
             </div>
 
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
@@ -646,15 +794,18 @@ class TodoModule {
       const title = document.getElementById('edit-todo-title').value.trim();
       if (!title) return;
 
+      const orderNum = document.getElementById('edit-todo-ordernum')?.value.trim() || '';
       const payload = {
         title,
+        orderNum,
         owner: document.getElementById('edit-todo-owner').value,
         category: document.getElementById('edit-todo-category').value,
         priority: Number(document.getElementById('edit-todo-priority').value),
         targetDate: document.getElementById('edit-todo-target').value.trim(),
         desc: document.getElementById('edit-todo-desc').value.trim(),
         status: document.getElementById('edit-todo-status').value,
-        visibility: document.getElementById('edit-todo-vis').value
+        visibility: document.getElementById('edit-todo-vis').value,
+        updatedAt: new Date().toISOString()
       };
 
       if (isEdit) {
@@ -664,6 +815,9 @@ class TodoModule {
         window.spaceStore.addTodo(payload);
         this.showToast('✨ 新心愿已记录入清单！');
       }
+
+      // 实时向 Cloudflare 全球云端推送，确保跨设备零延迟可见
+      try { window.spaceStore.pushToCloud(false); } catch (_) {}
 
       closeModal();
       this.render();
@@ -798,8 +952,10 @@ class TodoModule {
           completedAt: null,
           completedLocation: '',
           memoryNote: '',
-          memoryPhoto: ''
+          memoryPhoto: '',
+          updatedAt: new Date().toISOString()
         });
+        try { window.spaceStore.pushToCloud(false); } catch (_) {}
         this.showToast('🌟 心愿已重置为待实现状态');
         closeModal();
         this.render();
@@ -818,8 +974,10 @@ class TodoModule {
         completedAt,
         completedLocation,
         memoryNote,
-        memoryPhoto: photoBase64
+        memoryPhoto: photoBase64,
+        updatedAt: new Date().toISOString()
       });
+      try { window.spaceStore.pushToCloud(false); } catch (_) {}
 
       this.showToast('🎉 恭喜圆梦！心愿已被永恒点亮！');
       closeModal();
@@ -1007,7 +1165,8 @@ class TodoModule {
       md += `*暂无已圆梦心愿*\n\n`;
     } else {
       completed.forEach((t, idx) => {
-        md += `### ${idx + 1}. ${t.title} [已实现]\n`;
+        const numStr = t.orderNum ? `#${t.orderNum}` : `#${String(idx + 1).padStart(2, '0')}`;
+        md += `### ${numStr} ${t.title} [已实现]\n`;
         md += `- **归属**：${this.getOwnerMeta(t.owner).name} | **分类**：${this.getCategoryMeta(t.category).name}\n`;
         if (t.completedAt) md += `- **实现日期**：${t.completedAt}${t.completedLocation ? ` · 📍 ${t.completedLocation}` : ''}\n`;
         if (t.memoryNote) md += `- **圆梦感言**：“${t.memoryNote}”\n`;
@@ -1021,7 +1180,8 @@ class TodoModule {
       md += `*暂无筹备中心愿*\n\n`;
     } else {
       inProgress.forEach((t, idx) => {
-        md += `### ${idx + 1}. ${t.title}\n`;
+        const numStr = t.orderNum ? `#${t.orderNum}` : `#${String(idx + 1).padStart(2, '0')}`;
+        md += `### ${numStr} ${t.title}\n`;
         md += `- **归属**：${this.getOwnerMeta(t.owner).name} | **分类**：${this.getCategoryMeta(t.category).name} | **心动指数**：${'⭐'.repeat(t.priority || 2)}\n`;
         if (t.targetDate) md += `- **计划时间**：${t.targetDate}\n`;
         if (t.desc) md += `- **描述**：${t.desc}\n`;
@@ -1034,7 +1194,8 @@ class TodoModule {
       md += `*暂无期待中心愿*\n\n`;
     } else {
       pending.forEach((t, idx) => {
-        md += `### ${idx + 1}. ${t.title}\n`;
+        const numStr = t.orderNum ? `#${t.orderNum}` : `#${String(idx + 1).padStart(2, '0')}`;
+        md += `### ${numStr} ${t.title}\n`;
         md += `- **归属**：${this.getOwnerMeta(t.owner).name} | **分类**：${this.getCategoryMeta(t.category).name} | **心动指数**：${'⭐'.repeat(t.priority || 2)}\n`;
         if (t.targetDate) md += `- **预期时间**：${t.targetDate}\n`;
         if (t.desc) md += `- **描述**：${t.desc}\n`;

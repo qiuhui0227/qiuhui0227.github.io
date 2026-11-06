@@ -8,12 +8,12 @@
   <link rel="icon" type="image/png" href="./images/logo.png">
 
   <!-- 加载完全复刻 USV Lab 经典美学与艺术扩展的样式表 (带强力防缓存指纹) -->
-  <link rel="stylesheet" href="./css/style.css?v=202611061120">
-  <link rel="stylesheet" href="./css/resume.css?v=202611061120">
-  <link rel="stylesheet" href="./css/albums.css?v=202611061120">
-  <link rel="stylesheet" href="./css/todo.css?v=202611061120">
-  <link rel="stylesheet" href="./css/responsive.css?v=202611061120">
-  <link rel="stylesheet" href="./css/meals.css?v=202611061120">
+  <link rel="stylesheet" href="./css/style.css?v=202611061210">
+  <link rel="stylesheet" href="./css/resume.css?v=202611061210">
+  <link rel="stylesheet" href="./css/albums.css?v=202611061210">
+  <link rel="stylesheet" href="./css/todo.css?v=202611061210">
+  <link rel="stylesheet" href="./css/responsive.css?v=202611061210">
+  <link rel="stylesheet" href="./css/meals.css?v=202611061210">
 </head>
 <body>
 
@@ -66,25 +66,43 @@
       
       <!-- Topline 顶部状态栏 -->
       <div class="topline">
-        <!-- 左上角三餐相机入口 (两个字一行，整齐优雅) -->
-        <button type="button" class="meal-cam-top-btn" id="btn-top-meal-cam" title="点击打开三餐手帐与拍照打卡">
-          <div class="meal-cam-icon-box">
-            <svg class="meal-cam-ico-top" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-              <circle cx="12" cy="13" r="3"/>
-              <path d="M18 10h.01"/>
-            </svg>
-          </div>
-          <div class="meal-cam-text-col">
-            <span class="meal-cam-line">三餐</span>
-            <span class="meal-cam-line">相机</span>
-          </div>
-        </button>
-        <div class="top-actions">
-          <span class="name-tag cloud-tag" id="header-cloud-badge" title="Cloudflare 云端双向实时同步状态">
+        <!-- 左侧快捷功能区: 三餐相机 + 云端指示灯 + 人生ToDo -->
+        <div class="topline-left">
+          <!-- 三餐相机入口 -->
+          <button type="button" class="meal-cam-top-btn" id="btn-top-meal-cam" title="点击打开三餐手帐与拍照打卡">
+            <div class="meal-cam-icon-box">
+              <svg class="meal-cam-ico-top" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
+                <circle cx="12" cy="13" r="3"/>
+                <path d="M18 10h.01"/>
+              </svg>
+            </div>
+            <div class="meal-cam-text-col">
+              <span class="meal-cam-line">三餐</span>
+              <span class="meal-cam-line">相机</span>
+            </div>
+          </button>
+
+          <!-- 云端同步指示灯 (靠近三餐相机，只留灯，点击立即同步) -->
+          <button type="button" class="cloud-tag-lamp synced" id="header-cloud-badge" title="Cloudflare 全球云端实时双向同步 (点击立即同步)">
             <span class="cloud-dot"></span>
-            <span class="cloud-text">云端已同步</span>
-          </span>
+          </button>
+
+          <!-- 人生ToDo入口 (位于云端同步右侧，精致按钮设计，类似于三餐相机) -->
+          <button type="button" class="meal-cam-top-btn todo-top-btn" id="btn-top-todo" title="点击打开人生ToDo愿望清单与圆梦手帐">
+            <div class="meal-cam-icon-box todo-icon-box">
+              <svg class="meal-cam-ico-top todo-ico-top" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+            </div>
+            <div class="meal-cam-text-col">
+              <span class="meal-cam-line">人生</span>
+              <span class="meal-cam-line">ToDo</span>
+            </div>
+          </button>
+        </div>
+
+        <div class="top-actions">
           <span class="name-tag" id="header-role-badge">
             <svg class="ico" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
             <span>卧室主人 (全特权)</span>
@@ -99,7 +117,7 @@
 
       <!-- Content 核心内容卡片 -->
       <section class="content">
-        <!-- Tabs 分段切换器 -->
+        <!-- Tabs 分段切换器 (已精简人生ToDo至顶部独立页面，底部不再拥挤) -->
         <div class="tabs">
           <button type="button" class="tab active" data-tab="timetable">
             <svg class="ico" viewBox="0 0 24 24"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/><path d="M9 12h6m-6 4h4"/></svg>
@@ -108,10 +126,6 @@
           <button type="button" class="tab" data-tab="albums">
             <svg class="ico" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
             岁月相册
-          </button>
-          <button type="button" class="tab" id="tab-btn-todo" data-tab="todo">
-            <svg class="ico" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-            人生ToDo
           </button>
           <button type="button" class="tab" id="tab-btn-resume" data-tab="resume">
             <svg class="ico" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
@@ -138,13 +152,13 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- 脚本模块按顺序载入 (带强力防缓存指纹) -->
-  <script src="./js/store.js?v=202611061120"></script>
-  <script src="./js/auth.js?v=202611061120"></script>
-  <script src="./js/timetable.js?v=202611061120"></script>
-  <script src="./js/albums.js?v=202611061120"></script>
-  <script src="./js/todo.js?v=202611061120"></script>
-  <script src="./js/resume.js?v=202611061120"></script>
-  <script src="./js/meals.js?v=202611061120"></script>
-  <script src="./js/app.js?v=202611061120"></script>
+  <script src="./js/store.js?v=202611061210"></script>
+  <script src="./js/auth.js?v=202611061210"></script>
+  <script src="./js/timetable.js?v=202611061210"></script>
+  <script src="./js/albums.js?v=202611061210"></script>
+  <script src="./js/todo.js?v=202611061210"></script>
+  <script src="./js/resume.js?v=202611061210"></script>
+  <script src="./js/meals.js?v=202611061210"></script>
+  <script src="./js/app.js?v=202611061210"></script>
 </body>
 </html>

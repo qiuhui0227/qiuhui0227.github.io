@@ -1,4 +1,4 @@
-﻿/**
+/**
  * OASIS | Qiuhui & Yan
  * 空间核心路由调度与应用控制器
  * 支持：持久化设备记住、男女主人独立密码鉴权、多访客通行证（不限数量）全功能管理
@@ -160,9 +160,19 @@ class SpaceApp {
     } else if (this.currentTab === 'settings') {
       this.renderSettings(containers.settings);
     }
+    if (window.todoModule && window.todoModule.isOpen) {
+      window.todoModule.renderIfOpen();
+    }
   }
 
   switchTab(tabName) {
+    if (tabName === 'todo') {
+      if (window.todoModule) {
+        window.todoModule.openTodoModal();
+      }
+      return;
+    }
+
     const isMaster = window.spaceAuth.isMaster();
 
     // 严密隐私拦截：来宾禁止通过任何方式切换到简历生成器或空间管理

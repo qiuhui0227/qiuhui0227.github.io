@@ -1179,30 +1179,39 @@ class SpaceStore {
     this.recordDeletedTodoId(id);
     const list = this.getTodos().filter(item => item.id !== id);
     this.saveTodos(list);
+    // 立即向云端同步，防止延迟导致另一端或刷新时拉取旧数据
+    try { this.pushToCloud(false); } catch (_) {}
     return list;
   }
 
+  // 人生ToDo智能双向合并 (以云端最新修改为准，绝不让已删除项死灰复燃，同时保护离线新增条目)
   mergeTodos(localList = [], cloudList = []) {
     const deletedIds = this.getDeletedTodoIds();
     const map = new Map();
 
+    // 1. 优先载入云端最新列表（剔除本地已删的）
     for (const item of (cloudList || [])) {
       if (item && item.id && !deletedIds.has(item.id)) {
         map.set(item.id, item);
       }
     }
 
+    // 2. 本地检查：仅当条目是本地在离线状态下新增的（创建时间晚于上次同步时间且不在云端）才追加
+    const lastSaved = parseInt(localStorage.getItem('oasis_last_saved_at') || '0', 10);
     for (const item of (localList || [])) {
-      if (item && item.id) {
+      if (item && item.id && !deletedIds.has(item.id)) {
         if (!map.has(item.id)) {
-          if (!deletedIds.has(item.id)) {
+          const createdTime = new Date(item.createdAt || 0).getTime();
+          // 仅保留未同步到云端的新增心愿，防止已删心愿复活
+          if (createdTime > lastSaved) {
             map.set(item.id, item);
           }
         } else {
+          // 若同一心愿本地 updatedAt 显著更新（离线修改），才覆盖云端
           const cloudItem = map.get(item.id);
           const localTime = new Date(item.updatedAt || item.createdAt || 0).getTime();
           const cloudTime = new Date(cloudItem.updatedAt || cloudItem.createdAt || 0).getTime();
-          if (localTime >= cloudTime) {
+          if (localTime > cloudTime) {
             map.set(item.id, item);
           }
         }
@@ -1339,32 +1348,78 @@ class SpaceStore {
       this.pullFromCloud(true);
     }, 300);
 
-    // 2. 页面切回前台时自动静默检查同步
+    // 2. 针对微信浮窗、切回前台、移动端多重唤醒生命周期的即时同步中枢
     if (typeof window !== 'undefined') {
+      // 窗口聚焦
       window.addEventListener('focus', () => {
         this.pullFromCloud(false);
       });
 
+      // 标签可见性恢复
       document.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'visible') {
           this.pullFromCloud(false);
         }
       });
 
-      // 3. 定时每 30 秒静默无感轮询拉取
+      // 微信浮窗还原 / 浏览器从 BFCache 恢复时触发
+      window.addEventListener('pageshow', () => {
+        this.pullFromCloud(false);
+      });
+
+      // 微信/移动端 WebView 原生 resume 唤醒事件
+      document.addEventListener('resume', () => {
+        this.pullFromCloud(false);
+      });
+
+      // 网络由断开恢复连接
+      window.addEventListener('online', () => {
+        this.pullFromCloud(false);
+      });
+
+      // 用户交互主动触发（防止微信浮窗在后台冻结定时器后，唤醒时无标准生命周期事件派发）
+      let lastUserInteractPull = 0;
+      const onUserActive = () => {
+        const now = Date.now();
+        if (now - lastUserInteractPull > 5000) {
+          lastUserInteractPull = now;
+          this.pullFromCloud(false);
+        }
+      };
+      ['touchstart', 'pointerdown', 'click'].forEach(evt => {
+        window.addEventListener(evt, onUserActive, { passive: true });
+      });
+
+      // 3. 定时每 15 秒静默无感轮询拉取（前台活跃时保持极高实时性）
       setInterval(() => {
         this.pullFromCloud(false);
-      }, 30000);
+      }, 15000);
     }
   }
 
   // 健壮的双轨云端网络请求适配器 (优先国内直连自定义域名 api.iqiuqiu.me，自动兜底 workers.dev)
   async cloudFetch(path, options = {}, timeoutMs = 5000) {
+    // 强制增加动态时间戳防缓存（对 GET/HEAD 彻底消除微信内核/代理服务强缓存）
+    const isGetOrHead = !options.method || options.method === 'GET' || options.method === 'HEAD';
+    const separator = path.includes('?') ? '&' : '?';
+    const cacheBustedPath = isGetOrHead ? `${path}${separator}_t=${Date.now()}` : path;
+
     const urls = [
-      `${this.cloudBaseUrl}${path}`,
-      `${this.cloudFallbackUrl}${path}`
+      `${this.cloudBaseUrl}${cacheBustedPath}`,
+      `${this.cloudFallbackUrl}${cacheBustedPath}`
     ];
     let lastError = null;
+
+    const fetchOptions = {
+      credentials: 'omit',
+      cache: 'no-store', // 严禁微信或浏览器使用内存/磁盘缓存
+      ...options,
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        ...(options.headers || {})
+      }
+    };
 
     for (const url of urls) {
       try {
@@ -1372,8 +1427,7 @@ class SpaceStore {
         const timer = setTimeout(() => controller.abort(), timeoutMs);
 
         const res = await fetch(url, {
-          credentials: 'omit',
-          ...options,
+          ...fetchOptions,
           signal: controller.signal
         });
         clearTimeout(timer);
@@ -1405,8 +1459,14 @@ class SpaceStore {
         const localSavedAt = parseInt(localStorage.getItem('oasis_last_saved_at') || '0', 10);
         const cloudSavedAt = cloud.savedAt || 0;
 
-        // 如果云端更新，或者本地从未标记过同步，则合并到本地
-        if (cloudSavedAt > localSavedAt || !localStorage.getItem('oasis_has_synced')) {
+        const localMealsCount = this.getMeals().length;
+        const cloudMealsCount = Array.isArray(cloud.meals) ? cloud.meals.length : 0;
+        const localTodosCount = this.getTodos().length;
+        const cloudTodosCount = Array.isArray(cloud.todos) ? cloud.todos.length : 0;
+        const countDiff = cloudMealsCount !== localMealsCount || cloudTodosCount !== localTodosCount;
+
+        // 如果云端更新，或者餐食/待办条目数量存在差异，或者本地从未标记过同步，则合并到本地
+        if (cloudSavedAt > localSavedAt || countDiff || !localStorage.getItem('oasis_has_synced')) {
           let hasUpdated = false;
           if (cloud.timetables && Array.isArray(cloud.timetables)) {
             const localList = this.getTimetables();
@@ -1447,6 +1507,9 @@ class SpaceStore {
           if (hasUpdated) {
             if (window.spaceApp) {
               window.spaceApp.refreshCurrentModule();
+            }
+            if (window.todoModule) {
+              window.todoModule.renderIfOpen();
             }
             if (window.mealsModule && window.mealsModule.isOpen) {
               window.mealsModule.renderGallery();
@@ -1521,19 +1584,23 @@ class SpaceStore {
     }, 1000);
   }
 
-  // 状态指示通知
+  // 状态指示通知 (支持纯灯指示器与浮动说明)
   notifyCloudStateChanged(status) {
     const badge = document.getElementById('header-cloud-badge');
     if (!badge) return;
-    badge.className = `name-tag cloud-tag ${status}`;
-    const textEl = badge.querySelector('.cloud-text');
-    if (!textEl) return;
+    badge.className = `cloud-tag-lamp ${status}`;
     if (status === 'syncing') {
-      textEl.innerText = '正在同步...';
+      badge.title = '正在与 Cloudflare 全球边缘云端实时双向同步...';
     } else if (status === 'synced') {
-      textEl.innerText = '云端已同步';
+      badge.title = 'Cloudflare 全球边缘云端已同步 (点击可立即同步)';
     } else if (status === 'error') {
-      textEl.innerText = '离线缓存';
+      badge.title = '云端连接异常，当前为本地离线模式 (点击重试同步)';
+    }
+    const textEl = badge.querySelector('.cloud-text');
+    if (textEl) {
+      if (status === 'syncing') textEl.innerText = '正在同步...';
+      else if (status === 'synced') textEl.innerText = '云端已同步';
+      else if (status === 'error') textEl.innerText = '离线缓存';
     }
   }
 

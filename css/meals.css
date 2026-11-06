@@ -59,6 +59,21 @@
   display: block;
 }
 
+/* 顶部人生ToDo按钮 (外观与三餐相机同款高雅精致风格，金黄星光视觉) */
+.todo-top-btn:hover {
+  border-color: #d97706 !important;
+}
+.todo-icon-box {
+  background: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #d97706 !important;
+}
+.todo-ico-top {
+  width: 14px;
+  height: 14px;
+  color: #d97706 !important;
+}
+
 /* 2. 三餐相册弹层主体 (Modal Overlay) */
 .meal-modal-overlay {
   position: fixed;
@@ -185,6 +200,31 @@
 .meal-btn-close:hover {
   color: #0f172a;
   border-color: #0f172a;
+}
+.meal-btn-refresh {
+  background: none;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.meal-btn-refresh:hover {
+  color: #ea580c;
+  border-color: #ea580c;
+  background: #fff7ed;
+}
+.meal-btn-refresh.rotating svg {
+  animation: meal-spin 0.6s linear infinite;
+}
+@keyframes meal-spin {
+  100% { transform: rotate(360deg); }
 }
 .meal-ico-sm {
   width: 14px;

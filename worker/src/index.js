@@ -15,6 +15,9 @@ function jsonResponse(data, status = 200, extraHeaders = {}) {
     status,
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0',
+      'Pragma': 'no-cache',
+      'Expires': '0',
       ...CORS_HEADERS,
       ...extraHeaders,
     },
@@ -71,6 +74,28 @@ export default {
         const now = Date.now();
         body.savedAt = now;
         body.savedAtIso = new Date(now).toISOString();
+
+        // 智能合并：获取当前云端已有数据，防止老旧客户端或浮窗挂起时推空覆盖他人最新三餐
+        try {
+          const existing = await env.OASIS_KV.get('oasis_global_data', 'json');
+          if (existing && typeof existing === 'object') {
+            if (Array.isArray(existing.meals) && Array.isArray(body.meals)) {
+              const mealMap = new Map();
+              existing.meals.forEach(m => { if (m && m.id) mealMap.set(m.id, m); });
+              body.meals.forEach(m => {
+                if (m && m.id) {
+                  const prev = mealMap.get(m.id);
+                  mealMap.set(m.id, prev ? { ...prev, ...m } : m);
+                }
+              });
+              body.meals = Array.from(mealMap.values()).sort((a, b) => {
+                const tA = new Date(a.time || a.createdAt || 0).getTime();
+                const tB = new Date(b.time || b.createdAt || 0).getTime();
+                return tB - tA;
+              });
+            }
+          }
+        } catch (_) {}
 
         // 写入主键
         await env.OASIS_KV.put('oasis_global_data', JSON.stringify(body));
