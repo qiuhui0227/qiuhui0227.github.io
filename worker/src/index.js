@@ -79,6 +79,7 @@ export default {
         try {
           const existing = await env.OASIS_KV.get('oasis_global_data', 'json');
           if (existing && typeof existing === 'object') {
+            // 合并三餐照片（新增不覆盖，双向补全）
             if (Array.isArray(existing.meals) && Array.isArray(body.meals)) {
               const mealMap = new Map();
               existing.meals.forEach(m => { if (m && m.id) mealMap.set(m.id, m); });
@@ -93,6 +94,26 @@ export default {
                 const tB = new Date(b.time || b.createdAt || 0).getTime();
                 return tB - tA;
               });
+            }
+
+            // 合并 deleted_todo_ids（两端的已删 ID 取并集，防止遗漏）
+            if (Array.isArray(existing.deleted_todo_ids) || Array.isArray(body.deleted_todo_ids)) {
+              const existingDeleted = Array.isArray(existing.deleted_todo_ids) ? existing.deleted_todo_ids : [];
+              const bodyDeleted = Array.isArray(body.deleted_todo_ids) ? body.deleted_todo_ids : [];
+              const mergedDeleted = [...new Set([...existingDeleted, ...bodyDeleted])].slice(0, 500);
+              body.deleted_todo_ids = mergedDeleted;
+              // 用合并后的 deleted list 再次过滤 todos，确保云端不残留已删条目
+              if (Array.isArray(body.todos) && mergedDeleted.length > 0) {
+                const deletedSet = new Set(mergedDeleted);
+                body.todos = body.todos.filter(t => t && t.id && !deletedSet.has(t.id));
+              }
+            }
+
+            // 合并 deleted_note_ids
+            if (Array.isArray(existing.deleted_note_ids) || Array.isArray(body.deleted_note_ids)) {
+              const existingDeleted = Array.isArray(existing.deleted_note_ids) ? existing.deleted_note_ids : [];
+              const bodyDeleted = Array.isArray(body.deleted_note_ids) ? body.deleted_note_ids : [];
+              body.deleted_note_ids = [...new Set([...existingDeleted, ...bodyDeleted])].slice(0, 500);
             }
           }
         } catch (_) {}

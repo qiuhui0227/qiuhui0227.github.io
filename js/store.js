@@ -1185,11 +1185,25 @@ class SpaceStore {
   }
 
   // 人生ToDo智能双向合并 (以云端最新修改为准，绝不让已删除项死灰复燃，同时保护离线新增条目)
-  mergeTodos(localList = [], cloudList = []) {
-    const deletedIds = this.getDeletedTodoIds();
+  // cloudDeletedIds: 云端下发的对方已删除的 ID 列表，用于跨设备传播"删除"操作
+  mergeTodos(localList = [], cloudList = [], cloudDeletedIds = []) {
+    // 合并本地 + 云端（对方）的已删除 ID，实现跨设备删除同步
+    const deletedIds = new Set([
+      ...this.getDeletedTodoIds(),
+      ...(cloudDeletedIds || [])
+    ]);
+    // 将对方的已删除 ID 也写入本地，防止后续再次复活
+    if (cloudDeletedIds && cloudDeletedIds.length > 0) {
+      try {
+        const local = JSON.parse(localStorage.getItem('oasis_deleted_todo_ids') || '[]');
+        const merged = [...new Set([...local, ...cloudDeletedIds])].slice(0, 500);
+        localStorage.setItem('oasis_deleted_todo_ids', JSON.stringify(merged));
+      } catch (_) {}
+    }
+
     const map = new Map();
 
-    // 1. 优先载入云端最新列表（剔除本地已删的）
+    // 1. 优先载入云端最新列表（剔除本地+云端已删的）
     for (const item of (cloudList || [])) {
       if (item && item.id && !deletedIds.has(item.id)) {
         map.set(item.id, item);
@@ -1355,15 +1369,20 @@ class SpaceStore {
         this.pullFromCloud(false);
       });
 
-      // 标签可见性恢复
+      // 标签可见性恢复（同时记录离开时间，恢复时若超过 3s 强制 pull）
+      let _lastHiddenAt = 0;
       document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
+        if (document.visibilityState === 'hidden') {
+          _lastHiddenAt = Date.now();
+        } else if (document.visibilityState === 'visible') {
+          // 无论间隔多短，只要从隐藏恢复就拉取，确保微信浮窗唤醒必同步
           this.pullFromCloud(false);
         }
       });
 
       // 微信浮窗还原 / 浏览器从 BFCache 恢复时触发
-      window.addEventListener('pageshow', () => {
+      window.addEventListener('pageshow', (e) => {
+        // persisted=true 表示从 BFCache 恢复，强制拉取
         this.pullFromCloud(false);
       });
 
@@ -1378,10 +1397,11 @@ class SpaceStore {
       });
 
       // 用户交互主动触发（防止微信浮窗在后台冻结定时器后，唤醒时无标准生命周期事件派发）
+      // 缩短触发间隔至 3s（原 5s），提高恢复后首次交互的同步及时性
       let lastUserInteractPull = 0;
       const onUserActive = () => {
         const now = Date.now();
-        if (now - lastUserInteractPull > 5000) {
+        if (now - lastUserInteractPull > 3000) {
           lastUserInteractPull = now;
           this.pullFromCloud(false);
         }
@@ -1390,10 +1410,10 @@ class SpaceStore {
         window.addEventListener(evt, onUserActive, { passive: true });
       });
 
-      // 3. 定时每 15 秒静默无感轮询拉取（前台活跃时保持极高实时性）
+      // 3. 定时每 10 秒静默无感轮询拉取（原 15s，缩短以提升实时性）
       setInterval(() => {
         this.pullFromCloud(false);
-      }, 15000);
+      }, 10000);
     }
   }
 
@@ -1465,9 +1485,21 @@ class SpaceStore {
         const cloudTodosCount = Array.isArray(cloud.todos) ? cloud.todos.length : 0;
         const countDiff = cloudMealsCount !== localMealsCount || cloudTodosCount !== localTodosCount;
 
-        // 如果云端更新，或者餐食/待办条目数量存在差异，或者本地从未标记过同步，则合并到本地
+        // 无论如何，三餐照片每次都无条件合并（merge 是幂等的，确保数量差异一定被修复）
+        let hasUpdated = false;
+        if (cloud.meals && Array.isArray(cloud.meals)) {
+          const localList = this.getMeals();
+          const merged = this.mergeMeals(localList, cloud.meals);
+          const localStr = JSON.stringify(localList.map(m => m.id).sort());
+          const mergedStr = JSON.stringify(merged.map(m => m.id).sort());
+          if (localStr !== mergedStr) {
+            localStorage.setItem('oasis_meals', JSON.stringify(merged));
+            hasUpdated = true;
+          }
+        }
+
+        // 如果云端更新，或者条目数量存在差异，或者本地从未标记过同步，则合并其余数据
         if (cloudSavedAt > localSavedAt || countDiff || !localStorage.getItem('oasis_has_synced')) {
-          let hasUpdated = false;
           if (cloud.timetables && Array.isArray(cloud.timetables)) {
             const localList = this.getTimetables();
             const merged = this.mergeTimetables(localList, cloud.timetables);
@@ -1484,15 +1516,10 @@ class SpaceStore {
             localStorage.setItem('oasis_albums', JSON.stringify(cleanCloudAlbums));
             hasUpdated = true;
           }
-          if (cloud.meals && Array.isArray(cloud.meals)) {
-            const localList = this.getMeals();
-            const merged = this.mergeMeals(localList, cloud.meals);
-            localStorage.setItem('oasis_meals', JSON.stringify(merged));
-            hasUpdated = true;
-          }
           if (cloud.todos && Array.isArray(cloud.todos)) {
             const localList = this.getTodos();
-            const merged = this.mergeTodos(localList, cloud.todos);
+            // 传入云端的 deleted_todo_ids，实现跨设备删除同步
+            const merged = this.mergeTodos(localList, cloud.todos, cloud.deleted_todo_ids || []);
             localStorage.setItem('oasis_todos', JSON.stringify(merged));
             hasUpdated = true;
           }
@@ -1503,20 +1530,21 @@ class SpaceStore {
 
           localStorage.setItem('oasis_last_saved_at', String(cloudSavedAt));
           localStorage.setItem('oasis_has_synced', 'true');
+        }
 
-          if (hasUpdated) {
-            if (window.spaceApp) {
-              window.spaceApp.refreshCurrentModule();
-            }
-            if (window.todoModule) {
-              window.todoModule.renderIfOpen();
-            }
-            if (window.mealsModule && window.mealsModule.isOpen) {
-              window.mealsModule.renderGallery();
-            }
-            if (window.albumsModule) {
-              window.albumsModule.updateSpecialMealCover();
-            }
+        // 触发 UI 刷新（meals 合并在条件外，故 hasUpdated 可能在条件内为 true）
+        if (hasUpdated) {
+          if (window.spaceApp) {
+            window.spaceApp.refreshCurrentModule();
+          }
+          if (window.todoModule) {
+            window.todoModule.renderIfOpen();
+          }
+          if (window.mealsModule && window.mealsModule.isOpen) {
+            window.mealsModule.renderGallery();
+          }
+          if (window.albumsModule) {
+            window.albumsModule.updateSpecialMealCover();
           }
         }
         this.lastSyncTime = new Date(cloudSavedAt || Date.now());
@@ -1549,6 +1577,10 @@ class SpaceStore {
         meals: this.getMeals(),
         todos: this.getTodos(),
         auth_config: this.getAuthConfig(),
+        // 携带本地已删除的 todo ID，让对方设备拉取后也能过滤掉这些已删条目
+        deleted_todo_ids: [...this.getDeletedTodoIds()].slice(0, 500),
+        // 携带本地已删除的 note/日程 ID
+        deleted_note_ids: [...this.getDeletedNoteIds()].slice(0, 500),
         clientTimestamp: Date.now()
       };
 
