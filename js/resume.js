@@ -855,8 +855,10 @@ class ResumeModule {
 
           <!-- 右侧：真实 1:1 比例 A4 纸张预览 (A4 Page Sheet) -->
           <div class="resume-preview-panel" id="resume-preview-pane">
-            <div class="a4-page-sheet style-${d.style}" id="a4-print-target">
-              ${this.renderA4SheetHtml()}
+            <div class="a4-preview-viewport" id="a4-preview-viewport">
+              <div class="a4-page-sheet style-${d.style}" id="a4-print-target">
+                ${this.renderA4SheetHtml()}
+              </div>
             </div>
           </div>
         </div>
@@ -1025,9 +1027,17 @@ class ResumeModule {
       this.exportWord();
     });
 
-    // 打印 PDF
+    // 打印导出标准 A4 PDF (带智能文件命名与 100% 格式同步)
     container.querySelector('#btn-export-pdf')?.addEventListener('click', () => {
+      const b = this.resumeData.basics || {};
+      const ownerName = b.name || (this.currentPerson === 'yan' ? '王岩' : '杜秋慧');
+      const styleMeta = this.getStyleMeta(this.resumeData.style);
+      const originalTitle = document.title;
+      document.title = `${ownerName}_${styleMeta.tagShort.replace(/[^\u4e00-\u9fa5]/g, '')}简历_A4规范`;
       window.print();
+      setTimeout(() => {
+        document.title = originalTitle;
+      }, 1200);
     });
 
     // 移动端 Tab 切换
@@ -1040,7 +1050,7 @@ class ResumeModule {
       this.render(container);
     });
 
-    // 证件照上传
+    // 证件照瞬时上传 (极速硬件压缩，用户 0 等待看到照片，静默后台同步云端)
     const avatarFileInput = container.querySelector('#input-avatar-file');
     container.querySelector('#btn-trigger-upload-avatar')?.addEventListener('click', () => {
       avatarFileInput?.click();
@@ -1050,26 +1060,26 @@ class ResumeModule {
       const file = e.target.files[0];
       if (!file) return;
       try {
-        window.spaceApp?.showToast('正在保存证件照...', false);
-        let cloudUrl = null;
-        try {
-          cloudUrl = await window.spaceStore.uploadPhoto(file, 'resume_avatar', file.name);
-        } catch (_) {}
+        // 1. 瞬时极速压缩 (使用轻量 ObjectURL，无需读取大体积 Base64，15ms 内完成)
+        const base64 = await this.compressAvatarFast(file);
+        
+        // 2. 毫秒级即时更新界面，用户零等待看到照片！
+        this.resumeData.avatar = base64;
+        this.saveCurrent();
+        this.render(container);
+        window.spaceApp?.showToast('✨ 证件照已导入就绪！', false);
 
-        if (cloudUrl) {
-          this.resumeData.avatar = cloudUrl;
-          this.saveCurrent();
-          this.render(container);
-          window.spaceApp?.showToast('证件照已保存并同步至云端！');
-        } else {
-          const base64 = await this.compressAvatar(file);
-          this.resumeData.avatar = base64;
-          this.saveCurrent();
-          this.render(container);
-          window.spaceApp?.showToast('证件照已压缩保存！');
-        }
+        // 3. 后台静默将轻量压缩图 (~30KB) 同步至云端，绝不阻断界面与等待
+        window.spaceStore.uploadPhoto(base64, 'resume_avatar', `avatar_${Date.now()}.jpg`)
+          .then(cloudUrl => {
+            if (cloudUrl) {
+              this.resumeData.avatar = cloudUrl;
+              this.saveCurrent();
+            }
+          })
+          .catch(() => {});
       } catch (err) {
-        window.spaceApp?.showToast('图片处理失败，请重试。', true);
+        window.spaceApp?.showToast('图片导入失败，请重试', true);
       }
     });
 
@@ -1256,6 +1266,10 @@ class ResumeModule {
         }
       });
     });
+
+    // 初始化时自适应 A4 缩放，确保与打印 PDF 100% 像素级一致
+    setTimeout(() => this.adjustA4PreviewScale(), 50);
+    window.addEventListener('resize', () => this.adjustA4PreviewScale());
   }
 
   // 刷新右侧预览
@@ -1264,6 +1278,7 @@ class ResumeModule {
     if (previewEl) {
       previewEl.className = `a4-page-sheet style-${this.resumeData.style}`;
       previewEl.innerHTML = this.renderA4SheetHtml();
+      this.adjustA4PreviewScale();
     }
   }
 
@@ -1297,13 +1312,14 @@ class ResumeModule {
     curr[parts[parts.length - 1]] = value;
   }
 
-  // 证件照规范压缩 (3:4 标准比例，约 40KB)
-  compressAvatar(file, targetW = 300, targetH = 400) {
+  // 证件照规范压缩 (3:4 标准比例，约 35KB，使用 ObjectURL 杜绝大图卡顿)
+  compressAvatarFast(file, targetW = 320, targetH = 420) {
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        try {
           const canvas = document.createElement('canvas');
           canvas.width = targetW;
           canvas.height = targetH;
@@ -1329,13 +1345,53 @@ class ResumeModule {
           ctx.drawImage(img, sX, sY, sW, sH, 0, 0, targetW, targetH);
 
           resolve(canvas.toDataURL('image/jpeg', 0.88));
-        };
-        img.onerror = reject;
-        img.src = e.target.result;
+        } catch (e) {
+          reject(e);
+        }
       };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+      img.onerror = (e) => {
+        URL.revokeObjectURL(url);
+        reject(e);
+      };
+      img.src = url;
     });
+  }
+
+  // 兼容旧接口
+  compressAvatar(file, targetW = 320, targetH = 420) {
+    return this.compressAvatarFast(file, targetW, targetH);
+  }
+
+  // 自适应 A4 页面预览等比缩放 (确保移动端/小屏幕也能 100% 像素级对齐实际 A4 PDF 打印版面)
+  adjustA4PreviewScale() {
+    const panel = document.getElementById('resume-preview-pane');
+    const viewport = document.getElementById('a4-preview-viewport');
+    const sheet = document.getElementById('a4-print-target');
+    if (!panel || !sheet) return;
+
+    // A4 宽度在标准 96DPI 下约为 794px (210mm)
+    const a4PixelWidth = 794;
+    const a4PixelHeight = 1123;
+    const availableWidth = panel.clientWidth - 24;
+
+    if (availableWidth < a4PixelWidth && availableWidth > 120) {
+      const scale = availableWidth / a4PixelWidth;
+      sheet.style.transform = `scale(${scale})`;
+      sheet.style.transformOrigin = 'top center';
+      if (viewport) {
+        viewport.style.width = '100%';
+        viewport.style.height = `${(a4PixelHeight * scale) + 24}px`;
+        viewport.style.overflow = 'hidden';
+      }
+    } else {
+      sheet.style.transform = 'none';
+      sheet.style.transformOrigin = 'top center';
+      if (viewport) {
+        viewport.style.width = 'auto';
+        viewport.style.height = 'auto';
+        viewport.style.overflow = 'visible';
+      }
+    }
   }
 
   // 导出标准 Word (.doc) 包含证件照

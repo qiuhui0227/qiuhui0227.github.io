@@ -414,18 +414,23 @@ class MealCameraModule {
     }
   }
 
-  // 将 File 解析为 ImageBitmap 或 HTMLImageElement
+  // 将 File 瞬时解析为 ImageBitmap 或 HTMLImageElement (使用极速 ObjectURL 与硬件加速，告别 FileReader 卡顿)
   loadImageBitmapFromFile(file) {
+    if (window.createImageBitmap) {
+      return createImageBitmap(file);
+    }
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => resolve(img);
-        img.onerror = reject;
-        img.src = e.target.result;
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        resolve(img);
       };
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
+      img.onerror = (e) => {
+        URL.revokeObjectURL(url);
+        reject(e);
+      };
+      img.src = url;
     });
   }
 
