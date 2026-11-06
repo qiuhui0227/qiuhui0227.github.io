@@ -663,7 +663,9 @@ class TodoModule {
       return;
     }
 
-    const isEdit = !!todo;
+    // 只有当传入的 todo 对象带有真实存在的 id 时，才是编辑既有心愿；
+    // 灵感库采纳传入的是模板数据（无 id），应走“新建/采纳心愿”通道
+    const isEdit = !!(todo && todo.id);
     const item = todo || {
       title: '',
       category: 'romantic',
@@ -680,7 +682,7 @@ class TodoModule {
         <div class="sheet" style="max-width: 520px;">
           <div class="sheet-head">
             <div>
-              <h3>${isEdit ? '编辑心愿细节' : '✨ 记下新的心愿'}</h3>
+              <h3>${isEdit ? '编辑心愿细节' : (todo && todo.title ? '✨ 采纳并记下心愿' : '✨ 记下新的心愿')}</h3>
               <div class="fine">人生ToDo · 记录两个人奔赴的美好与梦想</div>
             </div>
             <button type="button" class="logout" id="btn-edit-modal-close" style="font-size: 20px; line-height: 1;">×</button>
