@@ -3,36 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#18354a">
-  <title>OASIS | Qiuhui & Yan 专属情侣空间</title>
-  <link rel="icon" type="image/png" href="./images/logo.png">
+  <meta name="theme-color" content="#ffffff">
+  <title>iqiuqiu</title>
+  <link rel="icon" type="image/svg+xml" href="./images/logo.svg">
+  <link rel="icon" type="image/png" sizes="192x192" href="./images/icon-192.png">
 
-  <!-- 加载完全复刻 USV Lab 经典美学与艺术扩展的样式表 (带强力防缓存指纹) -->
-  <link rel="stylesheet" href="./css/style.css?v=202611061245">
-  <link rel="stylesheet" href="./css/resume.css?v=202611061245">
-  <link rel="stylesheet" href="./css/albums.css?v=202611061245">
-  <link rel="stylesheet" href="./css/todo.css?v=202611061245">
-  <link rel="stylesheet" href="./css/responsive.css?v=202611061245">
-  <link rel="stylesheet" href="./css/meals.css?v=202611061245">
+  <!-- PWA & Mobile Web App Meta (原生 App 全屏与桌面图标适配) -->
+  <link rel="manifest" href="./manifest.json">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="iqiuqiu">
+  <link rel="apple-touch-icon" href="./images/apple-touch-icon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="./images/apple-touch-icon.png">
+
+  <!-- 加载样式表 (带强力防缓存指纹) -->
+  <link rel="stylesheet" href="./css/style.css?v=202611062130">
+  <link rel="stylesheet" href="./css/resume.css?v=202611062130">
+  <link rel="stylesheet" href="./css/albums.css?v=202611062130">
+  <link rel="stylesheet" href="./css/todo.css?v=202611062130">
+  <link rel="stylesheet" href="./css/responsive.css?v=202611062130">
+  <link rel="stylesheet" href="./css/meals.css?v=202611062130">
 </head>
 <body>
 
   <!-- ==========================================================================
-       1. 门禁锁屏界面 (复刻 USV Lab 经典登录页面)
-       深蓝夜海径向渐变底色 + 右上角三层同心轨道几何光晕 + 白色大圆角浮升卡片
+       1. 门禁锁屏界面 (iqiuqiu 简约浪漫风格)
+       极简纯白浮升卡片 + 双心相印灵动 Logo + 专属通行门禁
        ========================================================================== -->
   <div id="screen-lock" class="login-layout">
     <section class="login-panel">
-      <div class="brand">
-        <span class="brand-mark">O</span>
-        <span>OASIS <span class="brand-light">/ SPACE</span></span>
+      <!-- iqiuqiu 简约爱情品牌区 (取代旧版 OASIS 与深海科技背景) -->
+      <div class="iq-brand-header">
+        <div class="iq-brand-icon-wrap">
+          <img src="./images/logo.svg" alt="iqiuqiu" class="iq-brand-icon">
+        </div>
+        <h1 class="iq-brand-title">iqiuqiu</h1>
+        <p class="iq-brand-subtitle">秋慧 &amp; 王岩 · 专属情侣空间</p>
       </div>
-      <h1>Qiuhui & Yan<br>专属情侣空间<span class="period">.</span></h1>
-      <p class="login-intro">私属星系 · 客厅与卧室双模门禁。<br>输入访问通行码，即可入座。</p>
 
       <form id="gate-login-form" class="login-form" autocomplete="off">
         <div>
-          <label class="form-label" for="gate-password-input">访问通行码</label>
+          <label class="form-label" for="gate-password-input" style="text-align: left;">访问通行码</label>
           <input 
             class="input" 
             id="gate-password-input" 
@@ -48,7 +60,7 @@
           进入专属空间
           <svg class="ico" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg>
         </button>
-        <div id="gate-error-tip" class="fine" style="color: #a7464c; text-align: center; min-height: 18px;"></div>
+        <div id="gate-error-tip" class="fine" style="color: #f43f5e; text-align: center; min-height: 18px;"></div>
       </form>
 
       <p class="login-foot">
@@ -152,13 +164,35 @@
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
   <!-- 脚本模块按顺序载入 (带强力防缓存指纹) -->
-  <script src="./js/store.js?v=202611061248"></script>
-  <script src="./js/auth.js?v=202611061248"></script>
-  <script src="./js/timetable.js?v=202611061248"></script>
-  <script src="./js/albums.js?v=202611061248"></script>
-  <script src="./js/todo.js?v=202611061248"></script>
-  <script src="./js/resume.js?v=202611061248"></script>
-  <script src="./js/meals.js?v=202611061248"></script>
-  <script src="./js/app.js?v=202611061248"></script>
+  <script src="./js/store.js?v=202611062130"></script>
+  <script src="./js/auth.js?v=202611062130"></script>
+  <script src="./js/timetable.js?v=202611062130"></script>
+  <script src="./js/albums.js?v=202611062130"></script>
+  <script src="./js/todo.js?v=202611062130"></script>
+  <script src="./js/resume.js?v=202611062130"></script>
+  <script src="./js/meals.js?v=202611062130"></script>
+  <script src="./js/app.js?v=202611062130"></script>
+
+  <!-- PWA Service Worker 注册与安装捕获 -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then((reg) => {
+            console.log('[PWA] ServiceWorker registered with scope:', reg.scope);
+          })
+          .catch((err) => {
+            console.warn('[PWA] ServiceWorker registration failed:', err);
+          });
+      });
+    }
+
+    // 捕获 PWA 安装引导事件
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      window.deferredPWAInstallPrompt = e;
+      window.dispatchEvent(new CustomEvent('pwa-installable'));
+    });
+  </script>
 </body>
 </html>

@@ -299,6 +299,55 @@ class SpaceApp {
           </div>
         </div>
 
+        <!-- 0.5 手机专属 App (PWA) / 添加到主屏幕独立运行 -->
+        <div class="admin-card" style="margin-bottom: 20px; border-left: 4px solid #0284c7; background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 120px);">
+          <div class="admin-card-head" style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+              <img src="./images/apple-touch-icon.png" alt="iqiuqiu App Icon" style="width:48px; height:48px; border-radius:12px; box-shadow:0 4px 12px rgba(244,63,94,0.18);">
+              <div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <h3 style="margin:0; font-size:16px; color:#0369a1;">📱 手机专属 App (PWA) · 添加到主屏幕</h3>
+                  <span class="pill good" style="font-size:11px; background:#e0f2fe; color:#0284c7; border-color:#bae6fd;">已配置原生独立全屏</span>
+                </div>
+                <p class="fine" style="margin:4px 0 0; color:#0c4a6e;">无需通过微信小程序审核与备案，即可在手机桌面拥有原生 App 图标，全屏秒开体验</p>
+              </div>
+            </div>
+            <div id="pwa-install-btn-container" style="display:flex; gap:8px;">
+              <button type="button" class="btn btn-primary btn-sm" id="btn-trigger-pwa-install" style="background:#0284c7; border-color:#0284c7; display:none;">
+                📲 一键安装为手机 App
+              </button>
+            </div>
+          </div>
+
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-top:8px;">
+            <!-- 苹果 iOS Safari 教程 -->
+            <div style="background:#ffffff; border:1px solid #e0f2fe; border-radius:10px; padding:12px 14px; font-size:12.5px; color:#334155;">
+              <div style="font-weight:700; color:#0369a1; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                <span>🍎 苹果 iPhone (Safari 浏览器)</span>
+              </div>
+              <ol style="margin:0; padding-left:18px; line-height:1.6; color:#475569;">
+                <li>用 Safari 浏览器打开当前站点 <code>iqiuqiu.me</code></li>
+                <li>点击底部工具栏居中的 <strong>“分享”</strong> 按钮（方框加向上箭头 ⎋）</li>
+                <li>向上滑动菜单，找到并轻点 <strong>“添加到主屏幕”</strong></li>
+                <li>右上角点 <strong>“添加”</strong>，桌面即生成专属 iqiuqiu 独立 App</li>
+              </ol>
+            </div>
+
+            <!-- 安卓 Android 教程 -->
+            <div style="background:#ffffff; border:1px solid #e0f2fe; border-radius:10px; padding:12px 14px; font-size:12.5px; color:#334155;">
+              <div style="font-weight:700; color:#0369a1; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                <span>🤖 安卓手机 (Chrome / 微信 / 手机自带浏览器)</span>
+              </div>
+              <ol style="margin:0; padding-left:18px; line-height:1.6; color:#475569;">
+                <li>使用手机浏览器访问当前网址 <code>iqiuqiu.me</code></li>
+                <li>点击浏览器右上角或底部的 <strong>菜单按钮</strong>（三点或三条线）</li>
+                <li>选择 <strong>“添加到主屏幕”</strong> 或 <strong>“安装应用”</strong></li>
+                <li>安装后即可脱离浏览器，全屏无边框沉浸式运行</li>
+              </ol>
+            </div>
+          </div>
+        </div>
+
         <!-- 1. 访客通行证多账号管理 (不限数量) -->
         <div class="admin-card">
           <div class="card-title">
@@ -455,6 +504,27 @@ class SpaceApp {
       this.renderSettings(container);
       this.showToast('本地数据已全量备份至 Cloudflare 云端！');
     });
+
+    // 绑定 PWA 独立 App 安装引导
+    const pwaInstallBtn = container.querySelector('#btn-trigger-pwa-install');
+    if (pwaInstallBtn) {
+      if (window.deferredPWAInstallPrompt) {
+        pwaInstallBtn.style.display = 'inline-flex';
+        pwaInstallBtn.addEventListener('click', async () => {
+          const promptEvent = window.deferredPWAInstallPrompt;
+          if (promptEvent) {
+            promptEvent.prompt();
+            const choice = await promptEvent.userChoice;
+            console.log('[PWA] User choice:', choice);
+            window.deferredPWAInstallPrompt = null;
+            pwaInstallBtn.style.display = 'none';
+          }
+        });
+      }
+      window.addEventListener('pwa-installable', () => {
+        pwaInstallBtn.style.display = 'inline-flex';
+      });
+    }
 
     // 绑定访客账号管理事件
     container.querySelector('#btn-create-guest-acc-top')?.addEventListener('click', () => {

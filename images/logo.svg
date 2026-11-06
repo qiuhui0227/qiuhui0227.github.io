@@ -1,0 +1,136 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <!-- Background Gradient: Soft, Warm Pearl / Cream with Subtle Rose Ambient Light -->
+    <linearGradient id="bg-canvas" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="65%" stop-color="#fffbfc"/>
+      <stop offset="100%" stop-color="#fff1f3"/>
+    </linearGradient>
+
+    <!-- Yan Azure to Indigo (Left Heart) -->
+    <linearGradient id="yan-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8"/>
+      <stop offset="55%" stop-color="#60a5fa"/>
+      <stop offset="100%" stop-color="#818cf8"/>
+    </linearGradient>
+
+    <!-- Qiuhui Soft Peony Rose to Coral (Right Heart) -->
+    <linearGradient id="qiu-rose" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#f43f5e"/>
+      <stop offset="50%" stop-color="#fb7185"/>
+      <stop offset="100%" stop-color="#fda4af"/>
+    </linearGradient>
+
+    <!-- Intersecting Love Blend Gradient -->
+    <linearGradient id="love-blend" x1="0%" y1="50%" x2="100%" y2="50%">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="50%" stop-color="#c084fc"/>
+      <stop offset="100%" stop-color="#f43f5e"/>
+    </linearGradient>
+
+    <!-- Soft Heart Drop Shadow -->
+    <filter id="heart-glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#f43f5e" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <!-- Background Card (Squircle) -->
+  <rect width="512" height="512" rx="116" fill="url(#bg-canvas)"/>
+  <rect width="506" height="506" x="3" y="3" rx="114" fill="none" stroke="#ffe4e6" stroke-width="2" opacity="0.7"/>
+
+  <!-- ========================================================================
+       Minimalist Intertwined Love Emblem (Two Souls Intertwined Heart Ribbon)
+       ======================================================================== -->
+  <g filter="url(#heart-glow)" transform="translate(0, -18)">
+
+    <!-- Left Heart Lobe (Yan: Calm Azure) -->
+    <path d="M 256, 324
+             C 192, 276 138, 226 138, 168
+             C 138, 122 174, 88 220, 88
+             C 246, 88 270, 102 282, 124
+             C 272, 162 256, 230 256, 324 Z"
+          fill="url(#yan-blue)"
+          opacity="0.92"
+          style="mix-blend-mode: multiply;"/>
+
+    <!-- Right Heart Lobe (Qiuhui: Tender Rose Coral) -->
+    <path d="M 256, 324
+             C 320, 276 374, 226 374, 168
+             C 374, 122 338, 88 292, 88
+             C 266, 88 242, 102 230, 124
+             C 240, 162 256, 230 256, 324 Z"
+          fill="url(#qiu-rose)"
+          opacity="0.94"
+          style="mix-blend-mode: multiply;"/>
+
+    <!-- Seamless Ribbon Outline (Modern White Contour Ribbon for Depth & Minimalism) -->
+    <path d="M 256, 316
+             C 188, 266 150, 218 150, 168
+             C 150, 130 178, 102 216, 102
+             C 240, 102 252, 116 256, 124
+             C 260, 116 272, 102 296, 102
+             C 334, 102 362, 130 362, 168
+             C 362, 218 324, 266 256, 316 Z"
+          fill="none"
+          stroke="#ffffff"
+          stroke-width="11"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          opacity="0.9"/>
+
+    <!-- Center Sweet Love Knot (Purity Dot) -->
+    <circle cx="256" cy="182" r="14" fill="#ffffff" opacity="0.96"/>
+    <circle cx="256" cy="182" r="8" fill="#f43f5e" opacity="0.85"/>
+
+    <!-- Little Golden Romance Star (Top Right) -->
+    <g transform="translate(366, 94)">
+      <path d="M 0,-16 Q 0,0 16,0 Q 0,0 0,16 Q 0,0 -16,0 Q 0,0 0,-16 Z" fill="#f59e0b"/>
+      <circle cx="0" cy="0" r="3.5" fill="#ffffff"/>
+    </g>
+
+    <!-- Little Soft Sparkle (Bottom Left) -->
+    <g transform="translate(142, 268)">
+      <path d="M 0,-9 Q 0,0 9,0 Q 0,0 0,9 Q 0,0 -9,0 Q 0,0 0,-9 Z" fill="#fb7185" opacity="0.8"/>
+    </g>
+  </g>
+
+  <!-- ========================================================================
+       Brand Wordmark: "iqiuqiu" + Subtitle
+       ======================================================================== -->
+  <g transform="translate(256, 408)">
+    <!-- Main Typographic Name "iqiuqiu" -->
+    <text text-anchor="middle"
+          y="0"
+          font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', Arial, sans-serif"
+          font-size="54"
+          font-weight="800"
+          letter-spacing="1.5"
+          fill="#1e293b">
+      <tspan fill="#f43f5e">i</tspan>qiuqiu
+    </text>
+
+    <!-- Sweet Romantic Love Heart above the leading 'i' -->
+    <g transform="translate(-108, -50)">
+      <path d="M 12, 5
+               C 12, 1 8, -2 4.5, -2
+               C 1.5, -2 -0.5, 0.5 -0.5, 3
+               C -0.5, 7.5 7.5, 12 12, 15
+               C 16.5, 12 24.5, 7.5 24.5, 3
+               C 24.5, 0.5 22.5, -2 19.5, -2
+               C 16, -2 12, 1 12, 5 Z"
+            fill="#f43f5e"
+            transform="scale(0.8) translate(-12, -4)"/>
+    </g>
+
+    <!-- Subtitle: Qiuhui & Yan -->
+    <text text-anchor="middle"
+          y="35"
+          font-family="-apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Arial, sans-serif"
+          font-size="15"
+          font-weight="600"
+          letter-spacing="5"
+          fill="#94a3b8">
+      QIUHUI &amp; YAN
+    </text>
+  </g>
+</svg>
