@@ -1087,15 +1087,17 @@ class TodoModule {
         img.onerror = reject;
         img.src = fileOrUrl;
       } else {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const img = new Image();
-          img.onload = () => handleImage(img);
-          img.onerror = reject;
-          img.src = e.target.result;
+        const url = URL.createObjectURL(fileOrUrl);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          handleImage(img);
         };
-        reader.onerror = reject;
-        reader.readAsDataURL(fileOrUrl);
+        img.onerror = (e) => {
+          URL.revokeObjectURL(url);
+          reject(e);
+        };
+        img.src = url;
       }
     });
   }
