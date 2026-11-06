@@ -90,8 +90,6 @@ class AlbumsModule {
           <div class="bookshelf-shelf-row">
             <div class="albums-grid bookshelf-grid">
               ${this.renderSpecialMealAlbumCard()}
-              ${this.renderSpecialResumeBookCardQiuhui()}
-              ${this.renderSpecialResumeBookCardYan()}
               ${visibleAlbums.map(album => this.renderAlbumCard(album, isMaster)).join('')}
             </div>
             <!-- 实木温润托架横梁 -->
@@ -140,62 +138,6 @@ class AlbumsModule {
               <span>人间烟火</span>
               <span>·</span>
               <span>手帐</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // 专属杜秋慧找导师学术简历图书 (书架常驻)
-  renderSpecialResumeBookCardQiuhui() {
-    return `
-      <div class="shelf-photobook-card special-resume-book-qh" id="album-card-resume-qh" title="点击查阅与编辑 杜秋慧 · 口腔医学学术简历">
-        <div class="photobook-cover-wrap">
-          <div class="photobook-spine-groove"></div>
-          <div class="resume-book-cover-art advisor">
-            <div class="resume-cover-emblem">🔬</div>
-            <div class="resume-cover-name">杜秋慧</div>
-            <div class="resume-cover-sub">吉大口腔 · 找导师简历</div>
-          </div>
-          <span class="photobook-silk-ribbon qh">👧 杜秋慧</span>
-          <span class="photobook-stamp-badge">A4 规范</span>
-        </div>
-        <div class="photobook-spine-label">
-          <div class="photobook-spine-content">
-            <h4 class="photobook-title-txt">🔬 杜秋慧 · 找导师简历</h4>
-            <div class="photobook-sub-txt">
-              <span>口腔5+3</span>
-              <span>·</span>
-              <span>学术A4</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  // 专属王岩求职简历图书 (书架常驻)
-  renderSpecialResumeBookCardYan() {
-    return `
-      <div class="shelf-photobook-card special-resume-book-yan" id="album-card-resume-yan" title="点击查阅与编辑 王岩 · 个人求职简历">
-        <div class="photobook-cover-wrap">
-          <div class="photobook-spine-groove"></div>
-          <div class="resume-book-cover-art job">
-            <div class="resume-cover-emblem">💼</div>
-            <div class="resume-cover-name">王岩</div>
-            <div class="resume-cover-sub">软件工程 · 名企求职</div>
-          </div>
-          <span class="photobook-silk-ribbon yan">👦 王岩</span>
-          <span class="photobook-stamp-badge">A4 规范</span>
-        </div>
-        <div class="photobook-spine-label">
-          <div class="photobook-spine-content">
-            <h4 class="photobook-title-txt">💼 王岩 · 求职简历</h4>
-            <div class="photobook-sub-txt">
-              <span>软件工程</span>
-              <span>·</span>
-              <span>求职A4</span>
             </div>
           </div>
         </div>
@@ -332,30 +274,6 @@ class AlbumsModule {
     const handleCardOpen = (card) => {
       if (card.classList.contains('special-meal-book')) {
         window.mealsModule?.openMealAlbumModal();
-      } else if (card.id === 'album-card-resume-qh' || card.classList.contains('special-resume-book-qh')) {
-        if (window.resumeModule) {
-          window.resumeModule.currentPerson = 'qiuhui';
-          const qhBooks = window.spaceStore?.getResumeBooks()?.qiuhui || [];
-          window.resumeModule.activeResumeId = qhBooks[0]?.id || 'res_qh_advisor';
-          window.resumeModule.viewMode = 'editor';
-        }
-        if (!window.spaceAuth.isMaster()) {
-          window.spaceApp?.openMasterUpgradeModal();
-        } else {
-          window.spaceApp?.switchTab('resume');
-        }
-      } else if (card.id === 'album-card-resume-yan' || card.classList.contains('special-resume-book-yan')) {
-        if (window.resumeModule) {
-          window.resumeModule.currentPerson = 'yan';
-          const yanBooks = window.spaceStore?.getResumeBooks()?.yan || [];
-          window.resumeModule.activeResumeId = yanBooks[0]?.id || 'res_yan_job';
-          window.resumeModule.viewMode = 'editor';
-        }
-        if (!window.spaceAuth.isMaster()) {
-          window.spaceApp?.openMasterUpgradeModal();
-        } else {
-          window.spaceApp?.switchTab('resume');
-        }
       } else {
         this.currentAlbumId = card.dataset.id;
         this.render(container);

@@ -88,42 +88,37 @@ class ResumeModule {
 
     container.innerHTML = `
       <div class="oasis-bookshelf-zone">
-        <!-- 统一主模块标头栏 (简约优雅) -->
-        <div class="oasis-header-bar">
+        <!-- 极简主标头栏 -->
+        <div class="oasis-header-bar resume-header-minimal">
           <div class="oasis-header-main">
-            <div class="oasis-header-kicker">
-              <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-              <span>研途与求职 · A4 规范履历书房</span>
-            </div>
-            <h2 class="oasis-header-title">📖 履历书架</h2>
-            <p class="oasis-header-sub">共 ${currentList.length} 卷简历档案 · 点击书脊翻阅排版 · 找导师学术联系、求职与奖学金申报</p>
+            <h2 class="oasis-header-title">📄 履历档案</h2>
+            <p class="oasis-header-sub">轻触书本翻阅 · 支持 A4 专业排版与一键打印导出</p>
           </div>
           <div class="oasis-header-actions">
             <button class="btn btn-primary btn-sm" id="btn-create-new-resume">
               <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-              新建简历
+              新建履历
             </button>
           </div>
         </div>
 
-        <!-- 二级控制栏：男女主人切换 -->
-        <div class="oasis-sub-bar" style="margin-bottom: 14px;">
-          <div class="oasis-sub-bar-left">
-            <div class="person-switcher" style="margin-bottom:0;">
-              <button class="person-tab ${this.currentPerson === 'yan' ? 'active' : ''}" data-person="yan">
-                👦 王岩的简历卷宗 (${yanList.length})
-              </button>
-              <button class="person-tab ${this.currentPerson === 'qiuhui' ? 'active' : ''}" data-person="qiuhui">
-                👧 杜秋慧的简历卷宗 (${qhList.length})
-              </button>
-            </div>
-          </div>
-          <div class="oasis-sub-bar-right fine" style="color: #627d8c;">
-            <span>轻触书本翻阅 · 长按可挺住预览</span>
+        <!-- 极简轻量 Segmented 控制栏 (彻底告别“xx的简历卷宗”) -->
+        <div class="resume-segment-bar">
+          <div class="resume-segment-pill-group">
+            <button class="resume-segment-pill ${this.currentPerson === 'yan' ? 'active' : ''}" data-person="yan">
+              <span class="pill-avatar">👦</span>
+              <span class="pill-name">王岩</span>
+              <span class="pill-count">${yanList.length}</span>
+            </button>
+            <button class="resume-segment-pill ${this.currentPerson === 'qiuhui' ? 'active' : ''}" data-person="qiuhui">
+              <span class="pill-avatar">👧</span>
+              <span class="pill-name">杜秋慧</span>
+              <span class="pill-count">${qhList.length}</span>
+            </button>
           </div>
         </div>
 
-        <!-- 日系小清新 · 实木温润陈列时光书架 -->
+        <!-- 实木温润陈列时光书架 -->
         <div class="bookshelf-display-unit" id="resume-bookshelf-unit">
           <div class="bookshelf-shelf-row">
             <div class="albums-grid bookshelf-grid" id="resume-shelf-grid">
@@ -154,40 +149,64 @@ class ResumeModule {
   renderResumeBookCard(resume) {
     const styleMeta = this.getStyleMeta(resume.style);
     const b = resume.basics || {};
-    const hasAvatar = !!resume.avatar;
     const defaultName = this.currentPerson === 'yan' ? '王岩' : '杜秋慧';
     const ownerName = b.name || defaultName;
 
+    // 获取精炼封面主标题与副标
+    let coverMainTitle = '名企求职';
+    let coverSubTitle = '软件工程 · STAR经历';
+    let shelfTitle = '名企求职版';
+    if (resume.style === 'advisor') {
+      coverMainTitle = this.currentPerson === 'qiuhui' ? '找导师简历' : '学术科研自述';
+      coverSubTitle = this.currentPerson === 'qiuhui' ? '口腔医学 · 导师推荐' : '智能系统 · 课题攻读';
+      shelfTitle = '找导师学术版';
+    } else if (resume.style === 'scholarship') {
+      coverMainTitle = '奖学金申报';
+      coverSubTitle = '综合评优 · 荣誉自述';
+      shelfTitle = '奖学金评优版';
+    }
+
+    if (resume.title && resume.title.includes('规培')) {
+      coverMainTitle = '规培求职';
+      coverSubTitle = '住院医师 · 临床考核';
+      shelfTitle = '住院规培版';
+    }
+
     return `
-      <div class="shelf-photobook-card resume-shelf-book style-${resume.style}" data-id="${resume.id}">
+      <div class="shelf-photobook-card resume-shelf-book style-${resume.style}" data-id="${resume.id}" title="点击翻阅排版 · ${this.escapeHtml(resume.title)}">
         <div class="photobook-cover-wrap">
           <div class="photobook-spine-groove"></div>
-          ${hasAvatar ? `
-            <img src="${resume.avatar}" alt="cover" class="photobook-cover-img" loading="eager" decoding="async" />
-            <div class="resume-book-avatar-overlay">
-              <span class="resume-book-cover-name">${this.escapeHtml(ownerName)}</span>
-              <span class="resume-book-cover-target">${this.escapeHtml(b.target || styleMeta.tag)}</span>
+          
+          <div class="resume-book-cover-art ${resume.style}">
+            <div class="resume-cover-header-rule">
+              <span class="resume-cover-dot"></span>
+              <span class="resume-cover-tag-txt">${this.escapeHtml(styleMeta.tagShort.replace(/[^\u4e00-\u9fa5]/g, ''))}</span>
+              <span class="resume-cover-dot"></span>
             </div>
-          ` : `
-            <div class="resume-book-cover-art ${resume.style}">
-              <div class="resume-cover-emblem">${resume.style === 'job' ? '💼' : (resume.style === 'scholarship' ? '🎓' : '🔬')}</div>
-              <div class="resume-cover-name">${this.escapeHtml(ownerName)}</div>
-              <div class="resume-cover-sub">${this.escapeHtml(styleMeta.tag)}</div>
+            
+            <div class="resume-cover-emblem">${resume.style === 'job' ? '💼' : (resume.style === 'scholarship' ? '🎓' : '🔬')}</div>
+            
+            <div class="resume-cover-main-title">${this.escapeHtml(coverMainTitle)}</div>
+            <div class="resume-cover-sub-title">${this.escapeHtml(coverSubTitle)}</div>
+            
+            <div class="resume-cover-footer-author">
+              <span class="author-rule"></span>
+              <span class="author-name">${this.escapeHtml(ownerName)}</span>
+              <span class="author-rule"></span>
             </div>
-          `}
-          <span class="photobook-silk-ribbon ${resume.style}">${styleMeta.tagShort}</span>
-          <span class="photobook-stamp-badge">A4 规范</span>
+          </div>
+
           <div class="photobook-quick-acts">
             <button class="photobook-mini-btn del btn-del-resume" data-id="${resume.id}" title="删除此卷">×</button>
           </div>
         </div>
         <div class="photobook-spine-label">
           <div class="photobook-spine-content">
-            <h4 class="photobook-title-txt">${this.escapeHtml(resume.title)}</h4>
+            <h4 class="photobook-title-txt">${this.escapeHtml(shelfTitle)}</h4>
             <div class="photobook-sub-txt">
-              <span>${this.escapeHtml(b.school ? b.school.split('·')[0].trim() : styleMeta.name)}</span>
+              <span>${this.escapeHtml(ownerName)}</span>
               <span>·</span>
-              <span>${resume.updatedAt ? resume.updatedAt.slice(5) : '简历'}</span>
+              <span>${resume.updatedAt ? resume.updatedAt.slice(5) : '最新'}</span>
             </div>
           </div>
         </div>
@@ -198,22 +217,22 @@ class ResumeModule {
   // 渲染添置新卷卡片
   renderAddResumeBookCard() {
     return `
-      <div class="shelf-photobook-card add-resume-book" id="card-add-resume" title="添置新卷简历">
+      <div class="shelf-photobook-card add-resume-book" id="card-add-resume" title="新建一份新履历">
         <div class="photobook-cover-wrap add-wrap">
           <div class="photobook-spine-groove"></div>
           <div class="add-resume-content">
-            <div class="add-icon">➕</div>
-            <div class="add-text">添置新卷</div>
+            <div class="add-icon-circle">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            </div>
+            <div class="add-text">新建履历</div>
             <div class="add-sub">传承蓝本</div>
           </div>
         </div>
         <div class="photobook-spine-label">
           <div class="photobook-spine-content">
-            <h4 class="photobook-title-txt">➕ 添置新卷</h4>
+            <h4 class="photobook-title-txt">➕ 新建履历</h4>
             <div class="photobook-sub-txt">
-              <span>新建简历</span>
-              <span>·</span>
-              <span>书房</span>
+              <span>添加新档案</span>
             </div>
           </div>
         </div>
@@ -303,7 +322,7 @@ class ResumeModule {
     container.addEventListener('click', handleOutsideTap);
 
     // 绑定主人身份切换
-    container.querySelectorAll('.person-tab').forEach(btn => {
+    container.querySelectorAll('.resume-segment-pill, .person-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         this.currentPerson = btn.dataset.person;
         this.render(container);
