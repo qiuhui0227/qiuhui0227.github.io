@@ -54,8 +54,12 @@ class AlbumsModule {
   // 1. 相簿列表页 (日系小清新・实木陈列时光书架，秒开无延迟)
   async renderAlbumsList(container, isMaster) {
     const allAlbums = window.spaceStore.getAlbums();
-    const visibleAlbums = allAlbums.filter(a => isMaster || a.visibility === 'living_room');
-    const totalCount = visibleAlbums.length + 1; // +1 为专属三餐相册
+    // 严格过滤掉旧样例虚假相册，仅展示用户真实相册
+    const fakeAlbumIds = new Set(['album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+    const realAlbums = allAlbums.filter(a => a && !fakeAlbumIds.has(a.id));
+    const visibleAlbums = realAlbums.filter(a => isMaster || a.visibility === 'living_room');
+    // 书架图书总数：三餐手帐(1) + 杜秋慧找导师简历(1) + 王岩求职简历(1) + 真实自建相册数
+    const totalCount = visibleAlbums.length + 3;
 
     container.innerHTML = `
       <div class="oasis-bookshelf-zone">
@@ -64,10 +68,10 @@ class AlbumsModule {
           <div class="oasis-header-main">
             <div class="oasis-header-kicker">
               <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-              <span>岁月光影 · 艺术展卷典藏</span>
+              <span>时光书架 · 朝夕细碎与研途典藏</span>
             </div>
-            <h2 class="oasis-header-title">🎞️ 岁月相册</h2>
-            <p class="oasis-header-sub">共计 ${totalCount} 本影集 · 点击书脊翻阅 · 沉淀朝夕细碎</p>
+            <h2 class="oasis-header-title">🎞️ 时光书架</h2>
+            <p class="oasis-header-sub">共计 ${totalCount} 卷书册档案 · 点击书脊翻阅 · 沉淀朝夕烟火与研途初心</p>
           </div>
           <div class="oasis-header-actions">
             ${isMaster ? `
@@ -76,7 +80,7 @@ class AlbumsModule {
                 新建相册
               </button>
             ` : `
-              <span class="pill good">🛋️ 客厅来宾模式 · 仅展示开放相册</span>
+              <span class="pill good">🛋️ 客厅来宾模式 · 开放书架浏览</span>
             `}
           </div>
         </div>
@@ -86,6 +90,8 @@ class AlbumsModule {
           <div class="bookshelf-shelf-row">
             <div class="albums-grid bookshelf-grid">
               ${this.renderSpecialMealAlbumCard()}
+              ${this.renderSpecialResumeBookCardQiuhui()}
+              ${this.renderSpecialResumeBookCardYan()}
               ${visibleAlbums.map(album => this.renderAlbumCard(album, isMaster)).join('')}
             </div>
             <!-- 实木温润托架横梁 -->
@@ -94,7 +100,7 @@ class AlbumsModule {
 
           <!-- 需求 3：独立位于下方开阔空白处的放回书架控制栏，大气、优雅、美观 -->
           <div class="bookshelf-floating-retract-zone" id="bookshelf-retract-zone">
-            <button type="button" class="bookshelf-floating-retract-btn" id="btn-bookshelf-retract" title="将放大的相册放回书架">
+            <button type="button" class="bookshelf-floating-retract-btn" id="btn-bookshelf-retract" title="将放大的书册放回书架">
               <svg class="retract-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 4v12M18 11l-6 6-6-6M4 20h16"/>
               </svg>
@@ -134,6 +140,62 @@ class AlbumsModule {
               <span>人间烟火</span>
               <span>·</span>
               <span>手帐</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 专属杜秋慧找导师学术简历图书 (书架常驻)
+  renderSpecialResumeBookCardQiuhui() {
+    return `
+      <div class="shelf-photobook-card special-resume-book-qh" id="album-card-resume-qh" title="点击查阅与编辑 杜秋慧 · 口腔医学学术简历">
+        <div class="photobook-cover-wrap">
+          <div class="photobook-spine-groove"></div>
+          <div class="resume-book-cover-art advisor">
+            <div class="resume-cover-emblem">🔬</div>
+            <div class="resume-cover-name">杜秋慧</div>
+            <div class="resume-cover-sub">吉大口腔 · 找导师简历</div>
+          </div>
+          <span class="photobook-silk-ribbon qh">👧 杜秋慧</span>
+          <span class="photobook-stamp-badge">A4 规范</span>
+        </div>
+        <div class="photobook-spine-label">
+          <div class="photobook-spine-content">
+            <h4 class="photobook-title-txt">🔬 杜秋慧 · 找导师简历</h4>
+            <div class="photobook-sub-txt">
+              <span>口腔5+3</span>
+              <span>·</span>
+              <span>学术A4</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 专属王岩求职简历图书 (书架常驻)
+  renderSpecialResumeBookCardYan() {
+    return `
+      <div class="shelf-photobook-card special-resume-book-yan" id="album-card-resume-yan" title="点击查阅与编辑 王岩 · 个人求职简历">
+        <div class="photobook-cover-wrap">
+          <div class="photobook-spine-groove"></div>
+          <div class="resume-book-cover-art job">
+            <div class="resume-cover-emblem">💼</div>
+            <div class="resume-cover-name">王岩</div>
+            <div class="resume-cover-sub">软件工程 · 名企求职</div>
+          </div>
+          <span class="photobook-silk-ribbon yan">👦 王岩</span>
+          <span class="photobook-stamp-badge">A4 规范</span>
+        </div>
+        <div class="photobook-spine-label">
+          <div class="photobook-spine-content">
+            <h4 class="photobook-title-txt">💼 王岩 · 求职简历</h4>
+            <div class="photobook-sub-txt">
+              <span>软件工程</span>
+              <span>·</span>
+              <span>求职A4</span>
             </div>
           </div>
         </div>
@@ -266,6 +328,40 @@ class AlbumsModule {
       unpinCard();
     });
 
+    // 统一卡片点击/翻阅调度器
+    const handleCardOpen = (card) => {
+      if (card.classList.contains('special-meal-book')) {
+        window.mealsModule?.openMealAlbumModal();
+      } else if (card.id === 'album-card-resume-qh' || card.classList.contains('special-resume-book-qh')) {
+        if (window.resumeModule) {
+          window.resumeModule.currentPerson = 'qiuhui';
+          const qhBooks = window.spaceStore?.getResumeBooks()?.qiuhui || [];
+          window.resumeModule.activeResumeId = qhBooks[0]?.id || 'res_qh_advisor';
+          window.resumeModule.viewMode = 'editor';
+        }
+        if (!window.spaceAuth.isMaster()) {
+          window.spaceApp?.openMasterUpgradeModal();
+        } else {
+          window.spaceApp?.switchTab('resume');
+        }
+      } else if (card.id === 'album-card-resume-yan' || card.classList.contains('special-resume-book-yan')) {
+        if (window.resumeModule) {
+          window.resumeModule.currentPerson = 'yan';
+          const yanBooks = window.spaceStore?.getResumeBooks()?.yan || [];
+          window.resumeModule.activeResumeId = yanBooks[0]?.id || 'res_yan_job';
+          window.resumeModule.viewMode = 'editor';
+        }
+        if (!window.spaceAuth.isMaster()) {
+          window.spaceApp?.openMasterUpgradeModal();
+        } else {
+          window.spaceApp?.switchTab('resume');
+        }
+      } else {
+        this.currentAlbumId = card.dataset.id;
+        this.render(container);
+      }
+    };
+
     // 点空白处收回
     const handleOutsideTap = (e) => {
       if (!activePinnedCard) return;
@@ -282,12 +378,7 @@ class AlbumsModule {
         // 点击当前固定的卡片本身，直接进入相册
         const card = activePinnedCard;
         unpinCard();
-        if (card.classList.contains('special-meal-book')) {
-          window.mealsModule?.openMealAlbumModal();
-        } else {
-          this.currentAlbumId = card.dataset.id;
-          this.render(container);
-        }
+        handleCardOpen(card);
         return;
       }
       // 否则点击空白处或其它地方，收回！
@@ -364,17 +455,12 @@ class AlbumsModule {
 
         if (isTouchMove) return;
 
-        // 如果还没震动，用户只是轻点了一下：直接进入相册！
+        // 如果还没震动，用户只是轻点了一下：直接进入！
         if (!isVibrated) {
           if (activePinnedCard === card) {
             unpinCard();
           }
-          if (card.classList.contains('special-meal-book')) {
-            window.mealsModule?.openMealAlbumModal();
-          } else {
-            this.currentAlbumId = card.dataset.id;
-            this.render(container);
-          }
+          handleCardOpen(card);
         } else {
           // 已经震动：松开就会挺住！
           e.preventDefault();
@@ -417,12 +503,7 @@ class AlbumsModule {
           if (activePinnedCard === card) {
             unpinCard();
           }
-          if (card.classList.contains('special-meal-book')) {
-            window.mealsModule?.openMealAlbumModal();
-          } else {
-            this.currentAlbumId = card.dataset.id;
-            this.render(container);
-          }
+          handleCardOpen(card);
         }
       });
 

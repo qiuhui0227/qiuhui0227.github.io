@@ -1,41 +1,39 @@
 /**
  * OASIS | Qiuhui & Yan
- * 履历文库与 A4 简历书房模块 (Resume Bookshelf & Workshop)
+ * 履历文库与 A4 简历书房 (Resume Bookshelf & Workshop)
  * 
- * 核心功能特性：
- * 1. 像书本/书架一样多简历体系：男主和女主可以各自创建不同的多份简历。
- * 2. 覆盖主流三大场景风格：
- *    - 💼 校园与名企招聘 (job): 强调重点实习/工程项目、STAR量化成果与技能矩阵
- *    - 🎓 申请奖学金 (scholarship): 强调专业位次、国家级/省校级竞赛荣誉、学生骨干任职与综合测评
- *    - 🔬 找导师学术升学 (advisor): 强调学术志趣、大创科研训练、实验技能与研究生学术设想
- * 3. 基于蓝本复制创建 (Blueprint Copy):
- *    - 创建新简历时，可自由选择已有简历作为蓝本，自动带入基本资料与教育经历，省去重复输入。
- * 4. 普适化、专业标准示范内容：
- *    - 杜绝过度个人隐私或偏门内容，符合高校与职场通用学术范式。
- * 5. 证件照与云端持久化防丢保障：
- *    - 支持本地上传自动高清微损压缩持久化；
- *    - 支持云端图片外链（填入任意图床/CDN链接，跨设备永不丢失）；
- *    - 支持一键导出/导入包含全部简历与照片的完整数据备份。
+ * 核心设计特色：
+ * 1. 日系实木温润陈列书架：简历如实体典雅书卷立于书架之上，点击翻阅，支持触控震动挺住与归位。
+ * 2. 简约轻量化工作台：剔除重复蓝本按钮、冗余手动保存与繁杂文案，回归纯粹专注排版。
+ * 3. 三大主流升学与职业风格：
+ *    - 🔬 找导师学术简历 (advisor): 医科与科研前沿，突出导师意向、大创课题、实验技能与学术志向
+ *    - 💼 校园与名企求职 (job): 强调重点实践/实习、STAR工程成果与核心技能矩阵
+ *    - 🎓 申请奖学金评优 (scholarship): 聚焦学业位次、国家级/省校级竞赛荣誉、学生骨干奉献
+ * 4. 1:1 标准 A4 矢量即时排版：
+ *    - 左侧轻量配置，右侧高保真纸张渲染，支持一键浏览器原生矢量打印 (A4 PDF) 与 Word 导出。
  */
 
 class ResumeModule {
   constructor() {
     this.currentPerson = 'yan'; // 'yan' | 'qiuhui'
-    this.viewMode = 'bookshelf'; // 'bookshelf' (书架模式) | 'editor' (编辑/预览模式)
+    this.viewMode = 'bookshelf'; // 'bookshelf' | 'editor'
     this.activeResumeId = null;
     this.resumeData = null;
-    this.saveStatusText = '已全部自动保存';
+    this.saveStatusText = '✓ 已自动保存';
     this.saveTimer = null;
+    this.mobileTab = 'edit'; // 'edit' | 'preview'
+    this.showAvatarUrl = false;
   }
 
-  // --- 风格元数据 ---
+  // --- 场景风格元数据 ---
   getStyleMeta(style) {
     switch (style) {
       case 'job':
         return {
           key: 'job',
-          name: '💼 校园/名企招聘',
+          name: '💼 校园/名企求职',
           tag: '名企招聘版',
+          tagShort: '💼 求职',
           color: '#1e3a8a',
           desc: '成果导向 · STAR工程项目经历 · 核心技能矩阵'
         };
@@ -44,6 +42,7 @@ class ResumeModule {
           key: 'scholarship',
           name: '🎓 申请奖学金',
           tag: '奖学金申报版',
+          tagShort: '🎓 评优',
           color: '#881337',
           desc: '学业位次 · 国家级/省校级荣誉表彰 · 骨干奉献'
         };
@@ -53,6 +52,7 @@ class ResumeModule {
           key: 'advisor',
           name: '🔬 找导师学术简历',
           tag: '联系导师学术版',
+          tagShort: '🔬 学术',
           color: '#0f766e',
           desc: '学术志趣 · 大创科研训练 · 实验技能与未来设想'
         };
@@ -78,7 +78,7 @@ class ResumeModule {
   }
 
   // =========================================================================
-  // 1. 简历书架视图 (Bookshelf View)
+  // 1. 实木陈列书架视图 (Artisan Wooden Bookshelf View)
   // =========================================================================
   renderBookshelf(container) {
     const books = window.spaceStore.getResumeBooks();
@@ -87,99 +87,62 @@ class ResumeModule {
     const currentList = this.currentPerson === 'yan' ? yanList : qhList;
 
     container.innerHTML = `
-      <div class="resume-wrapper">
-        <!-- 统一主模块标头栏 -->
+      <div class="oasis-bookshelf-zone">
+        <!-- 统一主模块标头栏 (简约优雅) -->
         <div class="oasis-header-bar">
           <div class="oasis-header-main">
             <div class="oasis-header-kicker">
-              <span>📜 研途与职业 · 男女主人双轨履历文库</span>
+              <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <span>研途与求职 · A4 规范履历书房</span>
             </div>
-            <h2 class="oasis-header-title">📖 履历文库</h2>
-            <p class="oasis-header-sub">名企招聘、奖学金评优、联系导师学术自述多场景管理 · 支持蓝本继承与云端持久留存</p>
+            <h2 class="oasis-header-title">📖 履历书架</h2>
+            <p class="oasis-header-sub">共 ${currentList.length} 卷简历档案 · 点击书脊翻阅排版 · 找导师学术联系、求职与奖学金申报</p>
           </div>
           <div class="oasis-header-actions">
             <button class="btn btn-primary btn-sm" id="btn-create-new-resume">
-              ➕ 创建新简历 (基于蓝本)
-            </button>
-            <button class="btn btn-outline btn-sm" id="btn-export-all-books" title="一键导出全部简历与照片数据">
-              💾 备份文集
-            </button>
-            <input type="file" id="input-import-books" accept=".json" style="display:none;">
-            <button class="btn btn-outline btn-sm" id="btn-trigger-import-books" title="从备份文件导入恢复简历">
-              📥 导入恢复
+              <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+              新建简历
             </button>
           </div>
         </div>
 
-        <!-- 统一二级控制栏：男女主人切换与快速入口 -->
-        <div class="oasis-sub-bar">
+        <!-- 二级控制栏：男女主人切换 -->
+        <div class="oasis-sub-bar" style="margin-bottom: 14px;">
           <div class="oasis-sub-bar-left">
             <div class="person-switcher" style="margin-bottom:0;">
               <button class="person-tab ${this.currentPerson === 'yan' ? 'active' : ''}" data-person="yan">
-                👦 王岩的简历文集 (${yanList.length})
+                👦 王岩的简历卷宗 (${yanList.length})
               </button>
               <button class="person-tab ${this.currentPerson === 'qiuhui' ? 'active' : ''}" data-person="qiuhui">
-                👧 杜秋慧的简历文集 (${qhList.length})
+                👧 杜秋慧的简历卷宗 (${qhList.length})
               </button>
             </div>
           </div>
-          <div class="oasis-sub-bar-right">
-            <button class="btn btn-outline btn-sm" id="btn-quick-new-resume" style="font-size:12px; height:32px; padding:0 12px;">
-              ⚡ 快速以第一份为蓝本新建
-            </button>
+          <div class="oasis-sub-bar-right fine" style="color: #627d8c;">
+            <span>轻触书本翻阅 · 长按可挺住预览</span>
           </div>
         </div>
 
-        <!-- 简历书卷卡片网格 -->
-        <div class="resume-bookshelf-grid">
-          ${currentList.map(resume => {
-            const styleMeta = this.getStyleMeta(resume.style);
-            const b = resume.basics || {};
-            const hasAvatar = !!resume.avatar;
+        <!-- 日系小清新 · 实木温润陈列时光书架 -->
+        <div class="bookshelf-display-unit" id="resume-bookshelf-unit">
+          <div class="bookshelf-shelf-row">
+            <div class="albums-grid bookshelf-grid" id="resume-shelf-grid">
+              ${currentList.map(resume => this.renderResumeBookCard(resume)).join('')}
+              ${this.renderAddResumeBookCard()}
+            </div>
+            <!-- 实木温润托架横梁 -->
+            <div class="bookshelf-ledge-wood"></div>
+          </div>
 
-            return `
-              <div class="resume-book-card style-${resume.style}" data-id="${resume.id}">
-                <div class="book-spine-line"></div>
-                <div>
-                  <div class="book-card-header">
-                    <span class="book-style-badge">
-                      ${styleMeta.name}
-                    </span>
-                    <span class="book-date-text">更新于 ${resume.updatedAt || '近期'}</span>
-                  </div>
-
-                  <div class="book-card-title">${this.escapeHtml(resume.title)}</div>
-
-                  <div class="book-card-target">
-                    <strong>意向目标：</strong>${this.escapeHtml(b.target || '待完善目标')}
-                  </div>
-
-                  <div class="book-card-pills">
-                    ${b.school ? `<span class="book-pill-tag">🏫 ${this.escapeHtml(b.school.split('·')[0].trim())}</span>` : ''}
-                    ${b.major ? `<span class="book-pill-tag">📚 ${this.escapeHtml(b.major.split('/')[0].trim())}</span>` : ''}
-                    ${b.degree ? `<span class="book-pill-tag">🎓 ${this.escapeHtml(b.degree)}</span>` : ''}
-                    ${hasAvatar ? `<span class="book-pill-tag" style="color:#1b7659; background:#eaf6f1;">📷 已附证件照</span>` : ''}
-                  </div>
-                </div>
-
-                <div class="book-card-footer">
-                  <div style="display:flex; gap:6px;">
-                    <button class="btn btn-primary btn-xs btn-open-resume" data-id="${resume.id}">
-                      📖 打开编辑/预览
-                    </button>
-                    <button class="btn btn-outline btn-xs btn-copy-blueprint" data-id="${resume.id}" title="以此简历为蓝本复制新建">
-                      📑 以此为蓝本
-                    </button>
-                  </div>
-                  <div>
-                    <button class="btn btn-outline btn-xs btn-del-resume" data-id="${resume.id}" title="从书架移除" style="color:#b05252; border-color:#fad5d5;">
-                      🗑️
-                    </button>
-                  </div>
-                </div>
-              </div>
-            `;
-          }).join('')}
+          <!-- 独立位于下方开阔空白处的放回书架控制栏 -->
+          <div class="bookshelf-floating-retract-zone" id="resume-retract-zone">
+            <button type="button" class="bookshelf-floating-retract-btn" id="btn-resume-shelf-retract" title="放回书架">
+              <svg class="retract-ico" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 4v12M18 11l-6 6-6-6M4 20h16"/>
+              </svg>
+              <span>放回书架</span>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -187,8 +150,159 @@ class ResumeModule {
     this.bindBookshelfEvents(container);
   }
 
+  // 渲染单本简历图书
+  renderResumeBookCard(resume) {
+    const styleMeta = this.getStyleMeta(resume.style);
+    const b = resume.basics || {};
+    const hasAvatar = !!resume.avatar;
+    const defaultName = this.currentPerson === 'yan' ? '王岩' : '杜秋慧';
+    const ownerName = b.name || defaultName;
+
+    return `
+      <div class="shelf-photobook-card resume-shelf-book style-${resume.style}" data-id="${resume.id}">
+        <div class="photobook-cover-wrap">
+          <div class="photobook-spine-groove"></div>
+          ${hasAvatar ? `
+            <img src="${resume.avatar}" alt="cover" class="photobook-cover-img" loading="eager" decoding="async" />
+            <div class="resume-book-avatar-overlay">
+              <span class="resume-book-cover-name">${this.escapeHtml(ownerName)}</span>
+              <span class="resume-book-cover-target">${this.escapeHtml(b.target || styleMeta.tag)}</span>
+            </div>
+          ` : `
+            <div class="resume-book-cover-art ${resume.style}">
+              <div class="resume-cover-emblem">${resume.style === 'job' ? '💼' : (resume.style === 'scholarship' ? '🎓' : '🔬')}</div>
+              <div class="resume-cover-name">${this.escapeHtml(ownerName)}</div>
+              <div class="resume-cover-sub">${this.escapeHtml(styleMeta.tag)}</div>
+            </div>
+          `}
+          <span class="photobook-silk-ribbon ${resume.style}">${styleMeta.tagShort}</span>
+          <span class="photobook-stamp-badge">A4 规范</span>
+          <div class="photobook-quick-acts">
+            <button class="photobook-mini-btn del btn-del-resume" data-id="${resume.id}" title="删除此卷">×</button>
+          </div>
+        </div>
+        <div class="photobook-spine-label">
+          <div class="photobook-spine-content">
+            <h4 class="photobook-title-txt">${this.escapeHtml(resume.title)}</h4>
+            <div class="photobook-sub-txt">
+              <span>${this.escapeHtml(b.school ? b.school.split('·')[0].trim() : styleMeta.name)}</span>
+              <span>·</span>
+              <span>${resume.updatedAt ? resume.updatedAt.slice(5) : '简历'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 渲染添置新卷卡片
+  renderAddResumeBookCard() {
+    return `
+      <div class="shelf-photobook-card add-resume-book" id="card-add-resume" title="添置新卷简历">
+        <div class="photobook-cover-wrap add-wrap">
+          <div class="photobook-spine-groove"></div>
+          <div class="add-resume-content">
+            <div class="add-icon">➕</div>
+            <div class="add-text">添置新卷</div>
+            <div class="add-sub">传承蓝本</div>
+          </div>
+        </div>
+        <div class="photobook-spine-label">
+          <div class="photobook-spine-content">
+            <h4 class="photobook-title-txt">➕ 添置新卷</h4>
+            <div class="photobook-sub-txt">
+              <span>新建简历</span>
+              <span>·</span>
+              <span>书房</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   bindBookshelfEvents(container) {
-    // 身份切换
+    const bookshelfUnit = container.querySelector('#resume-bookshelf-unit');
+    const bookshelfGrid = container.querySelector('#resume-shelf-grid');
+    const retractBtn = container.querySelector('#btn-resume-shelf-retract');
+    let activePinnedCard = null;
+
+    // 核心：挺住相册并放大
+    const pinCard = (card) => {
+      if (activePinnedCard && activePinnedCard !== card) {
+        unpinCard();
+      }
+      const cardRect = card.getBoundingClientRect();
+      const cardCenterX = cardRect.left + cardRect.width / 2;
+      const shelfCenterX = window.innerWidth / 2;
+      const diffX = shelfCenterX - cardCenterX;
+
+      let nudgeX = 0;
+      if (diffX > 15) {
+        nudgeX = Math.min(diffX * 0.44, 52);
+      } else if (diffX < -15) {
+        nudgeX = Math.max(diffX * 0.44, -52);
+      }
+
+      card.style.transform = `translate3d(${nudgeX.toFixed(1)}px, -36px, 0) scale(1.68)`;
+      card.classList.add('card-pinned');
+      card.classList.remove('touch-pressing');
+      bookshelfGrid?.classList.add('bookshelf-has-pinned');
+      bookshelfUnit?.classList.add('has-pinned-card');
+      activePinnedCard = card;
+    };
+
+    // 核心：收回相册
+    const unpinCard = () => {
+      if (!activePinnedCard) return;
+      activePinnedCard.style.transform = 'none';
+      activePinnedCard.classList.remove('card-pinned');
+      activePinnedCard.classList.remove('touch-pressing');
+      bookshelfGrid?.classList.remove('bookshelf-has-pinned');
+      bookshelfUnit?.classList.remove('has-pinned-card');
+      const tempCard = activePinnedCard;
+      activePinnedCard = null;
+      setTimeout(() => {
+        if (tempCard && !tempCard.classList.contains('card-pinned')) {
+          tempCard.style.transform = '';
+        }
+      }, 300);
+    };
+
+    // 绑定放回书架按钮
+    retractBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      unpinCard();
+    });
+
+    // 点空白处收回
+    const handleOutsideTap = (e) => {
+      if (!activePinnedCard) return;
+      if (e.target.closest('#btn-resume-shelf-retract')) {
+        e.stopPropagation();
+        unpinCard();
+        return;
+      }
+      if (e.target.closest('.shelf-photobook-card') === activePinnedCard) {
+        if (e.target.closest('.photobook-mini-btn')) return;
+        const card = activePinnedCard;
+        unpinCard();
+        if (card.id === 'card-add-resume') {
+          this.openCreateModal();
+        } else {
+          this.activeResumeId = card.dataset.id;
+          this.viewMode = 'editor';
+          this.render(container);
+        }
+        return;
+      }
+      unpinCard();
+    };
+
+    container.addEventListener('click', handleOutsideTap);
+
+    // 绑定主人身份切换
     container.querySelectorAll('.person-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         this.currentPerson = btn.dataset.person;
@@ -196,37 +310,117 @@ class ResumeModule {
       });
     });
 
-    // 打开编辑/预览
-    container.querySelectorAll('.btn-open-resume').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.activeResumeId = btn.dataset.id;
-        this.viewMode = 'editor';
-        this.render(container);
-      });
-    });
-
-    // 以某简历为蓝本新建
-    container.querySelectorAll('.btn-copy-blueprint').forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.openBlueprintModal(btn.dataset.id);
-      });
-    });
-
-    // 顶部创建新简历
+    // 绑定新建按钮
     container.querySelector('#btn-create-new-resume')?.addEventListener('click', () => {
-      this.openBlueprintModal();
+      this.openCreateModal();
     });
 
-    // 快速以当前第一份为蓝本新建
-    container.querySelector('#btn-quick-new-resume')?.addEventListener('click', () => {
-      const books = window.spaceStore.getResumeBooks();
-      const list = books[this.currentPerson] || [];
-      this.openBlueprintModal(list[0]?.id || null);
+    // 绑定书架卡片交互 (轻触翻阅、按住挺住)
+    container.querySelectorAll('.shelf-photobook-card').forEach(card => {
+      let pressTimer = null;
+      let isVibrated = false;
+      let isTouchMove = false;
+      let startX = 0;
+      let startY = 0;
+
+      // 触摸事件
+      card.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.photobook-mini-btn') || e.target.closest('.photobook-retract-btn')) return;
+        if (activePinnedCard && activePinnedCard !== card) unpinCard();
+
+        clearTimeout(pressTimer);
+        isVibrated = false;
+        isTouchMove = false;
+        startX = e.touches[0].clientX;
+        startY = e.touches[0].clientY;
+        card.classList.add('touch-pressing');
+
+        pressTimer = setTimeout(() => {
+          isVibrated = true;
+          if (navigator.vibrate) {
+            try { navigator.vibrate(35); } catch (_) {}
+          }
+          pinCard(card);
+        }, 280);
+      }, { passive: true });
+
+      card.addEventListener('touchmove', (e) => {
+        const dx = e.touches[0].clientX - startX;
+        const dy = e.touches[0].clientY - startY;
+        if (Math.hypot(dx, dy) > 10) {
+          isTouchMove = true;
+          clearTimeout(pressTimer);
+          card.classList.remove('touch-pressing');
+        }
+      }, { passive: true });
+
+      card.addEventListener('touchend', (e) => {
+        if (e.target.closest('.photobook-mini-btn')) return;
+        clearTimeout(pressTimer);
+        card.classList.remove('touch-pressing');
+        if (isTouchMove) return;
+
+        if (!isVibrated) {
+          if (activePinnedCard === card) unpinCard();
+          if (card.id === 'card-add-resume') {
+            this.openCreateModal();
+          } else {
+            this.activeResumeId = card.dataset.id;
+            this.viewMode = 'editor';
+            this.render(container);
+          }
+        } else {
+          e.preventDefault();
+        }
+      }, { passive: false });
+
+      card.addEventListener('touchcancel', () => {
+        clearTimeout(pressTimer);
+        card.classList.remove('touch-pressing');
+      }, { passive: true });
+
+      // 桌面鼠标交互
+      let mouseTimer = null;
+      let mouseVibrated = false;
+
+      card.addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || e.target.closest('.photobook-mini-btn') || e.target.closest('.photobook-retract-btn')) return;
+        if (activePinnedCard && activePinnedCard !== card) unpinCard();
+        mouseVibrated = false;
+        card.classList.add('touch-pressing');
+        mouseTimer = setTimeout(() => {
+          mouseVibrated = true;
+          pinCard(card);
+        }, 280);
+      });
+
+      card.addEventListener('mouseup', (e) => {
+        if (e.button !== 0 || e.target.closest('.photobook-mini-btn')) return;
+        clearTimeout(mouseTimer);
+        card.classList.remove('touch-pressing');
+        if (!mouseVibrated) {
+          if (activePinnedCard === card) unpinCard();
+          if (card.id === 'card-add-resume') {
+            this.openCreateModal();
+          } else {
+            this.activeResumeId = card.dataset.id;
+            this.viewMode = 'editor';
+            this.render(container);
+          }
+        }
+      });
+
+      card.addEventListener('mouseleave', () => {
+        clearTimeout(mouseTimer);
+        card.classList.remove('touch-pressing');
+      });
     });
 
-    // 删除简历
+    // 绑定删除按钮
     container.querySelectorAll('.btn-del-resume').forEach(btn => {
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
         const id = btn.dataset.id;
         const book = window.spaceStore.getResumeBook(this.currentPerson, id);
         if (!confirm(`确定要从书架移除这份简历【${book?.title || id}】吗？`)) return;
@@ -240,120 +434,67 @@ class ResumeModule {
         }
       });
     });
-
-    // 备份文集
-    container.querySelector('#btn-export-all-books')?.addEventListener('click', () => {
-      const books = window.spaceStore.getResumeBooks();
-      const dataStr = JSON.stringify({
-        oasis_resume_books_backup: true,
-        version: '20261105_v6',
-        exportAt: new Date().toISOString(),
-        books: books
-      }, null, 2);
-      const blob = new Blob([dataStr], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `OASIS_Resume_Library_${new Date().toISOString().split('T')[0]}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-      window.spaceApp?.showToast('文集数据与照片已全部导出备份！');
-    });
-
-    // 导入恢复
-    const fileInput = container.querySelector('#input-import-books');
-    container.querySelector('#btn-trigger-import-books')?.addEventListener('click', () => {
-      fileInput?.click();
-    });
-
-    fileInput?.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        try {
-          const parsed = JSON.parse(ev.target.result);
-          const incomingBooks = parsed.books || parsed;
-          if (incomingBooks && (incomingBooks.yan || incomingBooks.qiuhui)) {
-            window.spaceStore.saveResumeBooks(incomingBooks);
-            window.spaceApp?.showToast('简历文集恢复成功！');
-            this.render(container);
-          } else {
-            window.spaceApp?.showToast('导入文件格式不符，请选择正确的文集备份文件。', true);
-          }
-        } catch (err) {
-          window.spaceApp?.showToast('解析文件失败，文件可能已损坏。', true);
-        }
-      };
-      reader.readAsText(file);
-    });
   }
 
   // =========================================================================
-  // 2. 蓝本创建弹窗 (Blueprint Creation Modal)
+  // 2. 简约新建弹窗 (Minimalist Creation Modal)
   // =========================================================================
-  openBlueprintModal(blueprintId = null) {
+  openCreateModal() {
     const books = window.spaceStore.getResumeBooks();
     const allResumes = [];
     (books.yan || []).forEach(r => allResumes.push({ ...r, ownerName: '王岩' }));
     (books.qiuhui || []).forEach(r => allResumes.push({ ...r, ownerName: '杜秋慧' }));
 
-    const selectedBlueprint = allResumes.find(r => r.id === blueprintId) || null;
-    const defaultOwner = selectedBlueprint ? selectedBlueprint.owner : this.currentPerson;
-    const defaultTitle = selectedBlueprint ? `${selectedBlueprint.title} (新版)` : '2026 个人发展与求职简历';
+    const existingForOwner = allResumes.filter(r => r.owner === this.currentPerson);
+    const defaultBlueprint = existingForOwner[0] || null;
 
     const modalHtml = `
-      <div class="overlay" id="blueprint-modal">
+      <div class="overlay" id="resume-create-modal">
         <div class="sheet blueprint-modal-box">
           <div class="sheet-head">
-            <h3>➕ 创作新简历 (基于蓝本)</h3>
-            <button class="logout" id="blueprint-modal-close" style="font-size:18px;">✕</button>
+            <h3>➕ 添置新简历卷宗</h3>
+            <button class="logout" id="resume-create-close" style="font-size:18px;">✕</button>
           </div>
 
-          <form id="blueprint-form" class="login-form">
-            <div class="blueprint-tip-banner">
-              <strong>💡 蓝本复用优势：</strong> 选择已有简历作为蓝本后，系统将自动把其姓名、出生年月、高校教育经历、联系方式及证件照提前预填入新简历中，免去繁琐的重复录入！
-            </div>
-
+          <form id="resume-create-form" class="login-form">
             <div>
-              <label class="form-label">简历归属主人 *</label>
-              <select name="owner" class="select" id="blueprint-owner-select" required>
-                <option value="yan" ${defaultOwner === 'yan' ? 'selected' : ''}>👦 王岩 (Yan)</option>
-                <option value="qiuhui" ${defaultOwner === 'qiuhui' ? 'selected' : ''}>👧 杜秋慧 (Qiuhui)</option>
+              <label class="form-label">简历归属 *</label>
+              <select name="owner" class="select" id="create-owner-select" required>
+                <option value="yan" ${this.currentPerson === 'yan' ? 'selected' : ''}>👦 王岩 (Yan)</option>
+                <option value="qiuhui" ${this.currentPerson === 'qiuhui' ? 'selected' : ''}>👧 杜秋慧 (Qiuhui)</option>
               </select>
             </div>
 
             <div>
-              <label class="form-label">简历名称 / 卷宗标题 *</label>
-              <input type="text" name="title" class="input" value="${this.escapeHtml(defaultTitle)}" placeholder="例如：2026春招大厂技术岗、北大口腔找导师学术简历" required>
+              <label class="form-label">卷宗标题 / 简历名称 *</label>
+              <input type="text" name="title" class="input" placeholder="例如：2026 北大医学部导师联系学术简历" required autofocus>
             </div>
 
             <div class="form-row">
               <div>
-                <label class="form-label">风格场景预设 *</label>
-                <select name="style" class="select" id="blueprint-style-select" required>
-                  <option value="job" ${selectedBlueprint?.style === 'job' ? 'selected' : ''}>💼 校园/名企求职简历</option>
-                  <option value="scholarship" ${selectedBlueprint?.style === 'scholarship' ? 'selected' : ''}>🎓 申请奖学金/评优申报</option>
-                  <option value="advisor" ${(selectedBlueprint?.style === 'advisor' || !selectedBlueprint) ? 'selected' : ''}>🔬 找导师学术联系简历</option>
+                <label class="form-label">场景风格 *</label>
+                <select name="style" class="select" id="create-style-select" required>
+                  <option value="advisor">🔬 找导师学术版 (医科/升学)</option>
+                  <option value="job">💼 校园/名企求职版 (工程/实习)</option>
+                  <option value="scholarship">🎓 申请奖学金版 (评优/表彰)</option>
                 </select>
               </div>
 
               <div>
-                <label class="form-label">选择蓝本 (自动提取基础信息) *</label>
-                <select name="blueprintId" class="select" id="blueprint-source-select">
-                  <option value="blank">📄 从头创建 (使用普适空白标准模板)</option>
-                  ${allResumes.map(r => `
-                    <option value="${r.id}" ${r.id === blueprintId ? 'selected' : ''}>
-                      📑 [${r.ownerName}] ${this.escapeHtml(r.title)}
-                    </option>
+                <label class="form-label">信息继承蓝本</label>
+                <select name="blueprintId" class="select" id="create-blueprint-select">
+                  ${defaultBlueprint ? `<option value="${defaultBlueprint.id}">📑 自动继承已有的基本资料与经历</option>` : ''}
+                  ${allResumes.filter(r => r.id !== defaultBlueprint?.id).map(r => `
+                    <option value="${r.id}">📑 [${r.ownerName}] ${this.escapeHtml(r.title)}</option>
                   `).join('')}
+                  <option value="blank">📄 使用空白标准模板</option>
                 </select>
               </div>
             </div>
 
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
-              <button type="button" class="btn btn-outline" id="blueprint-modal-cancel">取消</button>
-              <button type="submit" class="btn btn-primary">立即创建并进入编辑</button>
+              <button type="button" class="btn btn-outline" id="resume-create-cancel">取消</button>
+              <button type="submit" class="btn btn-primary">立即创建并进入排版</button>
             </div>
           </form>
         </div>
@@ -361,13 +502,13 @@ class ResumeModule {
     `;
 
     document.body.insertAdjacentHTML('beforeend', modalHtml);
-    const modalEl = document.getElementById('blueprint-modal');
+    const modalEl = document.getElementById('resume-create-modal');
     const close = () => modalEl && modalEl.remove();
 
-    modalEl.querySelector('#blueprint-modal-close')?.addEventListener('click', close);
-    modalEl.querySelector('#blueprint-modal-cancel')?.addEventListener('click', close);
+    modalEl.querySelector('#resume-create-close')?.addEventListener('click', close);
+    modalEl.querySelector('#resume-create-cancel')?.addEventListener('click', close);
 
-    modalEl.querySelector('#blueprint-form')?.addEventListener('submit', (e) => {
+    modalEl.querySelector('#resume-create-form')?.addEventListener('submit', (e) => {
       e.preventDefault();
       const fd = new FormData(e.target);
       const targetOwner = fd.get('owner');
@@ -375,33 +516,23 @@ class ResumeModule {
       const style = fd.get('style');
       const bId = fd.get('blueprintId');
 
-      let newResume = null;
       const defaults = window.spaceStore.getDefaultResumeBooks();
       const baseTemplates = defaults[targetOwner] || defaults.yan;
       const matchedStyleTemplate = baseTemplates.find(t => t.style === style) || baseTemplates[0];
 
-      // 深拷贝基础模板
-      newResume = JSON.parse(JSON.stringify(matchedStyleTemplate));
+      const newResume = JSON.parse(JSON.stringify(matchedStyleTemplate));
       newResume.id = 'res_' + targetOwner + '_' + Date.now();
       newResume.owner = targetOwner;
       newResume.title = title;
       newResume.style = style;
       newResume.updatedAt = new Date().toISOString().split('T')[0];
 
-      // 若指定了蓝本简历，则克隆蓝本的个人资料与教育经历
       if (bId && bId !== 'blank') {
         const blueprint = allResumes.find(r => r.id === bId);
         if (blueprint) {
-          if (blueprint.basics) {
-            newResume.basics = { ...newResume.basics, ...JSON.parse(JSON.stringify(blueprint.basics)) };
-          }
-          if (blueprint.avatar) {
-            newResume.avatar = blueprint.avatar;
-          }
-          if (Array.isArray(blueprint.education) && blueprint.education.length > 0) {
-            newResume.education = JSON.parse(JSON.stringify(blueprint.education));
-          }
-          // 若风格相同，连同重点项目与荣誉也一并继承
+          if (blueprint.basics) newResume.basics = { ...newResume.basics, ...JSON.parse(JSON.stringify(blueprint.basics)) };
+          if (blueprint.avatar) newResume.avatar = blueprint.avatar;
+          if (blueprint.education?.length) newResume.education = JSON.parse(JSON.stringify(blueprint.education));
           if (blueprint.style === style) {
             if (blueprint.experiences?.length) newResume.experiences = JSON.parse(JSON.stringify(blueprint.experiences));
             if (blueprint.projects?.length) newResume.projects = JSON.parse(JSON.stringify(blueprint.projects));
@@ -420,12 +551,12 @@ class ResumeModule {
       this.viewMode = 'editor';
       const container = document.getElementById('content-resume');
       if (container) this.render(container);
-      window.spaceApp?.showToast(`已成功创建新简历【${title}】并进入工作台！`);
+      window.spaceApp?.showToast(`已成功创建简历【${title}】！`);
     });
   }
 
   // =========================================================================
-  // 3. 双栏工作台视图 (Editor & A4 Paper Preview)
+  // 3. 极简双栏工作台视图 (Editor & A4 Paper Preview)
   // =========================================================================
   renderEditor(container) {
     const d = this.resumeData;
@@ -441,90 +572,83 @@ class ResumeModule {
 
     container.innerHTML = `
       <div class="resume-wrapper">
-        <!-- 统一主模块标头栏 (编辑工作台模式) -->
+        <!-- 统一主模块标头栏 (简约无冗余) -->
         <div class="oasis-header-bar">
           <div class="oasis-header-main">
-            <div class="oasis-header-kicker">
-              <span>✍️ 履历工作台 · ${this.currentPerson === 'yan' ? '王岩' : '杜秋慧'} 专属</span>
+            <div class="oasis-header-kicker" style="display:flex; align-items:center; gap:8px;">
+              <button class="btn btn-outline btn-xs" id="btn-back-to-shelf" style="padding:2px 8px; font-size:11px;">
+                ← 返回书架
+              </button>
+              <span>${this.currentPerson === 'yan' ? '👦 王岩' : '👧 杜秋慧'} · A4 标准工作台</span>
             </div>
-            <h2 class="oasis-header-title">
-              <span>${this.escapeHtml(d.title)}</span>
-              <span class="book-style-badge" style="font-size:11px; padding:2px 8px; border-radius:4px; font-weight:600;">${styleMeta.name}</span>
-            </h2>
-            <p class="oasis-header-sub">左侧实时配置，右侧 1:1 标准 A4 纸张排版即时渲染 · 自动双向同步</p>
+            <div style="display:flex; align-items:center; gap:10px; margin-top:2px;">
+              <h2 class="oasis-header-title" style="margin-bottom:0;">${this.escapeHtml(d.title)}</h2>
+              <select id="select-editor-style" class="select" style="height:26px; font-size:11.5px; padding:1px 8px; width:auto;">
+                <option value="advisor" ${d.style === 'advisor' ? 'selected' : ''}>🔬 找导师学术版</option>
+                <option value="job" ${d.style === 'job' ? 'selected' : ''}>💼 校园名企求职版</option>
+                <option value="scholarship" ${d.style === 'scholarship' ? 'selected' : ''}>🎓 申请奖学金版</option>
+              </select>
+            </div>
           </div>
           <div class="oasis-header-actions">
-            <button class="btn btn-outline btn-sm" id="btn-back-to-shelf">
-              ← 返回文库
-            </button>
-            <span class="fine save-indicator" id="resume-save-indicator" style="margin-right:4px;">${this.saveStatusText}</span>
-            <button class="btn btn-primary btn-sm" id="btn-save-manual">
-              💾 保存
-            </button>
-            <button class="btn btn-outline btn-sm" id="btn-clone-current-blueprint" title="以当前内容为新蓝本存入书架">
-              📑 另存为蓝本
-            </button>
-            <button class="btn btn-outline btn-sm" id="btn-export-word">
+            <span class="save-indicator" id="resume-save-indicator">${this.saveStatusText}</span>
+            <button class="btn btn-outline btn-sm" id="btn-export-word" title="导出 Word .doc 格式">
               📄 导出 Word
             </button>
-            <button class="btn btn-outline btn-sm" id="btn-export-pdf" title="调用浏览器高清矢量打印 A4 PDF">
+            <button class="btn btn-primary btn-sm" id="btn-export-pdf" title="调用浏览器高清矢量打印 A4 纸张">
               🖨️ 打印 / 存为 PDF
             </button>
           </div>
         </div>
 
-        <!-- 统一二级控制栏 -->
-        <div class="oasis-sub-bar">
-          <div class="oasis-sub-bar-left">
-            <span class="fine" style="font-weight:700; color:#18354a;">🎨 风格模板：</span>
-            <select id="select-editor-style" class="select" style="height:32px; font-size:12px; padding:2px 10px; width:auto;">
-              <option value="job" ${d.style === 'job' ? 'selected' : ''}>💼 校园/名企招聘求职风格</option>
-              <option value="scholarship" ${d.style === 'scholarship' ? 'selected' : ''}>🎓 申请奖学金/评优申报风格</option>
-              <option value="advisor" ${d.style === 'advisor' ? 'selected' : ''}>🔬 联系名师课题组学术风格</option>
-            </select>
-          </div>
-          <div class="oasis-sub-bar-right fine" style="color:#627d8c;">
-            📷 证件照及文本数据均自动离线与云端双轨留存
-          </div>
+        <!-- 手机端便捷切换 Tab -->
+        <div class="mobile-resume-tabs" style="display:none;">
+          <button type="button" class="btn ${this.mobileTab === 'edit' ? 'btn-primary' : 'btn-outline'} btn-sm" id="btn-mobile-tab-edit">
+            ✍️ 编辑资料
+          </button>
+          <button type="button" class="btn ${this.mobileTab === 'preview' ? 'btn-primary' : 'btn-outline'} btn-sm" id="btn-mobile-tab-preview">
+            📄 预览 A4 纸张
+          </button>
         </div>
 
         <!-- 双栏工作台 -->
-        <div class="resume-workspace">
-          <!-- 左侧：表单配置面板 -->
-          <div class="resume-editor-panel">
+        <div class="resume-workspace ${this.mobileTab}">
+          <!-- 左侧：紧凑表单配置面板 -->
+          <div class="resume-editor-panel" id="resume-editor-pane">
             <div class="resume-form-flow">
 
-              <!-- 证件照与云端持久化管理卡片 -->
+              <!-- 证件照轻量管理卡片 -->
               <div class="form-section-card">
-                <div class="section-header-row">
-                  <div class="section-title">📷 证件照与永久云端加载</div>
-                  ${hasAvatar ? `<button class="btn-text-del" id="btn-remove-avatar">移除照片</button>` : ''}
-                </div>
-                <div class="avatar-manager-card">
+                <div class="resume-avatar-tile">
                   <div class="avatar-preview-box">
                     ${hasAvatar ? `<img src="${d.avatar}" class="avatar-real-img" alt="avatar" />` : `<div class="avatar-placeholder-box">👤</div>`}
                   </div>
-                  <div class="avatar-controls">
-                    <div>
+                  <div class="avatar-tile-info">
+                    <div style="font-weight:700; font-size:12.5px; color:#18354a; margin-bottom:2px;">📷 证件照</div>
+                    <div class="fine" style="color:#627d8c; margin-bottom:6px;">建议一寸白底或正装免冠照，自动高清压缩</div>
+                    <div style="display:flex; align-items:center; gap:8px;">
                       <input type="file" id="input-avatar-file" accept="image/*" style="display:none;">
                       <button type="button" class="btn btn-outline btn-xs" id="btn-trigger-upload-avatar">
-                        📷 上传本地证件照 (自动高清微损压缩)
+                        ${hasAvatar ? '更换照片' : '上传照片'}
+                      </button>
+                      ${hasAvatar ? `<button type="button" class="btn-text-del" id="btn-remove-avatar">移除</button>` : ''}
+                      <button type="button" class="btn-text-muted" id="btn-toggle-avatar-url">
+                        ${this.showAvatarUrl ? '收起外链' : '填图片链接'}
                       </button>
                     </div>
-                    <div>
-                      <div class="fine" style="margin-bottom:3px;">或填入任意云端/免费图床图片链接 (换设备永不丢失)：</div>
-                      <div class="avatar-url-input-wrap">
-                        <input type="url" id="input-avatar-url" class="input" placeholder="https://... (支持微信/GitHub/ImgBB等公开图片)" value="${hasAvatar && d.avatar.startsWith('http') ? d.avatar : ''}">
+                    ${this.showAvatarUrl ? `
+                      <div class="avatar-url-input-wrap" style="margin-top:6px;">
+                        <input type="url" id="input-avatar-url" class="input sm" placeholder="https://...公开图片网址" value="${hasAvatar && d.avatar.startsWith('http') ? d.avatar : ''}">
                         <button type="button" class="btn btn-outline btn-xs" id="btn-apply-avatar-url">应用</button>
                       </div>
-                    </div>
+                    ` : ''}
                   </div>
                 </div>
               </div>
 
               <!-- 基本信息 -->
               <div class="form-section-card">
-                <div class="section-title">👤 基本信息 (普适通用规范)</div>
+                <div class="section-title">👤 基本信息</div>
                 <div class="form-row" style="margin-top:8px;">
                   <div>
                     <label class="form-label">姓名 *</label>
@@ -533,7 +657,7 @@ class ResumeModule {
                   <div>
                     <label class="form-label">性别 / 出生年月</label>
                     <div style="display:flex; gap:6px;">
-                      <input type="text" class="input resume-sync" data-path="basics.gender" placeholder="男/女" value="${this.escapeHtml(b.gender || '')}" style="width:60px;">
+                      <input type="text" class="input resume-sync" data-path="basics.gender" placeholder="男/女" value="${this.escapeHtml(b.gender || '')}" style="width:55px;">
                       <input type="text" class="input resume-sync" data-path="basics.birthDate" placeholder="如 2001-08" value="${this.escapeHtml(b.birthDate || '')}">
                     </div>
                   </div>
@@ -552,7 +676,7 @@ class ResumeModule {
 
                 <div class="form-row" style="margin-top:8px;">
                   <div>
-                    <label class="form-label">毕业/在读高校</label>
+                    <label class="form-label">毕业/就读高校</label>
                     <input type="text" class="input resume-sync" data-path="basics.school" value="${this.escapeHtml(b.school || '')}">
                   </div>
                   <div>
@@ -562,7 +686,7 @@ class ResumeModule {
                 </div>
 
                 <div style="margin-top:8px;">
-                  <label class="form-label">意向岗位 / 奖学金级别 / 意向研究方向导师 *</label>
+                  <label class="form-label">求职意向 / 奖学金级别 / 意向导师方向 *</label>
                   <input type="text" class="input resume-sync" data-path="basics.target" value="${this.escapeHtml(b.target || '')}">
                 </div>
 
@@ -573,11 +697,11 @@ class ResumeModule {
                   </div>
                   <div>
                     <label class="form-label">学业绩点 / 排名</label>
-                    <input type="text" class="input resume-sync" data-path="basics.gpaRank" placeholder="如 GPA 3.85 / 前5%" value="${this.escapeHtml(b.gpaRank || '')}">
+                    <input type="text" class="input resume-sync" data-path="basics.gpaRank" placeholder="如 GPA 3.86 / 前5%" value="${this.escapeHtml(b.gpaRank || '')}">
                   </div>
                   <div>
                     <label class="form-label">外语水平</label>
-                    <input type="text" class="input resume-sync" data-path="basics.englishLevel" placeholder="如 CET-6 560+" value="${this.escapeHtml(b.englishLevel || '')}">
+                    <input type="text" class="input resume-sync" data-path="basics.englishLevel" placeholder="如 CET-6 565" value="${this.escapeHtml(b.englishLevel || '')}">
                   </div>
                 </div>
               </div>
@@ -600,11 +724,11 @@ class ResumeModule {
                         <input type="text" class="input sm edu-sync" data-field="major" data-idx="${idx}" placeholder="专业与学院" value="${this.escapeHtml(edu.major || '')}">
                       </div>
                       <div class="form-row" style="margin-top:6px;">
-                        <input type="text" class="input sm edu-sync" data-field="degree" data-idx="${idx}" placeholder="学位学历 (如学士/硕士)" value="${this.escapeHtml(edu.degree || '')}">
-                        <input type="text" class="input sm edu-sync" data-field="period" data-idx="${idx}" placeholder="时间起止 (如 2022.09 - 2026.06)" value="${this.escapeHtml(edu.period || '')}">
+                        <input type="text" class="input sm edu-sync" data-field="degree" data-idx="${idx}" placeholder="学历学位" value="${this.escapeHtml(edu.degree || '')}">
+                        <input type="text" class="input sm edu-sync" data-field="period" data-idx="${idx}" placeholder="起止时间 (如 2022.09 - 至今)" value="${this.escapeHtml(edu.period || '')}">
                       </div>
                       <div style="margin-top:6px;">
-                        <input type="text" class="input sm edu-sync" data-field="desc" data-idx="${idx}" placeholder="核心课程/荣誉说明" value="${this.escapeHtml(edu.desc || '')}">
+                        <input type="text" class="input sm edu-sync" data-field="desc" data-idx="${idx}" placeholder="核心课程/学业位次说明" value="${this.escapeHtml(edu.desc || '')}">
                       </div>
                     </div>
                   `).join('')}
@@ -614,25 +738,25 @@ class ResumeModule {
               <!-- 重点经历 (实习/规培/工程/工作) -->
               <div class="form-section-card">
                 <div class="section-header-row">
-                  <div class="section-title">💼 重点实践与工作经历</div>
+                  <div class="section-title">💼 实践与工作经历</div>
                   <button type="button" class="btn btn-outline btn-xs" id="btn-add-exp">➕ 添加经历</button>
                 </div>
                 <div id="exp-list-wrap">
                   ${(d.experiences || []).map((exp, idx) => `
                     <div class="sub-form-item" data-idx="${idx}">
                       <div class="sub-item-header">
-                        <span style="font-weight:700; font-size:12px;">实践/实习经历 #${idx + 1}</span>
+                        <span style="font-weight:700; font-size:12px;">经历 #${idx + 1}</span>
                         <button type="button" class="btn-text-del btn-del-exp" data-idx="${idx}">删除</button>
                       </div>
                       <div class="form-row">
                         <input type="text" class="input sm exp-sync" data-field="org" data-idx="${idx}" placeholder="单位/机构/医院名称" value="${this.escapeHtml(exp.org || '')}">
-                        <input type="text" class="input sm exp-sync" data-field="role" data-idx="${idx}" placeholder="岗位/职责角色" value="${this.escapeHtml(exp.role || '')}">
+                        <input type="text" class="input sm exp-sync" data-field="role" data-idx="${idx}" placeholder="职责角色/岗位" value="${this.escapeHtml(exp.role || '')}">
                       </div>
                       <div style="margin-top:6px;">
-                        <input type="text" class="input sm exp-sync" data-field="period" data-idx="${idx}" placeholder="起止时间 (如 2024.03 - 2025.01)" value="${this.escapeHtml(exp.period || '')}">
+                        <input type="text" class="input sm exp-sync" data-field="period" data-idx="${idx}" placeholder="起止时间 (如 2024.03 - 至今)" value="${this.escapeHtml(exp.period || '')}">
                       </div>
                       <div style="margin-top:6px;">
-                        <textarea class="textarea sm exp-sync-bullets" data-idx="${idx}" rows="3" placeholder="工作内容与量化成果 (每行一项，支持STAR法则描述)">${(exp.bullets || []).join('\n')}</textarea>
+                        <textarea class="textarea sm exp-sync-bullets" data-idx="${idx}" rows="2" placeholder="工作内容与量化成果 (每行一项)">${(exp.bullets || []).join('\n')}</textarea>
                       </div>
                     </div>
                   `).join('')}
@@ -653,22 +777,22 @@ class ResumeModule {
                         <button type="button" class="btn-text-del btn-del-proj" data-idx="${idx}">删除</button>
                       </div>
                       <div class="form-row">
-                        <input type="text" class="input sm proj-sync" data-field="name" data-idx="${idx}" placeholder="课题或项目名称" value="${this.escapeHtml(p.name || '')}">
-                        <input type="text" class="input sm proj-sync" data-field="role" data-idx="${idx}" placeholder="承担角色 (如课题负责人/核心成员)" value="${this.escapeHtml(p.role || '')}">
+                        <input type="text" class="input sm proj-sync" data-field="name" data-idx="${idx}" placeholder="课题或项目全称" value="${this.escapeHtml(p.name || '')}">
+                        <input type="text" class="input sm proj-sync" data-field="role" data-idx="${idx}" placeholder="承担角色 (如主要成员/负责人)" value="${this.escapeHtml(p.role || '')}">
                       </div>
                       <div class="form-row" style="margin-top:6px;">
                         <input type="text" class="input sm proj-sync" data-field="period" data-idx="${idx}" placeholder="起止时间" value="${this.escapeHtml(p.period || '')}">
-                        <input type="text" class="input sm proj-sync" data-field="keywords" data-idx="${idx}" placeholder="关键词 (如 PCR, C++, ROS)" value="${this.escapeHtml(p.keywords || '')}">
+                        <input type="text" class="input sm proj-sync" data-field="keywords" data-idx="${idx}" placeholder="关键词 (如 PCR, 骨缺损, C++)" value="${this.escapeHtml(p.keywords || '')}">
                       </div>
                       <div style="margin-top:6px;">
-                        <textarea class="textarea sm proj-sync-bullets" data-idx="${idx}" rows="2" placeholder="工作重点与研究成果 (每行一项)">${(p.bullets || []).join('\n')}</textarea>
+                        <textarea class="textarea sm proj-sync-bullets" data-idx="${idx}" rows="2" placeholder="研究重点与成果 (每行一项)">${(p.bullets || []).join('\n')}</textarea>
                       </div>
                     </div>
                   `).join('')}
                 </div>
               </div>
 
-              <!-- 荣誉奖项与学术论文 -->
+              <!-- 荣誉奖项 -->
               <div class="form-section-card">
                 <div class="section-header-row">
                   <div class="section-title">🏆 荣誉表彰与奖项</div>
@@ -694,16 +818,16 @@ class ResumeModule {
                 </div>
               </div>
 
-              <!-- 专业技能与自我评价 -->
+              <!-- 专业技能与自我陈述 -->
               <div class="form-section-card">
-                <div class="section-title">⚡ 技能矩阵与综合评价</div>
+                <div class="section-title">⚡ 技能矩阵与自述</div>
                 <div style="margin-top:8px;">
                   <label class="form-label">专业技能清单 (每行一项)</label>
-                  <textarea class="textarea sm" id="input-skills-matrix" rows="3" placeholder="例如：\n临床技能: 严格遵循无菌原则，掌握规范缝合与印模制取\n编程语言: 熟练掌握 C/C++、Python、Linux Shell">${(d.skills || []).join('\n')}</textarea>
+                  <textarea class="textarea sm" id="input-skills-matrix" rows="3" placeholder="例如：\n临床技能: 严格无菌缝合、翻瓣与印模制取\n科研素养: 熟悉文献检索、统计软件与实验设计">${(d.skills || []).join('\n')}</textarea>
                 </div>
                 <div style="margin-top:8px;">
-                  <label class="form-label">综合自我评价 / 导师攻读设想</label>
-                  <textarea class="textarea sm resume-sync" data-path="selfEvaluation" rows="4" placeholder="总结个人优势、学术志向或职业规划">${this.escapeHtml(d.selfEvaluation || '')}</textarea>
+                  <label class="form-label">综合陈述 / 导师攻读设想</label>
+                  <textarea class="textarea sm resume-sync" data-path="selfEvaluation" rows="3" placeholder="总结个人优势、学术志向或导师课题攻读设想">${this.escapeHtml(d.selfEvaluation || '')}</textarea>
                 </div>
               </div>
 
@@ -711,7 +835,7 @@ class ResumeModule {
           </div>
 
           <!-- 右侧：真实 1:1 比例 A4 纸张预览 (A4 Page Sheet) -->
-          <div class="resume-preview-panel">
+          <div class="resume-preview-panel" id="resume-preview-pane">
             <div class="a4-page-sheet style-${d.style}" id="a4-print-target">
               ${this.renderA4SheetHtml()}
             </div>
@@ -724,7 +848,7 @@ class ResumeModule {
   }
 
   // =========================================================================
-  // 4. A4 纸张 HTML 排版引擎 (按三种风格精细化呈现)
+  // 4. A4 纸张 HTML 排版引擎
   // =========================================================================
   renderA4SheetHtml() {
     const d = this.resumeData;
@@ -737,7 +861,6 @@ class ResumeModule {
       b.politicalStatus && `${b.politicalStatus}`,
       b.phone && `📞 ${b.phone}`,
       b.email && `✉️ ${b.email}`,
-      b.nativePlace && `📍 ${b.nativePlace}`,
       b.englishLevel && `🔤 ${b.englishLevel}`,
       b.gpaRank && `⭐ ${b.gpaRank}`
     ].filter(Boolean);
@@ -793,7 +916,7 @@ class ResumeModule {
             </div>
             ${(exp.bullets && exp.bullets.length > 0) ? `
               <ul class="rp-bullets">
-                ${exp.bullets.map(b => `<li>${this.escapeHtml(b)}</li>`).join('')}
+                ${exp.bullets.map(bullet => `<li>${this.escapeHtml(bullet)}</li>`).join('')}
               </ul>
             ` : ''}
           </div>
@@ -816,7 +939,7 @@ class ResumeModule {
             </div>
             ${(p.bullets && p.bullets.length > 0) ? `
               <ul class="rp-bullets">
-                ${p.bullets.map(b => `<li>${this.escapeHtml(b)}</li>`).join('')}
+                ${p.bullets.map(bullet => `<li>${this.escapeHtml(bullet)}</li>`).join('')}
               </ul>
             ` : ''}
           </div>
@@ -838,24 +961,10 @@ class ResumeModule {
         </div>
       ` : ''}
 
-      <!-- 学术论文与成果 (若有) -->
-      ${(d.publications && d.publications.length > 0) ? `
-        <div class="rp-section-title">
-          <span>📑 学术成果与学术论文</span>
-        </div>
-        <ul class="rp-bullets" style="margin-bottom:6pt;">
-          ${d.publications.map(pub => `
-            <li>
-              <strong>${this.escapeHtml(pub.authors || '')}</strong>: 《${this.escapeHtml(pub.title || '')}》, <em>${this.escapeHtml(pub.journal || '')}</em> (${this.escapeHtml(pub.year || '')}) - [${this.escapeHtml(pub.status || '已发表')}]
-            </li>
-          `).join('')}
-        </ul>
-      ` : ''}
-
-      <!-- 技能矩阵与专业素养 -->
+      <!-- 专业技能 -->
       ${(d.skills && d.skills.length > 0) ? `
         <div class="rp-section-title">
-          <span>⚡ 专业技能与综合素养</span>
+          <span>⚡ 专业技能与素养</span>
         </div>
         <ul class="rp-bullets" style="margin-bottom:6pt;">
           ${d.skills.map(s => `<li>${this.escapeHtml(s)}</li>`).join('')}
@@ -865,7 +974,7 @@ class ResumeModule {
       <!-- 自我评价 / 导师攻读设想 -->
       ${d.selfEvaluation ? `
         <div class="rp-section-title">
-          <span>📝 综合陈述与发展规划</span>
+          <span>📝 综合陈述与设想</span>
         </div>
         <div class="rp-desc-text" style="font-size:8.5pt; line-height:1.6; color:#374151;">
           ${this.escapeHtml(d.selfEvaluation)}
@@ -875,7 +984,7 @@ class ResumeModule {
   }
 
   // =========================================================================
-  // 5. 工作台事件绑定 (双向同步、证件照管理、Word导出、打印)
+  // 5. 工作台事件绑定 (极速响应与无缝自动保存)
   // =========================================================================
   bindEditorEvents(container) {
     // 返回书架
@@ -892,21 +1001,6 @@ class ResumeModule {
       this.refreshPreview();
     });
 
-    // 手动保存
-    container.querySelector('#btn-save-manual')?.addEventListener('click', () => {
-      this.saveCurrent();
-      window.spaceApp?.showToast('简历已成功保存！');
-    });
-
-    // 另存为新蓝本
-    container.querySelector('#btn-clone-current-blueprint')?.addEventListener('click', () => {
-      const cloned = JSON.parse(JSON.stringify(this.resumeData));
-      cloned.id = 'res_' + this.currentPerson + '_' + Date.now();
-      cloned.title = `${this.resumeData.title} (蓝本副本)`;
-      window.spaceStore.createResumeBook(this.currentPerson, cloned);
-      window.spaceApp?.showToast(`已成功将当前简历另存为新蓝本【${cloned.title}】！`);
-    });
-
     // 导出 Word
     container.querySelector('#btn-export-word')?.addEventListener('click', () => {
       this.exportWord();
@@ -917,7 +1011,17 @@ class ResumeModule {
       window.print();
     });
 
-    // 本地证件照上传
+    // 移动端 Tab 切换
+    container.querySelector('#btn-mobile-tab-edit')?.addEventListener('click', () => {
+      this.mobileTab = 'edit';
+      this.render(container);
+    });
+    container.querySelector('#btn-mobile-tab-preview')?.addEventListener('click', () => {
+      this.mobileTab = 'preview';
+      this.render(container);
+    });
+
+    // 证件照上传
     const avatarFileInput = container.querySelector('#input-avatar-file');
     container.querySelector('#btn-trigger-upload-avatar')?.addEventListener('click', () => {
       avatarFileInput?.click();
@@ -927,19 +1031,17 @@ class ResumeModule {
       const file = e.target.files[0];
       if (!file) return;
       try {
-        window.spaceApp?.showToast('正在上传证件照至 Cloudflare 云端...', false);
+        window.spaceApp?.showToast('正在保存证件照...', false);
         let cloudUrl = null;
         try {
           cloudUrl = await window.spaceStore.uploadPhoto(file, 'resume_avatar', file.name);
-        } catch (uploadErr) {
-          console.warn('Cloud photo upload failed, fallback to base64:', uploadErr);
-        }
+        } catch (_) {}
 
         if (cloudUrl) {
           this.resumeData.avatar = cloudUrl;
           this.saveCurrent();
           this.render(container);
-          window.spaceApp?.showToast('证件照已永久保存至 Cloudflare 云端，换设备永不丢失！');
+          window.spaceApp?.showToast('证件照已保存并同步至云端！');
         } else {
           const base64 = await this.compressAvatar(file);
           this.resumeData.avatar = base64;
@@ -952,7 +1054,13 @@ class ResumeModule {
       }
     });
 
-    // 云端外链应用
+    // 切换图片外链输入框
+    container.querySelector('#btn-toggle-avatar-url')?.addEventListener('click', () => {
+      this.showAvatarUrl = !this.showAvatarUrl;
+      this.render(container);
+    });
+
+    // 应用外链
     container.querySelector('#btn-apply-avatar-url')?.addEventListener('click', () => {
       const url = container.querySelector('#input-avatar-url')?.value.trim();
       if (!url) {
@@ -962,10 +1070,10 @@ class ResumeModule {
       this.resumeData.avatar = url;
       this.saveCurrent();
       this.render(container);
-      window.spaceApp?.showToast('云端证件照链接已应用，换设备永久加载！');
+      window.spaceApp?.showToast('外链证件照已应用！');
     });
 
-    // 移除证件照
+    // 移除照片
     container.querySelector('#btn-remove-avatar')?.addEventListener('click', () => {
       this.resumeData.avatar = '';
       this.saveCurrent();
@@ -973,7 +1081,7 @@ class ResumeModule {
       window.spaceApp?.showToast('已移除证件照');
     });
 
-    // 双向绑定常规输入框
+    // 字段双向同步
     container.querySelectorAll('.resume-sync').forEach(input => {
       input.addEventListener('input', (e) => {
         const path = e.target.dataset.path;
@@ -984,7 +1092,7 @@ class ResumeModule {
       });
     });
 
-    // 技能矩阵文本域
+    // 技能文本域
     container.querySelector('#input-skills-matrix')?.addEventListener('input', (e) => {
       const lines = e.target.value.split('\n').map(l => l.trim()).filter(Boolean);
       this.resumeData.skills = lines;
@@ -992,10 +1100,10 @@ class ResumeModule {
       this.refreshPreview();
     });
 
-    // --- 教育经历交互 ---
+    // --- 教育经历 ---
     container.querySelector('#btn-add-edu')?.addEventListener('click', () => {
       if (!this.resumeData.education) this.resumeData.education = [];
-      this.resumeData.education.push({ school: '高校名称', major: '专业', degree: '学士/硕士', period: '2023.09 - 2026.06', desc: '' });
+      this.resumeData.education.push({ school: '高校名称', major: '专业', degree: '学士/硕士', period: '2023.09 - 至今', desc: '' });
       this.saveCurrent();
       this.render(container);
     });
@@ -1021,10 +1129,10 @@ class ResumeModule {
       });
     });
 
-    // --- 实践经历交互 ---
+    // --- 实践经历 ---
     container.querySelector('#btn-add-exp')?.addEventListener('click', () => {
       if (!this.resumeData.experiences) this.resumeData.experiences = [];
-      this.resumeData.experiences.push({ org: '单位/机构名称', role: '岗位角色', period: '2024.03 - 至今', bullets: ['工作成果与职责描述'] });
+      this.resumeData.experiences.push({ org: '单位/机构名称', role: '岗位角色', period: '2024.03 - 至今', bullets: ['工作内容与职责描述'] });
       this.saveCurrent();
       this.render(container);
     });
@@ -1061,10 +1169,10 @@ class ResumeModule {
       });
     });
 
-    // --- 科研项目交互 ---
+    // --- 科研项目 ---
     container.querySelector('#btn-add-proj')?.addEventListener('click', () => {
       if (!this.resumeData.projects) this.resumeData.projects = [];
-      this.resumeData.projects.push({ name: '课题/项目全称', role: '主要负责人', period: '2024.03 - 2025.04', keywords: '', bullets: ['项目攻关内容与成果'] });
+      this.resumeData.projects.push({ name: '课题/项目全称', role: '承担角色', period: '2024.03 - 至今', keywords: '', bullets: ['项目攻关内容与成果'] });
       this.saveCurrent();
       this.render(container);
     });
@@ -1101,7 +1209,7 @@ class ResumeModule {
       });
     });
 
-    // --- 荣誉奖项交互 ---
+    // --- 荣誉奖项 ---
     container.querySelector('#btn-add-honor')?.addEventListener('click', () => {
       if (!this.resumeData.honors) this.resumeData.honors = [];
       this.resumeData.honors.push({ title: '荣誉奖项全称', level: '校级/省部级', date: '2024', desc: '表彰说明' });
@@ -1131,7 +1239,7 @@ class ResumeModule {
     });
   }
 
-  // 刷新预览区
+  // 刷新右侧预览
   refreshPreview() {
     const previewEl = document.getElementById('a4-print-target');
     if (previewEl) {
@@ -1140,16 +1248,16 @@ class ResumeModule {
     }
   }
 
-  // 立即保存到存储
+  // 立即保存
   saveCurrent() {
     if (this.resumeData && this.activeResumeId) {
       window.spaceStore.saveResumeBook(this.currentPerson, this.resumeData);
       const indicator = document.getElementById('resume-save-indicator');
-      if (indicator) indicator.textContent = '已全部自动保存';
+      if (indicator) indicator.textContent = '✓ 已自动保存';
     }
   }
 
-  // 触发防抖自动保存
+  // 防抖自动保存
   triggerAutoSave() {
     const indicator = document.getElementById('resume-save-indicator');
     if (indicator) indicator.textContent = '正在保存修改...';
@@ -1170,7 +1278,7 @@ class ResumeModule {
     curr[parts[parts.length - 1]] = value;
   }
 
-  // 证件照规范压缩 (3:4 标准比例，~40KB 极清)
+  // 证件照规范压缩 (3:4 标准比例，约 40KB)
   compressAvatar(file, targetW = 300, targetH = 400) {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -1182,7 +1290,6 @@ class ResumeModule {
           canvas.height = targetH;
           const ctx = canvas.getContext('2d');
 
-          // 居中裁剪适应 3:4 比例
           const imgRatio = img.width / img.height;
           const targetRatio = targetW / targetH;
           let sW = img.width;
@@ -1332,7 +1439,7 @@ class ResumeModule {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    window.spaceApp?.showToast('Word 简历文档已生成下载！');
+    window.spaceApp?.showToast('Word 简历文档已下载！');
   }
 
   escapeHtml(str) {

@@ -1,10 +1,18 @@
 /**
  * OASIS | Qiuhui & Yan
  * 履历文库与 A4 简历书房样式表
- * 包含：书架视图 (Bookshelf)、蓝本复制弹窗 (Blueprint Modal)、双栏工作台 (Editor/Preview)、以及三种风格与 A4 打印规则
+ * 
+ * 包含：
+ * 1. 日系实木陈列书架 (Artisan Japanese Bookshelf for Resumes)
+ * 2. 仿真精装书卷封面与书脊艺术装帧 (Hardcover Book Art)
+ * 3. 极简轻量化双栏工作台 (Editor Workspace)
+ * 4. 1:1 标准 A4 真实纸张即时渲染与三大风格配色 (A4 Page Sheet)
+ * 5. 浏览器原生高清矢量打印引擎 (@media print)
  */
 
-/* ================== 1. 履历书房外层容器 ================== */
+/* ==========================================================================
+   1. 履历书房外层容器与通用控件
+   ========================================================================== */
 .resume-wrapper {
   display: flex;
   flex-direction: column;
@@ -12,233 +20,243 @@
   width: 100%;
 }
 
-/* 顶部通用导航工具栏 */
-.resume-toolbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 14px;
-  background: rgba(255, 255, 255, 0.92);
-  backdrop-filter: blur(12px);
-  padding: 12px 18px;
-  border-radius: 14px;
-  border: 1px solid rgba(220, 230, 235, 0.85);
-  box-shadow: 0 4px 18px rgba(18, 53, 74, 0.04);
-  flex-wrap: wrap;
-}
-
-.toolbar-title-group h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: #15354a;
-  letter-spacing: -0.2px;
-}
-
-.toolbar-actions {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: wrap;
-}
-
-.person-switcher {
-  display: inline-flex;
-  background: #edf3f6;
-  padding: 3px;
-  border-radius: 10px;
-  border: 1px solid #dce6eb;
-}
-
-.person-tab {
-  border: none;
-  background: transparent;
-  padding: 6px 14px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #557180;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.person-tab:hover {
-  color: #18354a;
-}
-
-.person-tab.active {
-  background: #ffffff;
-  color: #18354a;
-  box-shadow: 0 2px 8px rgba(24, 53, 74, 0.08);
-}
-
 .save-indicator {
   font-size: 11.5px;
+  font-weight: 600;
   color: #1b7659;
   background: #eaf6f1;
-  padding: 3px 8px;
+  padding: 3px 9px;
   border-radius: 6px;
   border: 1px solid #c9ebd8;
-}
-
-/* ================== 2. 简历书架视图 (Bookshelf View) ================== */
-.resume-shelf-banner {
-  background: linear-gradient(135deg, #f4f8fb 0%, #eef5f8 100%);
-  border: 1px solid #d8e5ec;
-  border-radius: 14px;
-  padding: 16px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.shelf-stats-info h4 {
-  margin: 0 0 4px 0;
-  font-size: 15px;
-  font-weight: 700;
-  color: #18354a;
-}
-
-.shelf-stats-info p {
-  margin: 0;
-  font-size: 12px;
-  color: #627d8c;
-}
-
-.resume-bookshelf-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 18px;
-}
-
-/* 仿精装书卷卡片 */
-.resume-book-card {
-  position: relative;
-  background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid #e1ebf0;
-  box-shadow: 0 4px 14px rgba(18, 53, 74, 0.04);
-  padding: 18px 20px 18px 26px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  overflow: hidden;
-}
-
-.resume-book-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px rgba(18, 53, 74, 0.09);
-  border-color: #cbdce4;
-}
-
-/* 书脊艺术色带 (不同风格不同颜色) */
-.book-spine-line {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 7px;
-}
-
-.style-job .book-spine-line { background: #1e3a8a; }
-.style-scholarship .book-spine-line { background: #881337; }
-.style-advisor .book-spine-line { background: #0f766e; }
-
-.book-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  gap: 8px;
-}
-
-.book-style-badge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 3px 9px;
-  border-radius: 20px;
-  letter-spacing: 0.3px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  transition: all 0.2s ease;
 }
 
-.style-job .book-style-badge {
-  background: #eff6ff;
-  color: #1e40af;
-  border: 1px solid #bfdbfe;
+.btn-text-del {
+  background: none;
+  border: none;
+  color: #b05252;
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 0;
+  font-weight: 600;
 }
-.style-scholarship .book-style-badge {
-  background: #fdf2f8;
-  color: #9d174d;
-  border: 1px solid #fbcfe8;
-}
-.style-advisor .book-style-badge {
-  background: #f0fdfa;
-  color: #0f766e;
-  border: 1px solid #99f6e4;
+.btn-text-del:hover {
+  text-decoration: underline;
+  color: #d32f2f;
 }
 
-.book-date-text {
-  font-size: 11px;
-  color: #8da2ad;
+.btn-text-muted {
+  background: none;
+  border: none;
+  color: #627d8c;
+  font-size: 11.5px;
+  cursor: pointer;
+  padding: 0;
 }
-
-.book-card-title {
-  font-size: 15px;
-  font-weight: 700;
+.btn-text-muted:hover {
+  text-decoration: underline;
   color: #18354a;
-  line-height: 1.4;
-  margin-bottom: 8px;
 }
 
-.book-card-target {
-  font-size: 12px;
-  color: #476272;
-  margin-bottom: 14px;
-  line-height: 1.45;
-  background: #f8fafb;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border-left: 3px solid #cbdde6;
+/* ==========================================================================
+   2. 实木陈列书架上的简历书卷 (Resume Books on Bookshelf)
+   ========================================================================== */
+
+/* 丝绸飘带标签配色 */
+.photobook-silk-ribbon.advisor {
+  background: linear-gradient(135deg, #0f766e, #134e4a);
+}
+.photobook-silk-ribbon.job {
+  background: linear-gradient(135deg, #1e3a8a, #172554);
+}
+.photobook-silk-ribbon.scholarship {
+  background: linear-gradient(135deg, #881337, #701a75);
+}
+.photobook-silk-ribbon.resume {
+  background: linear-gradient(135deg, #0f766e, #134e4a);
 }
 
-.book-card-pills {
+/* 封面艺术画芯 (无照片时呈现典雅学术烫金/银色封面) */
+.resume-book-cover-art {
+  width: 100%;
+  height: 100%;
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-
-.book-pill-tag {
-  font-size: 11px;
-  color: #557180;
-  background: #f0f4f7;
-  padding: 2px 7px;
-  border-radius: 4px;
-}
-
-.book-card-footer {
-  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  border-top: 1px solid #edf2f5;
-  padding-top: 12px;
-  margin-top: auto;
-  gap: 8px;
+  justify-content: center;
+  padding: 16px 8px;
+  text-align: center;
+  user-select: none;
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
 }
 
-/* ================== 3. 双栏工作台视图 (Editor Workspace) ================== */
+.resume-book-cover-art::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 12px;
+  right: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 2px;
+  pointer-events: none;
+}
+
+/* 找导师学术版 (深翡翠墨绿 + 烫金) */
+.resume-book-cover-art.advisor,
+.style-advisor .resume-book-cover-art {
+  background: linear-gradient(150deg, #134e4a 0%, #062b28 100%);
+  color: #f7eed8;
+}
+.resume-book-cover-art.advisor .resume-cover-emblem,
+.style-advisor .resume-cover-emblem {
+  color: #f6d87e;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+/* 校园名企求职版 (深海军蓝 + 银白) */
+.resume-book-cover-art.job,
+.style-job .resume-book-cover-art {
+  background: linear-gradient(150deg, #1b356e 0%, #0e1e42 100%);
+  color: #e2e8f0;
+}
+.resume-book-cover-art.job .resume-cover-emblem,
+.style-job .resume-cover-emblem {
+  color: #93c5fd;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+/* 申请奖学金版 (典雅酒红 + 暖金) */
+.resume-book-cover-art.scholarship,
+.style-scholarship .resume-book-cover-art {
+  background: linear-gradient(150deg, #6b1432 0%, #3a0818 100%);
+  color: #fae8ed;
+}
+.resume-book-cover-art.scholarship .resume-cover-emblem,
+.style-scholarship .resume-cover-emblem {
+  color: #fbcfe8;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+}
+
+.resume-cover-emblem {
+  font-size: 26px;
+  margin-bottom: 6px;
+  line-height: 1;
+}
+
+.resume-cover-name {
+  font-size: 13.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  margin-bottom: 3px;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.resume-cover-sub {
+  font-size: 9.5px;
+  opacity: 0.82;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+/* 附带证件照时的封面半透明下压层 */
+.resume-book-avatar-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(10, 20, 28, 0.88) 0%, rgba(10, 20, 28, 0.45) 60%, transparent 100%);
+  padding: 16px 8px 6px 12px;
+  display: flex;
+  flex-direction: column;
+  z-index: 4;
+}
+
+.resume-book-cover-name {
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.resume-book-cover-target {
+  font-size: 8.5px;
+  color: #cbd5e1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* 添置新卷卡片 */
+.shelf-photobook-card.add-resume-book .add-wrap {
+  background: #fbfdfe;
+  border: 1.5px dashed #cbdde6;
+  box-shadow: none;
+}
+.shelf-photobook-card.add-resume-book:hover .add-wrap {
+  border-color: #1b7659;
+  background: #f0fdf4;
+  box-shadow: 0 8px 20px rgba(27, 118, 89, 0.12);
+}
+
+.add-resume-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  color: #627d8c;
+}
+.shelf-photobook-card.add-resume-book:hover .add-resume-content {
+  color: #1b7659;
+}
+
+.add-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+.add-text {
+  font-size: 12px;
+  font-weight: 700;
+}
+.add-sub {
+  font-size: 9.5px;
+  opacity: 0.75;
+}
+
+/* 岁月相册书架上常驻的「研途履历」图书样式 */
+.shelf-photobook-card.special-resume-book .photobook-cover-wrap {
+  border: 1.5px solid #a7d8ca;
+  box-shadow: 
+    0 6px 14px -2px rgba(15, 118, 110, 0.22),
+    0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.shelf-photobook-card.special-resume-book:hover .photobook-cover-wrap {
+  box-shadow: 
+    0 18px 32px -4px rgba(15, 118, 110, 0.38),
+    0 6px 14px rgba(0, 0, 0, 0.12);
+}
+.shelf-photobook-card.special-resume-book.card-pinned .photobook-cover-wrap {
+  box-shadow: 
+    0 32px 70px -10px rgba(15, 60, 50, 0.70),
+    0 16px 36px rgba(0, 0, 0, 0.28),
+    0 0 0 2.5px rgba(15, 118, 110, 0.65) !important;
+}
+
+/* ==========================================================================
+   3. 双栏工作台视图 (Editor Workspace)
+   ========================================================================== */
 .resume-workspace {
   display: grid;
-  grid-template-columns: 460px 1fr;
-  gap: 20px;
+  grid-template-columns: 440px 1fr;
+  gap: 18px;
   align-items: start;
 }
 
@@ -256,7 +274,7 @@
 .resume-form-flow {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 12px;
 }
 
 .form-section-card {
@@ -270,32 +288,28 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .section-title {
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 750;
   color: #1b3d52;
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
-/* 证件照与云端持久化上传组件 */
-.avatar-manager-card {
-  background: #f9fbfd;
-  border: 1px dashed #cedfe7;
-  border-radius: 10px;
-  padding: 12px;
+/* 极简证件照管理块 (紧凑优雅) */
+.resume-avatar-tile {
   display: flex;
-  gap: 14px;
   align-items: center;
+  gap: 14px;
 }
 
 .avatar-preview-box {
-  width: 72px;
-  height: 96px;
+  width: 56px;
+  height: 74px;
   border-radius: 6px;
   background: #edf3f6;
   border: 1px solid #d4e2e8;
@@ -304,6 +318,7 @@
   justify-content: center;
   overflow: hidden;
   flex-shrink: 0;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.06);
 }
 
 .avatar-real-img {
@@ -313,26 +328,18 @@
 }
 
 .avatar-placeholder-box {
-  font-size: 28px;
+  font-size: 24px;
   color: #9cb5c1;
-  text-align: center;
 }
 
-.avatar-controls {
+.avatar-tile-info {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
 }
 
 .avatar-url-input-wrap {
   display: flex;
   gap: 6px;
-}
-
-.avatar-url-input-wrap input {
-  font-size: 11.5px;
-  height: 32px;
+  align-items: center;
 }
 
 .sub-form-item {
@@ -350,20 +357,9 @@
   margin-bottom: 6px;
 }
 
-.btn-text-del {
-  background: none;
-  border: none;
-  color: #b05252;
-  font-size: 11.5px;
-  cursor: pointer;
-  padding: 0;
-}
-
-.btn-text-del:hover {
-  text-decoration: underline;
-}
-
-/* ================== 4. 右侧 A4 真实比例页面预览 (A4 Sheet) ================== */
+/* ==========================================================================
+   4. 右侧 A4 真实比例页面预览 (A4 Sheet)
+   ========================================================================== */
 .resume-preview-panel {
   display: flex;
   justify-content: center;
@@ -511,23 +507,16 @@
   text-align: justify;
 }
 
-/* ================== 5. 蓝本创建弹窗 (Blueprint Modal) ================== */
+/* ==========================================================================
+   5. 蓝本创建弹窗 (Blueprint Modal)
+   ========================================================================== */
 .blueprint-modal-box {
-  max-width: 540px;
+  max-width: 520px;
 }
 
-.blueprint-tip-banner {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  border-radius: 8px;
-  padding: 10px 12px;
-  font-size: 12px;
-  color: #166534;
-  line-height: 1.5;
-  margin-bottom: 14px;
-}
-
-/* ================== 6. 打印 PDF 引擎 (@media print) ================== */
+/* ==========================================================================
+   6. 打印 PDF 引擎 (@media print)
+   ========================================================================== */
 @page {
   size: A4 portrait;
   margin: 10mm 10mm;
@@ -541,7 +530,9 @@
   .topline,
   .hero,
   .tabs,
-  .resume-toolbar,
+  .oasis-header-bar,
+  .oasis-sub-bar,
+  .mobile-resume-tabs,
   .resume-editor-panel,
   .toast,
   .footer,
@@ -577,10 +568,34 @@
 /* 响应式断点适配 */
 @media (max-width: 900px) {
   .resume-workspace {
-    grid-template-columns: 1fr;
+    display: block;
+  }
+  .resume-workspace.edit #resume-editor-pane {
+    display: block;
+  }
+  .resume-workspace.edit #resume-preview-pane {
+    display: none;
+  }
+  .resume-workspace.preview #resume-editor-pane {
+    display: none;
+  }
+  .resume-workspace.preview #resume-preview-pane {
+    display: flex;
+  }
+  .mobile-resume-tabs {
+    display: flex !important;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .mobile-resume-tabs .btn {
+    flex: 1;
   }
   .resume-preview-panel {
     padding: 10px;
+    max-height: none;
+  }
+  .resume-editor-panel {
+    max-height: none;
   }
   .a4-page-sheet {
     width: 100%;

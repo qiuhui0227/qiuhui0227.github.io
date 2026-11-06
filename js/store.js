@@ -561,38 +561,31 @@ class SpaceStore {
       this.saveAuthConfig(authConfig);
     }
 
-    // 2. 默认相簿 (包含横竖屏多风格)
-    if (!localStorage.getItem('oasis_albums')) {
-      const defaultAlbums = [
-        {
-          id: 'album_sweet_life',
-          title: '日常漫步 · 诗意长卷',
-          description: '从松花湖的微风到实验室的深夜，记录生活的每帧细碎温柔。',
-          cover: './images/1001_1_thumb.jpg',
-          style: 'scroll',
-          visibility: 'bedroom',
-          createdAt: '2026-10-01'
-        },
-        {
-          id: 'album_travel_notes',
-          title: '山海远行 · 手账集',
-          description: '跨越山川与城市的足迹，拍立得与胶带剪贴的情感信物。',
-          cover: './images/1001_1_thumb.jpg',
-          style: 'scrapbook',
-          visibility: 'living_room',
-          createdAt: '2026-10-15'
-        },
-        {
-          id: 'album_accordion_memories',
-          title: '光阴褶皱 · 经折典藏',
-          description: '传统经折装风琴光影折痕，如屏风般展开属于两个人的岁月长歌。',
-          cover: './images/1001_1_thumb.jpg',
-          style: 'accordion',
-          visibility: 'bedroom',
-          createdAt: '2026-10-25'
+    // 2. 相簿初始化 (绝不自动创建虚假默认相簿，仅保留用户真实创建的相册)
+    const existingAlbums = localStorage.getItem('oasis_albums');
+    if (!existingAlbums) {
+      localStorage.setItem('oasis_albums', JSON.stringify([]));
+    } else {
+      try {
+        const parsed = JSON.parse(existingAlbums);
+        const sampleIds = new Set(['album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+        const cleaned = (Array.isArray(parsed) ? parsed : []).filter(a => a && !sampleIds.has(a.id));
+        localStorage.setItem('oasis_albums', JSON.stringify(cleaned));
+      } catch (e) {
+        localStorage.setItem('oasis_albums', JSON.stringify([]));
+      }
+    }
+
+    // 2.1 三餐数据清理 (彻底剔除误插入的 meal_init_01，严格保留用户实际拍摄的照片)
+    const existingMeals = localStorage.getItem('oasis_meals');
+    if (existingMeals) {
+      try {
+        const parsedMeals = JSON.parse(existingMeals);
+        if (Array.isArray(parsedMeals)) {
+          const cleanedMeals = parsedMeals.filter(m => m && m.id && m.id !== 'meal_init_01');
+          localStorage.setItem('oasis_meals', JSON.stringify(cleanedMeals));
         }
-      ];
-      localStorage.setItem('oasis_albums', JSON.stringify(defaultAlbums));
+      } catch (_) {}
     }
 
     // 3. 日程排期数据初始化 (彻底清空旧样例数据，纯净初始状态)
@@ -711,26 +704,17 @@ class SpaceStore {
     try {
       const data = localStorage.getItem("oasis_meals");
       const list = data ? JSON.parse(data) : [];
-      if (Array.isArray(list) && list.length > 0) {
-        return list;
-      }
-      // 首次初始化与兜底保护：自动恢复第一张初遇美餐记忆，杜绝空白 0 餐与意外清空
-      const defaultCommemorativeMeal = [
-        {
-          id: "meal_init_01",
-          title: "初遇味道 · 人间烟火",
-          imageUrl: "./images/1001_1.jpg",
-          thumbUrl: "./images/1001_1_thumb.jpg",
-          mealType: "dinner",
-          time: "2024-02-14T18:00:00.000Z",
-          location: "长春 · 两人时光",
-          author: "both",
-          filter: "warm",
-          createdAt: 1707904800000
+      if (Array.isArray(list)) {
+        // 严格剔除 meal_init_01，绝不插入任何未经拍摄的虚假照片
+        const cleaned = list.filter(m => m && m.id && m.id !== 'meal_init_01');
+        if (cleaned.length !== list.length) {
+          try {
+            localStorage.setItem("oasis_meals", JSON.stringify(cleaned));
+          } catch (_) {}
         }
-      ];
-      localStorage.setItem("oasis_meals", JSON.stringify(defaultCommemorativeMeal));
-      return defaultCommemorativeMeal;
+        return cleaned;
+      }
+      return [];
     } catch (e) {
       return [];
     }
@@ -740,10 +724,10 @@ class SpaceStore {
   mergeMeals(localMeals, cloudMeals) {
     const map = new Map();
     (localMeals || []).forEach(m => {
-      if (m && m.id) map.set(m.id, m);
+      if (m && m.id && m.id !== 'meal_init_01') map.set(m.id, m);
     });
     (cloudMeals || []).forEach(m => {
-      if (m && m.id) {
+      if (m && m.id && m.id !== 'meal_init_01') {
         if (!map.has(m.id)) {
           map.set(m.id, m);
         } else {
@@ -1099,7 +1083,9 @@ class SpaceStore {
             hasUpdated = true;
           }
           if (cloud.albums && Array.isArray(cloud.albums)) {
-            localStorage.setItem('oasis_albums', JSON.stringify(cloud.albums));
+            const sampleIds = new Set(['album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+            const cleanCloudAlbums = cloud.albums.filter(a => a && !sampleIds.has(a.id));
+            localStorage.setItem('oasis_albums', JSON.stringify(cleanCloudAlbums));
             hasUpdated = true;
           }
           if (cloud.meals && Array.isArray(cloud.meals)) {

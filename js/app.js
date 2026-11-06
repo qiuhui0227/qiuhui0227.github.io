@@ -164,8 +164,9 @@ class SpaceApp {
 
     // 严密隐私拦截：来宾禁止通过任何方式切换到简历生成器或空间管理
     if (!isMaster && (tabName === 'resume' || tabName === 'settings')) {
-      tabName = 'timetable';
-      this.showToast('⚠️ 客厅来宾模式仅开放公共时刻表与相簿，无法查看私密档案');
+      this.openMasterUpgradeModal();
+      this.showToast('🔑 履历档案与空间管理需凭主人密码访问，请输入密码进入卧室');
+      return;
     }
 
     this.currentTab = tabName;
@@ -193,12 +194,16 @@ class SpaceApp {
       window.albumsModule.render(containers.albums);
     } else if (tabName === 'resume' && window.resumeModule) {
       // 自动定位到当前登录人的专属简历
-      if (window.spaceAuth.isYan()) {
-        window.resumeModule.currentPerson = 'yan';
-      } else if (window.spaceAuth.isQiuhui()) {
-        window.resumeModule.currentPerson = 'qiuhui';
+      if (!window.resumeModule.currentPerson) {
+        if (window.spaceAuth.isYan()) {
+          window.resumeModule.currentPerson = 'yan';
+        } else if (window.spaceAuth.isQiuhui()) {
+          window.resumeModule.currentPerson = 'qiuhui';
+        }
       }
-      window.resumeModule.viewMode = 'bookshelf';
+      if (!window.resumeModule.viewMode) {
+        window.resumeModule.viewMode = 'bookshelf';
+      }
       window.resumeModule.render(containers.resume);
     } else if (tabName === 'settings') {
       this.renderSettings(containers.settings);
