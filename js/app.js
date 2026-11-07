@@ -230,10 +230,10 @@ class SpaceApp {
     if (!container) return;
     if (!window.spaceAuth.isMaster()) {
       container.innerHTML = `
-        <div class="admin-card" style="text-align:center; padding:40px 20px;">
-          <div style="font-size:40px; margin-bottom:14px;">🔒</div>
-          <h3>空间管理仅限卧室主人配置</h3>
-          <p class="fine">客厅来宾无权查看或修改空间安全规则与通行密码。</p>
+        <div class="settings-card" style="text-align:center; padding:40px 20px;">
+          <div style="font-size:36px; margin-bottom:12px;">🔒</div>
+          <h3 style="margin:0 0 8px; font-size:16px; color:#1e293b;">空间管理仅限卧室主人</h3>
+          <p class="fine" style="margin:0; color:#64748b;">客厅来宾无权查看或修改空间安全规则与通行密码。</p>
         </div>
       `;
       return;
@@ -245,150 +245,110 @@ class SpaceApp {
 
     container.innerHTML = `
       <div class="settings-wrap">
-        <!-- 统一主模块标头栏 -->
-        <div class="oasis-header-bar">
-          <div class="oasis-header-main">
-            <div class="oasis-header-kicker">
-              <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span>空间安全 · 账号权限与独立通行管控</span>
-            </div>
-            <h2 class="oasis-header-title">⚙️ 空间管理</h2>
-            <p class="oasis-header-sub">卧室主人独立密码、访客无上限通行凭证及全站安全配置</p>
+        <!-- 极简标头 -->
+        <div class="settings-header">
+          <div class="settings-header-left">
+            <h2 class="settings-title">⚙️ 空间管理</h2>
+            <p class="settings-subtitle">
+              当前身份：<strong>${this.escapeHtml(currentUser?.avatar || '')} ${this.escapeHtml(currentUser?.name || '主人')}</strong> · 活跃访客码：<strong>${guestAccounts.length}</strong> 个
+            </p>
           </div>
-          <div class="oasis-header-actions">
+          <div class="settings-header-actions">
             <button class="btn btn-primary btn-sm" id="btn-create-guest-acc-top">
               <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
-              创建访客账号
+              添加访客码
             </button>
           </div>
         </div>
 
-        <!-- 统一二级控制栏 -->
-        <div class="oasis-sub-bar">
-          <div class="oasis-sub-bar-left fine" style="color:#627d8c;">
-            当前登录身份：<strong style="color:#1b7659;">${this.escapeHtml(currentUser?.name || '主人')}</strong> · 活跃访客码：<strong>${guestAccounts.length}</strong> 个
-          </div>
-          <div class="oasis-sub-bar-right fine" style="color:#627d8c;">
-            🔐 支持随时撤销访客码与重设主密码 · 记住设备免密入内
-          </div>
-        </div>
-
-        <!-- 0. Cloudflare 全球云端实时双向同步中枢 -->
-        <div class="admin-card" style="margin-bottom: 20px; border-left: 4px solid #16a34a; background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 120px);">
-          <div class="admin-card-head" style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
+        <!-- 1. 云端实时同步 -->
+        <div class="settings-card">
+          <div class="settings-card-head">
             <div>
-              <div style="display:flex; align-items:center; gap:8px;">
-                <h3 style="margin:0; font-size:16px; color:#14532d;">☁️ Cloudflare 全球云端实时同步中枢</h3>
+              <div class="settings-card-title">
+                <span>☁️ 云端同步</span>
                 <span class="pill good" style="font-size:11px;">🟢 实时双向互通</span>
               </div>
-              <p class="fine" style="margin:4px 0 0; color:#166534;">男主与女主在不同设备上实时互通小黑板日程、多份简历与相册照片，换设备永不丢失</p>
+              <p class="settings-card-desc" style="margin-top:4px;">
+                小黑板日程、时光相簿、三餐手帐与愿望清单全自动多端互通，换设备永不丢失。
+              </p>
             </div>
             <div style="display:flex; gap:8px;">
-              <button type="button" class="btn btn-outline btn-sm" id="btn-cloud-pull-now">🔄 从云端拉取</button>
-              <button type="button" class="btn btn-primary btn-sm" id="btn-cloud-push-now">⬆️ 备份至云端</button>
+              <button type="button" class="btn btn-outline btn-sm" id="btn-cloud-pull-now">🔄 立即拉取</button>
+              <button type="button" class="btn btn-primary btn-sm" id="btn-cloud-push-now">⬆️ 备份到云端</button>
             </div>
-          </div>
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap:12px; font-size:12px; color:#374151; background:#ffffff; border:1px solid #dcfce7; border-radius:10px; padding:12px 16px;">
-            <div><strong>云端引擎：</strong><span style="font-family:monospace; color:#2563eb;">Cloudflare Worker (全球边缘节点)</span></div>
-            <div><strong>存储配额：</strong><span style="font-family:monospace; color:#16a34a;">Cloudflare KV (100% 永久免费)</span></div>
-            <div><strong>主站接入：</strong><span style="font-family:monospace; color:#0f766e;">iqiuqiu.me/api/*</span></div>
-            <div><strong>绑定账号：</strong><span style="font-family:monospace; color:#4b5563;">Yanwang0227@gmail.com</span></div>
           </div>
         </div>
 
-        <!-- 0.5 手机专属 App (PWA) / 添加到主屏幕独立运行 -->
-        <div class="admin-card" style="margin-bottom: 20px; border-left: 4px solid #0284c7; background: linear-gradient(180deg, #f0f9ff 0%, #ffffff 120px);">
-          <div class="admin-card-head" style="margin-bottom: 12px; display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:10px;">
-            <div style="display:flex; align-items:center; gap:12px;">
-              <img src="./images/apple-touch-icon.png" alt="iqiuqiu App Icon" style="width:48px; height:48px; border-radius:12px; box-shadow:0 4px 12px rgba(244,63,94,0.18);">
-              <div>
-                <div style="display:flex; align-items:center; gap:8px;">
-                  <h3 style="margin:0; font-size:16px; color:#0369a1;">📱 手机专属 App (PWA) · 添加到主屏幕</h3>
-                  <span class="pill good" style="font-size:11px; background:#e0f2fe; color:#0284c7; border-color:#bae6fd;">已配置原生独立全屏</span>
-                </div>
-                <p class="fine" style="margin:4px 0 0; color:#0c4a6e;">无需通过微信小程序审核与备案，即可在手机桌面拥有原生 App 图标，全屏秒开体验</p>
+        <!-- 2. 手机桌面 App (PWA) -->
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div>
+              <div class="settings-card-title">
+                <span>📱 手机专属 App</span>
+                <span class="pill good" style="font-size:11px;">独立全屏运行</span>
               </div>
+              <p class="settings-card-desc" style="margin-top:4px;">
+                添加到手机桌面，即可拥有无边框原生 App 体验，秒开流畅。
+              </p>
             </div>
             <div id="pwa-install-btn-container" style="display:flex; gap:8px;">
-              <button type="button" class="btn btn-primary btn-sm" id="btn-trigger-pwa-install" style="background:#0284c7; border-color:#0284c7; display:none;">
-                📲 一键安装为手机 App
+              <button type="button" class="btn btn-primary btn-sm" id="btn-trigger-pwa-install" style="display:none;">
+                📲 安装到手机桌面
               </button>
             </div>
           </div>
 
-          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap:12px; margin-top:8px;">
-            <!-- 苹果 iOS Safari 教程 -->
-            <div style="background:#ffffff; border:1px solid #e0f2fe; border-radius:10px; padding:12px 14px; font-size:12.5px; color:#334155;">
-              <div style="font-weight:700; color:#0369a1; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-                <span>🍎 苹果 iPhone (Safari 浏览器)</span>
-              </div>
-              <ol style="margin:0; padding-left:18px; line-height:1.6; color:#475569;">
-                <li>用 Safari 浏览器打开当前站点 <code>iqiuqiu.me</code></li>
-                <li>点击底部工具栏居中的 <strong>“分享”</strong> 按钮（方框加向上箭头 ⎋）</li>
-                <li>向上滑动菜单，找到并轻点 <strong>“添加到主屏幕”</strong></li>
-                <li>右上角点 <strong>“添加”</strong>，桌面即生成专属 iqiuqiu 独立 App</li>
-              </ol>
+          <div class="settings-pwa-grid">
+            <div class="settings-pwa-item">
+              <strong>🍎 苹果 iPhone (Safari)</strong><br>
+              点击底部分享 ⎋ → 选择「添加到主屏幕」即可
             </div>
-
-            <!-- 安卓 Android 教程 -->
-            <div style="background:#ffffff; border:1px solid #e0f2fe; border-radius:10px; padding:12px 14px; font-size:12.5px; color:#334155;">
-              <div style="font-weight:700; color:#0369a1; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-                <span>🤖 安卓手机 (Chrome / 微信 / 手机自带浏览器)</span>
-              </div>
-              <ol style="margin:0; padding-left:18px; line-height:1.6; color:#475569;">
-                <li>使用手机浏览器访问当前网址 <code>iqiuqiu.me</code></li>
-                <li>点击浏览器右上角或底部的 <strong>菜单按钮</strong>（三点或三条线）</li>
-                <li>选择 <strong>“添加到主屏幕”</strong> 或 <strong>“安装应用”</strong></li>
-                <li>安装后即可脱离浏览器，全屏无边框沉浸式运行</li>
-              </ol>
+            <div class="settings-pwa-item">
+              <strong>🤖 安卓手机 (Chrome / 浏览器)</strong><br>
+              点击菜单 ⋮ → 选择「安装应用」或「添加到主屏幕」
             </div>
           </div>
         </div>
 
-        <!-- 1. 访客通行证多账号管理 (不限数量) -->
-        <div class="admin-card">
-          <div class="card-title">
-            <div class="card-title-left">
-              <span class="badge-icon">
-                <svg class="ico" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              </span>
-              <div>
-                <strong>访客通行码管理</strong>
-                <div class="fine">可为不同亲朋生成独立通行码，不限数量，支持使用额度控制</div>
+        <!-- 3. 访客通行码 -->
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div>
+              <div class="settings-card-title">
+                <span>🏷️ 访客通行码</span>
+                <span class="pill" style="font-size:11px;">仅限客厅公开内容</span>
               </div>
+              <p class="settings-card-desc" style="margin-top:4px;">
+                为亲友分配专属通行码，仅可浏览客厅公开相册与排期，无法查看私密内容。
+              </p>
             </div>
             <button class="btn btn-outline btn-sm" id="btn-create-guest-acc">
               <svg class="ico" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
               添加访客码
             </button>
           </div>
-          <p class="field-help" style="margin-bottom:16px;">
-            可分别针对不同亲朋、同学或家人创建独立通行码。持有通行码的访客入座客厅，仅能翻阅“客厅开放”的相簿与排期。
-          </p>
 
           <div class="guest-account-list">
             ${guestAccounts.length === 0 ? `
-              <div class="fine" style="padding:16px; background:#f8fafb; border-radius:10px; text-align:center;">
-                当前暂无访客通行码，可点击右上角创建。
+              <div class="fine" style="padding:14px; background:#f8fafc; border-radius:8px; text-align:center; color:#94a3b8;">
+                暂无访客码，可点击右上角添加。
               </div>
             ` : guestAccounts.map(acc => {
               const remaining = acc.usageLimit === -1 ? '无限次' : `${Math.max(0, acc.usageLimit - (acc.usedCount || 0))} 次`;
               return `
-                <div class="guest-item-card" style="border:1px solid #e2eaee; border-radius:12px; padding:14px 16px; margin-bottom:10px; background:#fbfcfd; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
-                  <div>
-                    <div style="font-weight:700; color:#18354a; font-size:14px; display:flex; align-items:center; gap:8px;">
+                <div class="guest-item-card">
+                  <div class="guest-item-info">
+                    <div class="guest-item-title">
                       <span>🏷️ ${this.escapeHtml(acc.name)}</span>
-                      <span class="pill good" style="font-size:11.5px; font-family:monospace; font-weight:700;">
-                        通行码: ${this.escapeHtml(acc.code)}
-                      </span>
+                      <span class="guest-item-code">${this.escapeHtml(acc.code)}</span>
                     </div>
-                    <div class="fine" style="color:#68889c; margin-top:6px; display:flex; gap:16px; flex-wrap:wrap;">
-                      <span>已使用: <strong>${acc.usedCount || 0}</strong> 次 / 限额: <strong>${acc.usageLimit === -1 ? '无限次' : acc.usageLimit + '次'}</strong> (剩余: <span style="color:#248154; font-weight:700;">${remaining}</span>)</span>
+                    <div class="guest-item-meta">
+                      <span>已用 <strong>${acc.usedCount || 0}</strong> 次 / 限额 <strong>${acc.usageLimit === -1 ? '无限次' : acc.usageLimit + '次'}</strong> (余 <strong style="color:#16a34a;">${remaining}</strong>)</span>
                       <span>有效期至: <strong>${acc.expiryDate || '永久'}</strong></span>
-                      <span>创建时间: ${acc.createdAt || '近期'}</span>
                     </div>
                   </div>
-                  <div style="display:flex; gap:8px;">
+                  <div style="display:flex; gap:6px;">
                     <button type="button" class="btn btn-outline btn-xs btn-reset-guest-acc" data-id="${acc.id}">🔄 重置次数</button>
                     <button type="button" class="btn btn-outline btn-xs btn-edit-guest-acc" data-id="${acc.id}">✏️ 编辑</button>
                     <button type="button" class="btn btn-danger btn-xs btn-del-guest-acc" data-id="${acc.id}">🗑️ 删除</button>
@@ -399,107 +359,101 @@ class SpaceApp {
           </div>
         </div>
 
-        <!-- 2. 男女主人独立密码修改 (王岩 vs 杜秋慧) -->
-        <div class="admin-card">
-          <div class="card-title">
-            <div class="card-title-left">
-              <span class="badge-icon">
-                <svg class="ico" viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
-              </span>
-              <div>
-                <strong>主人专属密码管理 (男女主独立分权)</strong>
-                <div class="fine">王岩（男主）与杜秋慧（女主）各自维护独立私密钥匙，互不影响</div>
+        <!-- 4. 主人专属密码 -->
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div>
+              <div class="settings-card-title">
+                <span>🔑 空间主人密码</span>
               </div>
+              <p class="settings-card-desc" style="margin-top:4px;">
+                王岩与杜秋慧各持独立专属钥匙，互不影响。
+              </p>
             </div>
-            <span class="pill good">当前操作人: ${currentUser?.avatar} ${currentUser?.name}</span>
+            <span class="pill good" style="font-size:11px;">当前：${this.escapeHtml(currentUser?.avatar || '')} ${this.escapeHtml(currentUser?.name || '')}</span>
           </div>
-          <p class="field-help" style="margin-bottom:16px;">
-            男主王岩（初始 <code>adminwy</code>）与女主杜秋慧（初始 <code>adminqh</code>）拥有各自独立的私密钥匙，可分别独立修改。
-          </p>
 
-          <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:20px;">
-            <!-- 修改王岩密码 -->
-            <div style="border:1px solid #e2eaee; border-radius:12px; padding:16px; background:#fbfcfd;">
-              <h4 style="margin:0 0 12px; font-size:13.5px; color:#18354a; display:flex; align-items:center; gap:6px;">
-                <span>👦 修改【王岩】的主人密码</span>
-                ${currentUser?.role === 'yan' ? '<span class="pill good" style="font-size:10px; padding:2px 6px;">本人</span>' : ''}
-              </h4>
+          <div class="settings-pwd-grid">
+            <!-- 王岩密码 -->
+            <div class="settings-pwd-card">
+              <div class="settings-pwd-title">
+                <span>👦 王岩的主人密码</span>
+                ${currentUser?.role === 'yan' ? '<span class="pill good" style="font-size:10px; padding:2px 6px;">当前登录</span>' : ''}
+              </div>
               <form id="form-pwd-yan">
-                <div class="field" style="margin:8px 0;">
+                <div class="field" style="margin:6px 0;">
                   <label>原密码</label>
-                  <input type="password" class="input sm" id="old-pwd-yan" placeholder="请输入王岩当前密码" required>
+                  <input type="password" class="input sm" id="old-pwd-yan" placeholder="输入当前密码" required>
                 </div>
-                <div class="field" style="margin:8px 0;">
-                  <label>设置新密码</label>
+                <div class="field" style="margin:6px 0;">
+                  <label>新密码</label>
                   <input type="password" class="input sm" id="new-pwd-yan" placeholder="至少4位新密码" required>
                 </div>
-                <div style="display:flex; justify-content:flex-end; margin-top:12px;">
-                  <button type="submit" class="btn btn-primary btn-sm">更新王岩密码</button>
+                <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+                  <button type="submit" class="btn btn-primary btn-sm">更新密码</button>
                 </div>
               </form>
             </div>
 
-            <!-- 修改秋慧密码 -->
-            <div style="border:1px solid #e2eaee; border-radius:12px; padding:16px; background:#fbfcfd;">
-              <h4 style="margin:0 0 12px; font-size:13.5px; color:#18354a; display:flex; align-items:center; gap:6px;">
-                <span>👧 修改【杜秋慧】的主人密码</span>
-                ${currentUser?.role === 'qiuhui' ? '<span class="pill good" style="font-size:10px; padding:2px 6px;">本人</span>' : ''}
-              </h4>
+            <!-- 秋慧密码 -->
+            <div class="settings-pwd-card">
+              <div class="settings-pwd-title">
+                <span>👧 杜秋慧的主人密码</span>
+                ${currentUser?.role === 'qiuhui' ? '<span class="pill good" style="font-size:10px; padding:2px 6px;">当前登录</span>' : ''}
+              </div>
               <form id="form-pwd-qiuhui">
-                <div class="field" style="margin:8px 0;">
+                <div class="field" style="margin:6px 0;">
                   <label>原密码</label>
-                  <input type="password" class="input sm" id="old-pwd-qiuhui" placeholder="请输入秋慧当前密码" required>
+                  <input type="password" class="input sm" id="old-pwd-qiuhui" placeholder="输入当前密码" required>
                 </div>
-                <div class="field" style="margin:8px 0;">
-                  <label>设置新密码</label>
+                <div class="field" style="margin:6px 0;">
+                  <label>新密码</label>
                   <input type="password" class="input sm" id="new-pwd-qiuhui" placeholder="至少4位新密码" required>
                 </div>
-                <div style="display:flex; justify-content:flex-end; margin-top:12px;">
-                  <button type="submit" class="btn btn-primary btn-sm">更新秋慧密码</button>
+                <div style="display:flex; justify-content:flex-end; margin-top:10px;">
+                  <button type="submit" class="btn btn-primary btn-sm">更新密码</button>
                 </div>
               </form>
             </div>
           </div>
         </div>
 
-        <!-- 3. 数据离线备份与恢复 -->
-        <div class="admin-card">
-          <div class="card-title">
-            <div class="card-title-left">
-              <span class="badge-icon">
-                <svg class="ico" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
-              </span>
-              <div>
-                <strong>全量数据离线备份与还原</strong>
-                <div class="fine">将时刻表、相簿元数据、双人简历档案及全部安全账户配置导出为标准 JSON 文件</div>
+        <!-- 5. 数据离线备份与恢复 -->
+        <div class="settings-card">
+          <div class="settings-card-head">
+            <div>
+              <div class="settings-card-title">
+                <span>💾 数据备份与恢复</span>
               </div>
+              <p class="settings-card-desc" style="margin-top:4px;">
+                导出或导入完整空间数据（包含日程、相册、手帐、心愿、履历与权限配置）。
+              </p>
             </div>
-          </div>
-          <p class="field-help">将时刻表、相簿元数据、双人简历档案及全部安全账户配置导出为标准 JSON 文件，防止数据丢失。</p>
-          <div style="display:flex; gap:12px; margin-top:14px; flex-wrap:wrap;">
-            <button class="btn btn-outline" id="btn-export-backup">📥 导出完整空间备份 (JSON)</button>
-            <label class="btn btn-outline" style="cursor:pointer; margin:0;">
-              <input type="file" id="btn-import-backup" accept=".json" style="display:none;">
-              📤 从备份恢复
-            </label>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <button class="btn btn-outline btn-sm" id="btn-export-backup">📥 导出备份 (JSON)</button>
+              <label class="btn btn-outline btn-sm" style="cursor:pointer; margin:0;">
+                <input type="file" id="btn-import-backup" accept=".json" style="display:none;">
+                📤 导入恢复
+              </label>
+            </div>
           </div>
         </div>
       </div>
     `;
 
-    // 绑定 Cloudflare 云端同步按钮事件
+    // 绑定云端同步按钮事件
     container.querySelector('#btn-cloud-pull-now')?.addEventListener('click', async () => {
-      this.showToast('正在从 Cloudflare 云端拉取全量数据...', false);
+      this.showToast('正在从云端拉取数据...', false);
       await window.spaceStore.pullFromCloud(false);
       this.renderSettings(container);
       this.showToast('云端数据拉取并同步完成！');
     });
 
     container.querySelector('#btn-cloud-push-now')?.addEventListener('click', async () => {
-      this.showToast('正在向 Cloudflare 云端全量备份数据...', false);
+      this.showToast('正在向云端备份数据...', false);
       await window.spaceStore.pushToCloud(false);
       this.renderSettings(container);
-      this.showToast('本地数据已全量备份至 Cloudflare 云端！');
+      this.showToast('本地数据已全量备份至云端！');
     });
 
     // 绑定 PWA 独立 App 安装引导
@@ -581,12 +535,14 @@ class SpaceApp {
       }
     });
 
-    // 备份导出与还原
+    // 备份导出与还原 (包含全模块：日程、相册、手帐、心愿、简历、账号配置)
     container.querySelector('#btn-export-backup')?.addEventListener('click', () => {
       const backup = {
-        version: '3.0',
+        version: '4.0',
         timetables: window.spaceStore.getTimetables(),
         albums: window.spaceStore.getAlbums(),
+        meals: window.spaceStore.getMeals ? window.spaceStore.getMeals() : [],
+        todos: window.spaceStore.getTodos ? window.spaceStore.getTodos() : [],
         resumeBooks: window.spaceStore.getResumeBooks(),
         resumes: window.spaceStore.getDualResumes(),
         authConfig: window.spaceStore.getAuthConfig(),
@@ -596,7 +552,7 @@ class SpaceApp {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `OASIS_Backup_${new Date().toISOString().split('T')[0]}.json`;
+      a.download = `iqiuqiu_backup_${new Date().toISOString().split('T')[0]}.json`;
       a.click();
       URL.revokeObjectURL(url);
     });
@@ -610,6 +566,8 @@ class SpaceApp {
           const data = JSON.parse(ev.target.result);
           if (data.timetables) window.spaceStore.saveTimetables(data.timetables);
           if (data.albums) window.spaceStore.saveAlbums(data.albums);
+          if (data.meals && window.spaceStore.saveMeals) window.spaceStore.saveMeals(data.meals);
+          if (data.todos && window.spaceStore.saveTodos) window.spaceStore.saveTodos(data.todos);
           if (data.resumeBooks) {
             window.spaceStore.saveResumeBooks(data.resumeBooks);
           } else if (data.resumes) {

@@ -3,7 +3,7 @@
  * 策略：网络优先 (Network-First)，离线回退到缓存；排除所有后端云同步接口
  */
 
-const CACHE_NAME = 'iqiuqiu-cache-v20261107-todo-scroll-fix-v2';
+const CACHE_NAME = 'iqiuqiu-cache-v20261107-settings-clean';
 
 const PRECACHE_RESOURCES = [
   './',

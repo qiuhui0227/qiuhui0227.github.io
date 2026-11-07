@@ -1864,8 +1864,173 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ==========================================================================
-   5. 后台控制中心 (Settings)
+   5. 空间管理 (Settings - 极简浪漫风格)
    ========================================================================== */
+
+.settings-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 简约顶栏 */
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f1f5f9;
+}
+.settings-header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.settings-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+}
+.settings-subtitle {
+  margin: 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* 现代简约卡片 */
+.settings-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px 18px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.settings-card:hover {
+  border-color: #cbd5e1;
+}
+
+.settings-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.settings-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 650;
+  color: #1e293b;
+}
+.settings-card-desc {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* PWA 简约指引 */
+.settings-pwa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+.settings-pwa-item {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #475569;
+  line-height: 1.6;
+}
+.settings-pwa-item strong {
+  color: #0f172a;
+}
+
+/* 访客账号卡片列表 */
+.guest-account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+.guest-item-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  transition: all 0.15s ease;
+}
+.guest-item-card:hover {
+  background: #ffffff;
+  border-color: #cbd5e1;
+}
+.guest-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.guest-item-title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.guest-item-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  background: #e2e8f0;
+  color: #0f172a;
+  padding: 2px 7px;
+  border-radius: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  user-select: all;
+}
+.guest-item-meta {
+  font-size: 11.5px;
+  color: #64748b;
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+/* 双人密码网格 */
+.settings-pwd-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+.settings-pwd-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 14px;
+}
+.settings-pwd-title {
+  font-size: 13px;
+  font-weight: 650;
+  color: #1e293b;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
 
 .field {
   margin: 14px 0;
