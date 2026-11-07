@@ -53,9 +53,15 @@ class TodoModule {
       modal.className = 'todo-modal-overlay';
       document.body.appendChild(modal);
     }
-    this.render();
+    this.render(null, { resetScroll: true });
     modal.classList.add('active');
     document.body.style.overflow = 'hidden';
+
+    // 初始打开时确保滚动条置顶
+    const bodyEl = modal.querySelector('.todo-modal-body');
+    if (bodyEl) {
+      bodyEl.scrollTop = 0;
+    }
 
     // 唤起时主动向云端拉取最新待办，拉取完成后若有新数据将自动无感重绘
     window.spaceStore?.pullFromCloud?.(false);
@@ -73,9 +79,15 @@ class TodoModule {
 
   // 云端同步后静默刷新当前开启的独立页面
   renderIfOpen() {
-    if (this.isOpen) {
-      this.render();
+    if (!this.isOpen) return;
+
+    // 检查待办数据是否有真实变动，若无变动绝不重绘，避免任何页面抖动或滚动位置重置
+    const allTodos = window.spaceStore ? window.spaceStore.getTodos() : [];
+    const currentHash = JSON.stringify(allTodos);
+    if (this._lastRenderedHash && this._lastRenderedHash === currentHash) {
+      return;
     }
+    this.render();
   }
 
   // --- 分类字典元数据 ---
@@ -153,11 +165,14 @@ class TodoModule {
   }
 
   // --- 主渲染入口 ---
-  render(container) {
+  render(container, options = {}) {
     if (container) this.container = container;
 
     const isMaster = window.spaceAuth ? window.spaceAuth.isMaster() : true;
     const allTodos = window.spaceStore ? window.spaceStore.getTodos() : [];
+
+    // 保存当前渲染快照，用于 renderIfOpen 判断是否需要重绘
+    this._lastRenderedHash = JSON.stringify(allTodos);
 
     // 严密访客过滤：非主人仅展示标记为 living_room 的公开愿望
     const visibleTodos = allTodos.filter(t => isMaster || t.visibility === 'living_room');
@@ -261,6 +276,15 @@ class TodoModule {
     // 1. 若弹层处于开启状态，优先渲染独立页面弹层
     let modal = document.getElementById('modal-todo-page');
     if (this.isOpen) {
+      // 记录重绘前用户的当前滚动条高度，确保任何数据同步或状态切换绝不跳回最顶部
+      let prevScrollTop = 0;
+      if (modal && !options.resetScroll) {
+        const existingBody = modal.querySelector('.todo-modal-body');
+        if (existingBody) {
+          prevScrollTop = existingBody.scrollTop;
+        }
+      }
+
       if (!modal) {
         modal = document.createElement('div');
         modal.id = 'modal-todo-page';
@@ -306,11 +330,33 @@ class TodoModule {
           </div>
         </div>
       `;
+
+      // 稳定恢复滚动条高度，多重保险避免移动端/桌面端异步排版丢失滚动位置
+      const newBody = modal.querySelector('.todo-modal-body');
+      if (newBody && prevScrollTop > 0) {
+        newBody.scrollTop = prevScrollTop;
+        requestAnimationFrame(() => {
+          if (newBody && newBody.scrollTop !== prevScrollTop) {
+            newBody.scrollTop = prevScrollTop;
+          }
+        });
+        setTimeout(() => {
+          if (newBody && prevScrollTop > 0 && Math.abs(newBody.scrollTop - prevScrollTop) > 10) {
+            newBody.scrollTop = prevScrollTop;
+          }
+        }, 60);
+      }
+
       this.bindEvents(isMaster, modal);
     }
 
     // 2. 兼容保留嵌入式容器（如果页面存在挂载点）
     if (this.container) {
+      let prevWindowScroll = 0;
+      if (!this.isOpen && !options.resetScroll) {
+        prevWindowScroll = window.scrollY;
+      }
+
       this.container.innerHTML = `
         <div class="todo-container">
           <div class="oasis-header-bar">
@@ -336,6 +382,11 @@ class TodoModule {
           ${bodyContentHtml}
         </div>
       `;
+
+      if (!this.isOpen && prevWindowScroll > 0) {
+        window.scrollTo(0, prevWindowScroll);
+      }
+
       if (!this.isOpen) {
         this.bindEvents(isMaster, this.container);
       }
@@ -585,7 +636,7 @@ class TodoModule {
         const activeRoot = rootEl || this.container || document.getElementById('modal-todo-page');
         const newInp = activeRoot?.querySelector('#todo-search-input');
         if (newInp) {
-          newInp.focus();
+          newInp.focus({ preventScroll: true });
           newInp.setSelectionRange(newInp.value.length, newInp.value.length);
         }
       });

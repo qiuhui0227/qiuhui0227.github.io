@@ -135,16 +135,30 @@ class MealCameraModule {
 
   renderIfOpen() {
     if (this.isOpen) {
+      const allMeals = window.spaceStore ? window.spaceStore.getMeals() : [];
+      const currentHash = JSON.stringify(allMeals.map(m => [m.id, m.time, m.title]));
+      if (this._lastRenderedHash && this._lastRenderedHash === currentHash) {
+        return;
+      }
       this.renderGallery();
     }
   }
 
   // 渲染相册画廊内容
-  renderGallery() {
+  renderGallery(options = {}) {
     const modal = document.getElementById('modal-meal-album');
     if (!modal) return;
 
+    let prevScrollTop = 0;
+    if (!options.resetScroll) {
+      const existingBody = modal.querySelector('.meal-gallery-body');
+      if (existingBody) {
+        prevScrollTop = existingBody.scrollTop;
+      }
+    }
+
     const allMeals = window.spaceStore ? window.spaceStore.getMeals() : [];
+    this._lastRenderedHash = JSON.stringify(allMeals.map(m => [m.id, m.time, m.title]));
     
     // 过滤列表
     const filteredMeals = allMeals.filter(m => {
@@ -249,6 +263,17 @@ class MealCameraModule {
         </div>
       </div>
     `;
+
+    // 恢复滚动条位置
+    const newBody = modal.querySelector('.meal-gallery-body');
+    if (newBody && prevScrollTop > 0) {
+      newBody.scrollTop = prevScrollTop;
+      requestAnimationFrame(() => {
+        if (newBody && newBody.scrollTop !== prevScrollTop) {
+          newBody.scrollTop = prevScrollTop;
+        }
+      });
+    }
 
     // 绑定事件
     modal.querySelector('#btn-close-meal-album')?.addEventListener('click', () => this.closeMealAlbumModal());

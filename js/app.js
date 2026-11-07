@@ -160,9 +160,6 @@ class SpaceApp {
     } else if (this.currentTab === 'settings') {
       this.renderSettings(containers.settings);
     }
-    if (window.todoModule && window.todoModule.isOpen) {
-      window.todoModule.renderIfOpen();
-    }
   }
 
   switchTab(tabName) {

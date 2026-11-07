@@ -1642,8 +1642,13 @@ class SpaceStore {
         const cloudTodosCount = Array.isArray(cloud.todos) ? cloud.todos.length : 0;
         const countDiff = cloudMealsCount !== localMealsCount || cloudTodosCount !== localTodosCount;
 
-        // 无论如何，三餐照片每次都无条件合并（merge 是幂等的，确保数量差异一定被修复）
-        let hasUpdated = false;
+        // 精准跟踪各个模块是否有真实数据变动，避免无关重绘导致用户界面跳动或滚动条复位
+        let mealsUpdated = false;
+        let timetablesUpdated = false;
+        let todosUpdated = false;
+        let albumsUpdated = false;
+        let resumeUpdated = false;
+        let authUpdated = false;
 
         // 1. 三餐手帐：无条件双向合并
         if (cloud.meals && Array.isArray(cloud.meals)) {
@@ -1653,7 +1658,7 @@ class SpaceStore {
           const mergedStr = JSON.stringify(merged.map(m => m.id).sort());
           if (localStr !== mergedStr) {
             localStorage.setItem('oasis_meals', JSON.stringify(merged));
-            hasUpdated = true;
+            mealsUpdated = true;
           }
         }
 
@@ -1663,7 +1668,7 @@ class SpaceStore {
         const mergedTimetables = this.mergeTimetables(localTimetables, cloudTimetables);
         if (JSON.stringify(localTimetables) !== JSON.stringify(mergedTimetables)) {
           localStorage.setItem('oasis_timetables', JSON.stringify(mergedTimetables));
-          hasUpdated = true;
+          timetablesUpdated = true;
         }
 
         // 3. 人生愿望清单：双向合并
@@ -1672,13 +1677,17 @@ class SpaceStore {
         const mergedTodos = this.mergeTodos(localTodos, cloudTodos, cloud.deleted_todo_ids || []);
         if (JSON.stringify(localTodos) !== JSON.stringify(mergedTodos)) {
           localStorage.setItem('oasis_todos', JSON.stringify(mergedTodos));
-          hasUpdated = true;
+          todosUpdated = true;
         }
 
         // 4. 其余模块（履历、相册、认证）
         if (cloud.resume_books && cloud.resume_books.yan) {
-          localStorage.setItem('oasis_resume_books', JSON.stringify(cloud.resume_books));
-          hasUpdated = true;
+          const localResumeStr = localStorage.getItem('oasis_resume_books') || '';
+          const cloudResumeStr = JSON.stringify(cloud.resume_books);
+          if (localResumeStr !== cloudResumeStr) {
+            localStorage.setItem('oasis_resume_books', cloudResumeStr);
+            resumeUpdated = true;
+          }
         }
         if (cloud.albums && Array.isArray(cloud.albums)) {
           if (cloud.deleted_album_ids && cloud.deleted_album_ids.length > 0) {
@@ -1692,13 +1701,19 @@ class SpaceStore {
           const mergedAlbums = this.mergeAlbums(localAlbums, cloud.albums, cloud.deleted_album_ids || []);
           if (JSON.stringify(localAlbums) !== JSON.stringify(mergedAlbums)) {
             localStorage.setItem('oasis_albums', JSON.stringify(mergedAlbums));
-            hasUpdated = true;
+            albumsUpdated = true;
           }
         }
         if (cloud.auth_config && (cloud.auth_config.masterPasswords || cloud.auth_config.guestAccounts)) {
-          localStorage.setItem('oasis_auth_config', JSON.stringify(cloud.auth_config));
-          hasUpdated = true;
+          const localAuthStr = localStorage.getItem('oasis_auth_config') || '';
+          const cloudAuthStr = JSON.stringify(cloud.auth_config);
+          if (localAuthStr !== cloudAuthStr) {
+            localStorage.setItem('oasis_auth_config', cloudAuthStr);
+            authUpdated = true;
+          }
         }
+
+        const hasUpdated = mealsUpdated || timetablesUpdated || todosUpdated || albumsUpdated || resumeUpdated || authUpdated;
 
         localStorage.setItem('oasis_last_saved_at', String(cloudSavedAt));
         localStorage.setItem('oasis_has_synced', 'true');
@@ -1735,20 +1750,18 @@ class SpaceStore {
           this.scheduleCloudPush();
         }
 
-        // 触发 UI 刷新（meals 合并在条件外，故 hasUpdated 可能在条件内为 true）
-        if (hasUpdated) {
-          if (window.spaceApp) {
-            window.spaceApp.refreshCurrentModule();
-          }
-          if (window.todoModule) {
-            window.todoModule.renderIfOpen();
-          }
-          if (window.mealsModule && window.mealsModule.isOpen) {
-            window.mealsModule.renderGallery();
-          }
-          if (window.albumsModule) {
-            window.albumsModule.updateSpecialMealCover();
-          }
+        // 仅针对确实发生变更的模块进行精准按需刷新，彻底解决背景轮询导致待办列表跳顶的问题
+        if (hasUpdated && window.spaceApp) {
+          window.spaceApp.refreshCurrentModule();
+        }
+        if (todosUpdated && window.todoModule) {
+          window.todoModule.renderIfOpen();
+        }
+        if (mealsUpdated && window.mealsModule && window.mealsModule.isOpen) {
+          window.mealsModule.renderGallery();
+        }
+        if ((mealsUpdated || albumsUpdated) && window.albumsModule) {
+          window.albumsModule.updateSpecialMealCover();
         }
         this.lastSyncTime = new Date(cloudSavedAt || Date.now());
         this.syncStatus = 'synced';
