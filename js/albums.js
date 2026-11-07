@@ -488,6 +488,7 @@ class AlbumsModule {
             <div class="oasis-header-kicker">
               <button class="btn btn-outline btn-xs" id="btn-back-to-albums" style="margin-right:6px;">← 返回相册列表</button>
               <span>${album.visibility === 'living_room' ? '🛋️ 客厅开放相册' : '🛏️ 卧室私密相册'}</span>
+              <span class="album-current-style-pill">${styleMeta.icon} ${styleMeta.name}</span>
             </div>
             <h2 class="oasis-header-title">
               <span>📖 ${this.escapeHtml(album.title)}</span>
@@ -500,7 +501,7 @@ class AlbumsModule {
           <div class="oasis-header-actions">
             <button class="btn btn-outline btn-sm" id="btn-sync-album-photos" title="从云端拉取最新照片">🔄 同步照片</button>
             ${isMaster ? `
-              <button class="btn btn-outline btn-sm" id="btn-edit-current-album">⚙️ 修改相册信息</button>
+              <button class="btn btn-outline btn-sm" id="btn-edit-current-album">⚙️ 相册设置</button>
               <label class="btn btn-primary btn-sm" style="margin: 0; cursor: pointer;">
                 <input type="file" id="input-upload-photos" accept="image/*" multiple style="display:none;">
                 <svg class="ico" width="13" height="13" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
@@ -510,35 +511,7 @@ class AlbumsModule {
           </div>
         </div>
 
-        <!-- 相簿艺术呈递风格切换器 (分类呈现横屏与竖屏) -->
-        <div class="album-style-bar">
-          <div class="album-style-bar-left">
-            <span class="fine" style="font-weight:750; color:#18354a;">🎨 呈递风格:</span>
-            <span class="pill-badge ${styleMeta.type}">${styleMeta.name}</span>
-          </div>
-          <div class="style-switcher">
-            <button class="style-tab ${currentStyle === 'scrapbook' ? 'active' : ''}" data-style="scrapbook" title="↕️ 竖屏手账">
-              🎀 竖屏手账
-            </button>
-            <button class="style-tab ${currentStyle === 'polaroid_wall' ? 'active' : ''}" data-style="polaroid_wall" title="↕️ 竖屏挂绳墙">
-              📱 竖屏挂墙
-            </button>
-            <button class="style-tab ${currentStyle === 'scroll' ? 'active' : ''}" data-style="scroll" title="↔️ 横屏水墨长卷">
-              📜 横屏长卷
-            </button>
-            <button class="style-tab ${currentStyle === 'film_strip' ? 'active' : ''}" data-style="film_strip" title="↔️ 横屏电影胶卷">
-              🎞️ 横屏胶卷
-            </button>
-            <button class="style-tab ${currentStyle === 'accordion' ? 'active' : ''}" data-style="accordion" title="📑 经折折子">
-              📑 经折折子
-            </button>
-            <button class="style-tab ${currentStyle === 'classic' ? 'active' : ''}" data-style="classic" title="🏛️ 现代画册">
-              🏛️ 经典画册
-            </button>
-          </div>
-        </div>
-
-        <!-- 动态视觉展示容器 -->
+        <!-- 动态视觉展示容器 (风格由相册设置设定，切换不突兀、不跳动) -->
         <div id="album-photos-view">
           ${this.renderPhotosByStyle(currentStyle, this.currentPhotos, isMaster)}
         </div>
@@ -842,19 +815,9 @@ class AlbumsModule {
       this.openAlbumModal(album);
     });
 
-    // 艺术风格切换 (同时持久化更新本相册的 style)
-    container.querySelectorAll('.style-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        const style = tab.dataset.style;
-        album.style = style;
-        const allAlbums = window.spaceStore.getAlbums();
-        const found = allAlbums.find(a => a.id === album.id);
-        if (found) found.style = style;
-        window.spaceStore.saveAlbums(allAlbums);
-        window.spaceStore.saveAlbumStyle(style);
-        this.render(container);
-      });
-    });
+    // 绑定横向流长卷、胶卷与经折装的直接抓手拖拽与滚轮滑动
+    const horizontalStreams = container.querySelectorAll('.scroll-paper-stream, .film-track-container, .accordion-leaves-container');
+    horizontalStreams.forEach(stream => this.bindDragToScroll(stream));
 
     const uploadInput = container.querySelector('#input-upload-photos');
     uploadInput?.addEventListener('change', async (e) => {
@@ -918,10 +881,14 @@ class AlbumsModule {
       this.render(container);
     });
 
-    // 点击照片打开全屏大图灯箱
+    // 点击照片打开全屏大图灯箱 (若处于拖动状态则不触发灯箱)
     container.querySelectorAll('.photo-card-target').forEach(card => {
       card.addEventListener('click', (e) => {
         if (e.target.closest('.btn-del-photo, .scrapbook-btn-del')) return;
+        const scrollParent = card.closest('.scroll-paper-stream, .film-track-container, .accordion-leaves-container');
+        if (scrollParent && scrollParent.dataset.justDragged === 'true') {
+          return;
+        }
         this.openLightbox(parseInt(card.dataset.index, 10));
       });
     });
@@ -936,6 +903,119 @@ class AlbumsModule {
         }
       });
     });
+  }
+
+  // 绑定横屏长卷、胶卷、折子的抓手拖拽与动力学滑行 (拖拽照片即可滚动，彻底摆脱窄滚动条)
+  bindDragToScroll(container) {
+    if (!container) return;
+
+    let isDown = false;
+    let startX = 0;
+    let startY = 0;
+    let scrollStart = 0;
+    let hasDragged = false;
+    let velocity = 0;
+    let lastX = 0;
+    let lastTime = 0;
+    let momentumId = null;
+
+    const stopMomentum = () => {
+      if (momentumId) {
+        cancelAnimationFrame(momentumId);
+        momentumId = null;
+      }
+    };
+
+    container.addEventListener('pointerdown', (e) => {
+      if (e.target.closest('button, a, input, select')) return;
+      if (e.button !== 0 && e.pointerType === 'mouse') return;
+
+      stopMomentum();
+      isDown = true;
+      hasDragged = false;
+      startX = e.clientX;
+      startY = e.clientY;
+      scrollStart = container.scrollLeft;
+      lastX = e.clientX;
+      lastTime = performance.now();
+      velocity = 0;
+
+      if (e.pointerType === 'mouse') {
+        try {
+          container.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+      container.classList.add('is-dragging');
+    });
+
+    container.addEventListener('pointermove', (e) => {
+      if (!isDown) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (Math.abs(dx) > 6 || Math.abs(dy) > 6) {
+        hasDragged = true;
+        container.dataset.justDragged = 'true';
+      }
+
+      if (e.pointerType === 'mouse') {
+        container.scrollLeft = scrollStart - dx;
+      }
+
+      const now = performance.now();
+      const dt = now - lastTime;
+      if (dt > 0) {
+        velocity = (e.clientX - lastX) / dt;
+      }
+      lastX = e.clientX;
+      lastTime = now;
+    });
+
+    const handlePointerEnd = (e) => {
+      if (!isDown) return;
+      isDown = false;
+      container.classList.remove('is-dragging');
+      try {
+        if (container.hasPointerCapture(e.pointerId)) {
+          container.releasePointerCapture(e.pointerId);
+        }
+      } catch (_) {}
+
+      if (hasDragged) {
+        // 惯性动力学滑行 (仅鼠标拖拽需要模拟惯性，移动端触控屏已有原生物理惯性)
+        if (e.pointerType === 'mouse' && Math.abs(velocity) > 0.12) {
+          let v = velocity * 18;
+          const glide = () => {
+            if (Math.abs(v) < 0.3) {
+              momentumId = null;
+              return;
+            }
+            container.scrollLeft -= v;
+            v *= 0.92;
+            momentumId = requestAnimationFrame(glide);
+          };
+          momentumId = requestAnimationFrame(glide);
+        }
+
+        setTimeout(() => {
+          delete container.dataset.justDragged;
+        }, 160);
+      } else {
+        delete container.dataset.justDragged;
+      }
+    };
+
+    container.addEventListener('pointerup', handlePointerEnd);
+    container.addEventListener('pointercancel', handlePointerEnd);
+
+    // 鼠标竖向滚轮自动转为横向滑行
+    container.addEventListener('wheel', (e) => {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        e.preventDefault();
+        stopMomentum();
+        container.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
   }
 
   // 纯前端 Canvas 视网膜级轻量压缩 (支持 File 或 dataUrl 字符串)
@@ -1001,7 +1081,7 @@ class AlbumsModule {
         <div class="sheet" style="max-width: 540px;">
           <div class="sheet-head">
             <div>
-              <h3>${isEdit ? '编辑相簿设置' : '创建新时光相册'}</h3>
+              <h3>${isEdit ? '⚙️ 相册设置' : '创建新时光相册'}</h3>
               <div class="fine">岁月相册 · 记录朝夕温暖印记</div>
             </div>
             <button type="button" class="logout" id="album-modal-close" style="font-size: 20px; line-height: 1;">×</button>
@@ -1073,7 +1153,7 @@ class AlbumsModule {
 
             <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px;">
               <button type="button" class="btn btn-outline" id="album-modal-cancel">取消</button>
-              <button type="submit" class="btn btn-primary" id="btn-album-submit">${isEdit ? '保存修改' : '立即创建'}</button>
+              <button type="submit" class="btn btn-primary" id="btn-album-submit">${isEdit ? '保存相册设置' : '立即创建'}</button>
             </div>
           </form>
         </div>
@@ -1150,6 +1230,14 @@ class AlbumsModule {
           found.coverThumb = coverVal;
           found.cover = coverVal;
         }
+        album.title = fd.get('title');
+        album.visibility = fd.get('visibility');
+        album.desc = fd.get('desc');
+        album.style = chosenStyle;
+        album.cover = coverVal;
+        album.coverThumb = coverVal;
+        album.coverUrl = coverVal;
+        window.spaceStore.saveAlbumStyle(chosenStyle);
       } else {
         list.push({
           id: 'album_' + Date.now(),

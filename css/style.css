@@ -1330,16 +1330,30 @@ a { color: inherit; text-decoration: none; }
 .albums-grid,
 .scrapbook-board,
 .polaroid-wall-stage,
-.scroll-stage,
-.film-strip-stage,
-.accordion-book-stage,
-.photos-masonry,
-.photo-card-target {
+.photos-masonry {
   -webkit-touch-callout: none !important;
   -webkit-user-select: none !important;
   user-select: none !important;
   -webkit-user-drag: none;
   touch-action: pan-y;
+}
+
+.scroll-stage,
+.film-strip-stage,
+.accordion-book-stage,
+.scroll-paper-stream,
+.film-track-container,
+.accordion-leaves-container,
+.scroll-painting-card,
+.film-frame-card,
+.accordion-leaf {
+  -webkit-touch-callout: none !important;
+  -webkit-user-select: none !important;
+  user-select: none !important;
+  -webkit-user-drag: none;
+  touch-action: pan-x pinch-zoom !important;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .photobook-cover-img,
