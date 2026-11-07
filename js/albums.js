@@ -1153,19 +1153,22 @@ class AlbumsModule {
       } else {
         list.push({
           id: 'album_' + Date.now(),
-          title: fd.get('title'),
-          visibility: fd.get('visibility'),
-          desc: fd.get('desc'),
+          title: (fd.get('title') || '').trim() || '美好相册',
+          visibility: fd.get('visibility') || 'bedroom',
+          desc: (fd.get('desc') || '').trim(),
           style: chosenStyle,
           coverUrl: coverVal,
           coverThumb: coverVal,
           cover: coverVal,
           createdAt: new Date().toISOString().split('T')[0],
-          count: 0
+          count: 0,
+          photos: []
         });
       }
 
       window.spaceStore.saveAlbums(list);
+      // 立即触发云端同步，防止被背景拉取竞争覆盖
+      try { window.spaceStore.pushToCloud(true); } catch (_) {}
       close();
       const container = document.getElementById('content-albums');
       if (container) this.render(container);

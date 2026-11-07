@@ -788,6 +788,59 @@ class SpaceStore {
     return list;
   }
 
+  // 双向智能合并时光相册 (albums) —— 剔除样例相册与已删除条目，合并照片集合
+  mergeAlbums(localList = [], cloudList = [], cloudDeletedIds = []) {
+    const sampleIds = new Set(['album_first_sight', 'album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+    const deletedIds = new Set([
+      ...this.getDeletedAlbumIds(),
+      ...(cloudDeletedIds || [])
+    ]);
+
+    const albumMap = new Map();
+
+    // 1. 先载入云端相册（排除样例与已删除）
+    for (const a of (cloudList || [])) {
+      if (a && a.id && !sampleIds.has(a.id) && !deletedIds.has(a.id)) {
+        albumMap.set(a.id, { ...a });
+      }
+    }
+
+    // 2. 双向智能合并本地相册（保护男女主人任何一方新建的相册与已绑定的照片）
+    for (const a of (localList || [])) {
+      if (a && a.id && !sampleIds.has(a.id) && !deletedIds.has(a.id)) {
+        if (!albumMap.has(a.id)) {
+          // 本地存在而云端尚未收录的新相册，绝对保留！
+          albumMap.set(a.id, { ...a });
+        } else {
+          // 双方均存在，深度合并照片与最新属性
+          const prev = albumMap.get(a.id);
+          const pMap = new Map();
+          const urlSet = new Set();
+          const addPhoto = (p) => {
+            if (!p) return;
+            const u = (p.cloudUrl || p.thumbUrl || p.dataUrl || '').replace(/^https?:\/\/[^\/]+/, '');
+            if (u && urlSet.has(u)) return;
+            if (u) urlSet.add(u);
+            pMap.set(p.id || u, p);
+          };
+          (Array.isArray(prev.photos) ? prev.photos : []).forEach(addPhoto);
+          (Array.isArray(a.photos) ? a.photos : []).forEach(addPhoto);
+          const mergedPhotos = Array.from(pMap.values());
+
+          const merged = { ...prev, ...a };
+          merged.photos = mergedPhotos;
+          merged.count = Math.max(prev.count || 0, a.count || 0, mergedPhotos.length);
+          merged.cover = a.cover || prev.cover || (mergedPhotos[0] ? (mergedPhotos[0].cloudUrl || mergedPhotos[0].thumbUrl) : '');
+          merged.coverThumb = a.coverThumb || prev.coverThumb || merged.cover;
+          merged.coverUrl = a.coverUrl || prev.coverUrl || merged.cover;
+          albumMap.set(a.id, merged);
+        }
+      }
+    }
+
+    return Array.from(albumMap.values());
+  }
+
   saveAlbumStyle(style) {
     try {
       localStorage.setItem('oasis_album_default_style', style);
@@ -1628,11 +1681,6 @@ class SpaceStore {
           hasUpdated = true;
         }
         if (cloud.albums && Array.isArray(cloud.albums)) {
-          const sampleIds = new Set(['album_first_sight', 'album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
-          const deletedAlbumIds = new Set([
-            ...this.getDeletedAlbumIds(),
-            ...(cloud.deleted_album_ids || [])
-          ]);
           if (cloud.deleted_album_ids && cloud.deleted_album_ids.length > 0) {
             try {
               const local = JSON.parse(localStorage.getItem('oasis_deleted_album_ids') || '[]');
@@ -1640,9 +1688,12 @@ class SpaceStore {
               localStorage.setItem('oasis_deleted_album_ids', JSON.stringify(merged));
             } catch (_) {}
           }
-          const cleanCloudAlbums = cloud.albums.filter(a => a && !sampleIds.has(a.id) && !deletedAlbumIds.has(a.id));
-          localStorage.setItem('oasis_albums', JSON.stringify(cleanCloudAlbums));
-          hasUpdated = true;
+          const localAlbums = this.getAlbums();
+          const mergedAlbums = this.mergeAlbums(localAlbums, cloud.albums, cloud.deleted_album_ids || []);
+          if (JSON.stringify(localAlbums) !== JSON.stringify(mergedAlbums)) {
+            localStorage.setItem('oasis_albums', JSON.stringify(mergedAlbums));
+            hasUpdated = true;
+          }
         }
         if (cloud.auth_config && (cloud.auth_config.masterPasswords || cloud.auth_config.guestAccounts)) {
           localStorage.setItem('oasis_auth_config', JSON.stringify(cloud.auth_config));
@@ -1662,6 +1713,11 @@ class SpaceStore {
         const cloudMealIds = new Set((cloud.meals || []).map(m => m.id));
         const hasUnsyncedMeals = this.getMeals().some(m => m && m.id && !cloudMealIds.has(m.id));
 
+        const sampleAlbumIds = new Set(['album_first_sight', 'album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+        const cloudAlbumIds = new Set((cloud.albums || []).map(a => a.id));
+        const currentLocalAlbums = this.getAlbums();
+        const hasUnsyncedAlbums = currentLocalAlbums.some(a => a && a.id && !cloudAlbumIds.has(a.id) && !sampleAlbumIds.has(a.id));
+
         const localDeletedTodos = [...this.getDeletedTodoIds()];
         const cloudDeletedTodos = Array.isArray(cloud.deleted_todo_ids) ? cloud.deleted_todo_ids : [];
         const hasUnsyncedDeletedTodos = localDeletedTodos.some(id => !cloudDeletedTodos.includes(id));
@@ -1674,8 +1730,8 @@ class SpaceStore {
         const cloudDeletedAlbums = Array.isArray(cloud.deleted_album_ids) ? cloud.deleted_album_ids : [];
         const hasUnsyncedDeletedAlbums = localDeletedAlbums.some(id => !cloudDeletedAlbums.includes(id));
 
-        if (hasUnsyncedTimetables || hasUnsyncedTodos || hasUnsyncedMeals || hasUnsyncedDeletedTodos || hasUnsyncedDeletedNotes || hasUnsyncedDeletedAlbums) {
-          console.log('[OASIS] 本地发现未同步至服务端的离线/历史数据（如小黑板），正在自动回推 VPS 权威库...');
+        if (hasUnsyncedTimetables || hasUnsyncedTodos || hasUnsyncedMeals || hasUnsyncedAlbums || hasUnsyncedDeletedTodos || hasUnsyncedDeletedNotes || hasUnsyncedDeletedAlbums) {
+          console.log('[OASIS] 本地发现未同步至服务端的离线/历史数据（如小黑板/新相册），正在自动回推 VPS 权威库...');
           this.scheduleCloudPush();
         }
 

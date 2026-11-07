@@ -191,14 +191,23 @@ export default {
                   const prevPhotos = Array.isArray(prev.photos) ? prev.photos : [];
                   const bodyPhotos = Array.isArray(a.photos) ? a.photos : [];
                   const pMap = new Map();
-                  prevPhotos.forEach(p => { if (p && p.id) pMap.set(p.id, p); });
-                  bodyPhotos.forEach(p => { if (p && p.id) pMap.set(p.id, p); });
+                  const urlSet = new Set();
+                  const addPhoto = (p) => {
+                    if (!p) return;
+                    const u = (p.cloudUrl || p.thumbUrl || p.dataUrl || '').replace(/^https?:\/\/[^\/]+/, '');
+                    if (u && urlSet.has(u)) return;
+                    if (u) urlSet.add(u);
+                    pMap.set(p.id || u, p);
+                  };
+                  prevPhotos.forEach(addPhoto);
+                  bodyPhotos.forEach(addPhoto);
                   const mergedPhotos = Array.from(pMap.values());
                   const merged = { ...prev, ...a };
                   merged.photos = mergedPhotos;
-                  if (mergedPhotos.length > 0) {
-                    merged.count = Math.max(merged.count || 0, mergedPhotos.length);
-                  }
+                  merged.count = Math.max(prev.count || 0, a.count || 0, mergedPhotos.length);
+                  merged.cover = a.cover || prev.cover || (mergedPhotos[0] ? (mergedPhotos[0].cloudUrl || mergedPhotos[0].thumbUrl) : '');
+                  merged.coverThumb = a.coverThumb || prev.coverThumb || merged.cover;
+                  merged.coverUrl = a.coverUrl || prev.coverUrl || merged.cover;
                   albumMap.set(a.id, merged);
                 } else {
                   albumMap.set(a.id, a);
@@ -212,7 +221,12 @@ export default {
               body.resume_books = existing.resume_books;
             }
           }
-        } catch (_) {}
+        } catch (err) {
+          console.error('Worker merge error:', err);
+          return jsonResponse({
+            error: '云端双向合并失败: ' + (err && err.message ? err.message : String(err))
+          }, 500);
+        }
 
         // 写入主键
         await env.OASIS_KV.put('oasis_global_data', JSON.stringify(body));
