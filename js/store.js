@@ -107,17 +107,42 @@ class SpaceStore {
       return album.photos;
     }
     await this.dbReady;
-    if (!this.db) return [];
-    return new Promise((resolve) => {
-      const tx = this.db.transaction([PHOTO_STORE], 'readonly');
-      const store = tx.objectStore(PHOTO_STORE);
-      const req = store.getAll();
-      req.onsuccess = () => {
-        const all = req.result || [];
-        resolve(all.filter(p => p.albumId === albumId));
-      };
-      req.onerror = () => resolve([]);
-    });
+    let localPhotos = [];
+    if (this.db) {
+      localPhotos = await new Promise((resolve) => {
+        try {
+          const tx = this.db.transaction([PHOTO_STORE], 'readonly');
+          const store = tx.objectStore(PHOTO_STORE);
+          const req = store.getAll();
+          req.onsuccess = () => {
+            const all = req.result || [];
+            resolve(all.filter(p => p.albumId === albumId));
+          };
+          req.onerror = () => resolve([]);
+        } catch (_) {
+          resolve([]);
+        }
+      });
+    }
+    if (localPhotos.length > 0) return localPhotos;
+
+    // 兜底：如果本地仍为空，主动向云端拉取该相册照片并写入本地缓存
+    try {
+      const res = await fetch(`/api/album/${albumId}/photos?_t=${Date.now()}`);
+      if (res.ok) {
+        const json = await res.json();
+        if (json && Array.isArray(json.photos) && json.photos.length > 0) {
+          if (album) {
+            album.photos = json.photos;
+            album.count = json.photos.length;
+            this.saveAlbums(albums);
+          }
+          return json.photos;
+        }
+      }
+    } catch (_) {}
+
+    return [];
   }
 
   async deletePhoto(photoId) {

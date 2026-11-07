@@ -439,7 +439,7 @@ class MealCameraModule {
   // 将 File 瞬时解析为 ImageBitmap 或 HTMLImageElement (使用极速 ObjectURL 与硬件加速，告别 FileReader 卡顿)
   loadImageBitmapFromFile(file) {
     if (window.createImageBitmap) {
-      return createImageBitmap(file);
+      return createImageBitmap(file, { imageOrientation: 'from-image' }).catch(() => createImageBitmap(file));
     }
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file);
@@ -482,10 +482,11 @@ class MealCameraModule {
         </div>
 
         <div class="meal-editor-body">
-          <!-- 实时滤镜预览视窗 -->
-          <div class="meal-preview-box">
+          <!-- 实时滤镜预览视窗 (自适应大图呈现 + 按住对比原图) -->
+          <div class="meal-preview-box" id="meal-preview-box" title="长按画面可查看原图对比">
             <canvas id="meal-editor-canvas" class="meal-editor-canvas"></canvas>
-            <div class="meal-preview-badge" id="meal-filter-name-badge">原图</div>
+            <div class="meal-compare-hint" id="meal-compare-hint">👆 按住对比原图</div>
+            <div class="meal-preview-badge" id="meal-filter-name-badge">🌿 原图</div>
           </div>
 
           <!-- 美食专属滤镜快捷选择条 -->
@@ -570,6 +571,25 @@ class MealCameraModule {
     // 初始化画板并绘制滤镜
     this.previewCanvas = editor.querySelector('#meal-editor-canvas');
     this.renderCanvasWithFilter(this.currentFilter);
+
+    // 按住画面实时对比原图 (提升修图体验)
+    const previewBoxEl = editor.querySelector('#meal-preview-box');
+    const badgeEl = editor.querySelector('#meal-filter-name-badge');
+    const startCompare = (e) => {
+      if (this.currentFilter === 'none') return;
+      this.renderCanvasWithFilter('none');
+      if (badgeEl) badgeEl.innerText = '🌿 原图 (按住对比中)';
+    };
+    const endCompare = (e) => {
+      if (this.currentFilter === 'none') return;
+      this.renderCanvasWithFilter(this.currentFilter);
+      const fMeta = filters.find(x => x.id === this.currentFilter);
+      if (badgeEl) badgeEl.innerText = fMeta ? `${fMeta.icon} ${fMeta.label}` : '原图';
+    };
+    previewBoxEl?.addEventListener('pointerdown', startCompare);
+    previewBoxEl?.addEventListener('pointerup', endCompare);
+    previewBoxEl?.addEventListener('pointercancel', endCompare);
+    previewBoxEl?.addEventListener('pointerleave', endCompare);
 
     // 滤镜切换事件
     editor.querySelectorAll('.meal-filter-chip').forEach(btn => {
@@ -754,6 +774,23 @@ class MealCameraModule {
 
     canvas.width = w;
     canvas.height = h;
+
+    // 智能自适应预览视窗高度：让竖屏美食照片顶格大图呈现，横屏紧凑无黑边
+    const previewBox = canvas.closest('.meal-preview-box');
+    if (previewBox) {
+      const isMobile = window.innerWidth <= 640;
+      const aspect = w / h; // 宽高比
+      if (aspect < 0.85) {
+        // 手机端常见 3:4 或 9:16 纵向竖图：给予舒展大高度，图片放大 3 倍以上
+        previewBox.style.height = isMobile ? 'min(420px, 48vh)' : '390px';
+      } else if (aspect <= 1.2) {
+        // 接近 1:1 方形美食图
+        previewBox.style.height = isMobile ? 'min(340px, 42vh)' : '340px';
+      } else {
+        // 横屏宽幅图 (4:3 或 16:9)
+        previewBox.style.height = isMobile ? 'min(260px, 34vh)' : '280px';
+      }
+    }
 
     // 查找滤镜字符串
     const filters = this.getFilters();

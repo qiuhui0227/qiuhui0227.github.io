@@ -498,6 +498,7 @@ class AlbumsModule {
             <p class="oasis-header-sub">${this.escapeHtml(album.desc || '点滴记录我们的美好时刻')}</p>
           </div>
           <div class="oasis-header-actions">
+            <button class="btn btn-outline btn-sm" id="btn-sync-album-photos" title="从云端拉取最新照片">🔄 同步照片</button>
             ${isMaster ? `
               <button class="btn btn-outline btn-sm" id="btn-edit-current-album">⚙️ 修改相册信息</button>
               <label class="btn btn-primary btn-sm" style="margin: 0; cursor: pointer;">
@@ -820,6 +821,21 @@ class AlbumsModule {
     container.querySelector('#btn-back-to-albums')?.addEventListener('click', () => {
       this.currentAlbumId = null;
       this.render(container);
+    });
+
+    container.querySelector('#btn-sync-album-photos')?.addEventListener('click', async (e) => {
+      const btn = e.currentTarget;
+      btn.innerText = '⏳ 同步中...';
+      try {
+        await window.spaceStore.pullFromCloud(false);
+        const isMaster = window.spaceAuth ? window.spaceAuth.canEdit() : false;
+        await this.renderAlbumDetail(container, isMaster);
+        window.spaceApp?.showToast('已从云端拉取最新相册与照片！', 'good');
+      } catch (err) {
+        console.warn('Sync album error:', err);
+      } finally {
+        btn.innerText = '🔄 同步照片';
+      }
     });
 
     container.querySelector('#btn-edit-current-album')?.addEventListener('click', () => {

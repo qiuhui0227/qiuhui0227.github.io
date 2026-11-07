@@ -187,7 +187,22 @@ export default {
             bodyAlbums.forEach(a => {
               if (a && a.id) {
                 const prev = albumMap.get(a.id);
-                albumMap.set(a.id, prev ? { ...prev, ...a } : a);
+                if (prev) {
+                  const prevPhotos = Array.isArray(prev.photos) ? prev.photos : [];
+                  const bodyPhotos = Array.isArray(a.photos) ? a.photos : [];
+                  const pMap = new Map();
+                  prevPhotos.forEach(p => { if (p && p.id) pMap.set(p.id, p); });
+                  bodyPhotos.forEach(p => { if (p && p.id) pMap.set(p.id, p); });
+                  const mergedPhotos = Array.from(pMap.values());
+                  const merged = { ...prev, ...a };
+                  merged.photos = mergedPhotos;
+                  if (mergedPhotos.length > 0) {
+                    merged.count = Math.max(merged.count || 0, mergedPhotos.length);
+                  }
+                  albumMap.set(a.id, merged);
+                } else {
+                  albumMap.set(a.id, a);
+                }
               }
             });
             body.albums = Array.from(albumMap.values());
@@ -275,6 +290,42 @@ export default {
         });
 
         const photoUrl = `/api/photo/${photoId}`;
+
+        // 自动将上传照片绑定到对应相册，实现云端自愈归档
+        if (albumId && albumId !== 'meals' && albumId !== 'covers') {
+          try {
+            const rawData = await env.OASIS_KV.get('oasis_global_data');
+            if (rawData) {
+              const globalData = JSON.parse(rawData);
+              if (globalData && Array.isArray(globalData.albums)) {
+                const album = globalData.albums.find(a => a && a.id === albumId);
+                if (album) {
+                  album.photos = Array.isArray(album.photos) ? album.photos : [];
+                  const photoItem = {
+                    id: 'photo_' + photoId,
+                    albumId: albumId,
+                    title: originalName ? originalName.replace(/\.[^/.]+$/, '') : '美好瞬间',
+                    date: new Date().toISOString().split('T')[0],
+                    thumbUrl: photoUrl,
+                    dataUrl: photoUrl,
+                    cloudUrl: photoUrl
+                  };
+                  if (!album.photos.some(p => p.id === photoItem.id || p.cloudUrl === photoUrl)) {
+                    album.photos.push(photoItem);
+                    album.count = album.photos.length;
+                    if (!album.cover || album.cover.includes('unsplash') || album.cover === './images/1001_1_thumb.jpg') {
+                      album.cover = photoUrl;
+                      album.coverThumb = photoUrl;
+                      album.coverUrl = photoUrl;
+                    }
+                    await env.OASIS_KV.put('oasis_global_data', JSON.stringify(globalData));
+                  }
+                }
+              }
+            }
+          } catch (_) {}
+        }
+
         return jsonResponse({
           success: true,
           photoId,
@@ -282,6 +333,28 @@ export default {
           size: photoBuffer.byteLength,
           mimeType,
         });
+      }
+
+      // 4.1 获取指定相册照片列表 (GET /api/album/:albumId/photos)
+      if (path.startsWith('/api/album/') && path.endsWith('/photos') && request.method === 'GET') {
+        const parts = path.split('/');
+        const albumId = parts[3];
+        try {
+          const rawData = await env.OASIS_KV.get('oasis_global_data');
+          let photos = [];
+          if (rawData) {
+            const globalData = JSON.parse(rawData);
+            if (globalData && Array.isArray(globalData.albums)) {
+              const album = globalData.albums.find(a => a && a.id === albumId);
+              if (album && Array.isArray(album.photos)) {
+                photos = album.photos;
+              }
+            }
+          }
+          return jsonResponse({ success: true, albumId, photos });
+        } catch (err) {
+          return jsonResponse({ error: err.message }, 500);
+        }
       }
 
       // 5. 图片/照片读取 (GET /api/photo/:id)
