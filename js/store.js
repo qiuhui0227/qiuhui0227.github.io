@@ -21,14 +21,15 @@ const PHOTO_STORE = 'photos';
 class SpaceStore {
   constructor() {
     this.db = null;
-    const isCustomDomain = typeof window !== 'undefined' && window.location && (
+    const isVpsOrigin = typeof window !== 'undefined' && window.location && (
       window.location.hostname.includes('iqiuqiu.me') ||
       window.location.hostname === '8.220.209.101' ||
       window.location.hostname === 'localhost' ||
       window.location.hostname === '127.0.0.1'
     );
-    this.cloudBaseUrl = isCustomDomain ? window.location.origin : 'https://api.iqiuqiu.me';
-    this.cloudFallbackUrl = 'https://oasis-backend.yanwang0227.workers.dev';
+    // 权威主服务器：同源优先直连，外域 (如 qiuhui0227.github.io) 统一无缝直连 https://iqiuqiu.me 独立 VPS
+    this.cloudBaseUrl = isVpsOrigin ? window.location.origin : 'https://iqiuqiu.me';
+    this.cloudFallbackUrl = 'https://api.iqiuqiu.me';
     this.activeCloudUrl = this.cloudBaseUrl;
     this.syncStatus = 'idle';
     this.lastSyncTime = null;
@@ -1496,6 +1497,8 @@ class SpaceStore {
 
         // 无论如何，三餐照片每次都无条件合并（merge 是幂等的，确保数量差异一定被修复）
         let hasUpdated = false;
+
+        // 1. 三餐手帐：无条件双向合并
         if (cloud.meals && Array.isArray(cloud.meals)) {
           const localList = this.getMeals();
           const merged = this.mergeMeals(localList, cloud.meals);
@@ -1507,44 +1510,63 @@ class SpaceStore {
           }
         }
 
-        // 如果云端更新，或者条目数量存在差异，或者本地从未标记过同步，则合并其余数据
-        if (cloudSavedAt > localSavedAt || countDiff || !localStorage.getItem('oasis_has_synced')) {
-          if (cloud.timetables && Array.isArray(cloud.timetables)) {
-            const localList = this.getTimetables();
-            const merged = this.mergeTimetables(localList, cloud.timetables);
-            localStorage.setItem('oasis_timetables', JSON.stringify(merged));
-            hasUpdated = true;
-          }
-          if (cloud.resume_books && cloud.resume_books.yan) {
-            localStorage.setItem('oasis_resume_books', JSON.stringify(cloud.resume_books));
-            hasUpdated = true;
-          }
-          if (cloud.albums && Array.isArray(cloud.albums)) {
-            const sampleIds = new Set(['album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
-            const cleanCloudAlbums = cloud.albums.filter(a => a && !sampleIds.has(a.id));
-            localStorage.setItem('oasis_albums', JSON.stringify(cleanCloudAlbums));
-            hasUpdated = true;
-          }
-          if (cloud.todos && Array.isArray(cloud.todos)) {
-            const localList = this.getTodos();
-            // 传入云端的 deleted_todo_ids，实现跨设备删除同步
-            const merged = this.mergeTodos(localList, cloud.todos, cloud.deleted_todo_ids || []);
-            localStorage.setItem('oasis_todos', JSON.stringify(merged));
-            hasUpdated = true;
-          }
-          if (cloud.auth_config && (cloud.auth_config.masterPasswords || cloud.auth_config.guestAccounts)) {
-            localStorage.setItem('oasis_auth_config', JSON.stringify(cloud.auth_config));
-            hasUpdated = true;
-          }
-
-          localStorage.setItem('oasis_last_saved_at', String(cloudSavedAt));
-          localStorage.setItem('oasis_has_synced', 'true');
+        // 2. 小黑板日程/备忘：每次都进行双向智能合并（男女主人任何设备上写下的日程均不遗漏）
+        const localTimetables = this.getTimetables();
+        const cloudTimetables = Array.isArray(cloud.timetables) ? cloud.timetables : [];
+        const mergedTimetables = this.mergeTimetables(localTimetables, cloudTimetables);
+        if (JSON.stringify(localTimetables) !== JSON.stringify(mergedTimetables)) {
+          localStorage.setItem('oasis_timetables', JSON.stringify(mergedTimetables));
+          hasUpdated = true;
         }
 
-        // 关键机制：如果本地存在云端尚未知晓的已删除心愿/日程（如秋慧之前删除的条目），主动将其回推云端
+        // 3. 人生愿望清单：双向合并
+        const localTodos = this.getTodos();
+        const cloudTodos = Array.isArray(cloud.todos) ? cloud.todos : [];
+        const mergedTodos = this.mergeTodos(localTodos, cloudTodos, cloud.deleted_todo_ids || []);
+        if (JSON.stringify(localTodos) !== JSON.stringify(mergedTodos)) {
+          localStorage.setItem('oasis_todos', JSON.stringify(mergedTodos));
+          hasUpdated = true;
+        }
+
+        // 4. 其余模块（履历、相册、认证）
+        if (cloud.resume_books && cloud.resume_books.yan) {
+          localStorage.setItem('oasis_resume_books', JSON.stringify(cloud.resume_books));
+          hasUpdated = true;
+        }
+        if (cloud.albums && Array.isArray(cloud.albums)) {
+          const sampleIds = new Set(['album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+          const cleanCloudAlbums = cloud.albums.filter(a => a && !sampleIds.has(a.id));
+          localStorage.setItem('oasis_albums', JSON.stringify(cleanCloudAlbums));
+          hasUpdated = true;
+        }
+        if (cloud.auth_config && (cloud.auth_config.masterPasswords || cloud.auth_config.guestAccounts)) {
+          localStorage.setItem('oasis_auth_config', JSON.stringify(cloud.auth_config));
+          hasUpdated = true;
+        }
+
+        localStorage.setItem('oasis_last_saved_at', String(cloudSavedAt));
+        localStorage.setItem('oasis_has_synced', 'true');
+
+        // 5. 关键权威收录机制：如果本地存在云端尚未收录的备忘/数据（如用户在 io 或原有本地浏览器中保存的昨晚小黑板），立即反推云端，权威持久化！
+        const cloudTimetableIds = new Set(cloudTimetables.map(t => t.id));
+        const hasUnsyncedTimetables = localTimetables.some(t => t && t.id && !cloudTimetableIds.has(t.id));
+
+        const cloudTodoIds = new Set(cloudTodos.map(t => t.id));
+        const hasUnsyncedTodos = localTodos.some(t => t && t.id && !cloudTodoIds.has(t.id));
+
+        const cloudMealIds = new Set((cloud.meals || []).map(m => m.id));
+        const hasUnsyncedMeals = this.getMeals().some(m => m && m.id && !cloudMealIds.has(m.id));
+
         const localDeletedTodos = [...this.getDeletedTodoIds()];
         const cloudDeletedTodos = Array.isArray(cloud.deleted_todo_ids) ? cloud.deleted_todo_ids : [];
-        if (localDeletedTodos.some(id => !cloudDeletedTodos.includes(id))) {
+        const hasUnsyncedDeletedTodos = localDeletedTodos.some(id => !cloudDeletedTodos.includes(id));
+
+        const localDeletedNotes = [...this.getDeletedNoteIds()];
+        const cloudDeletedNotes = Array.isArray(cloud.deleted_note_ids) ? cloud.deleted_note_ids : [];
+        const hasUnsyncedDeletedNotes = localDeletedNotes.some(id => !cloudDeletedNotes.includes(id));
+
+        if (hasUnsyncedTimetables || hasUnsyncedTodos || hasUnsyncedMeals || hasUnsyncedDeletedTodos || hasUnsyncedDeletedNotes) {
+          console.log('[OASIS] 本地发现未同步至服务端的离线/历史数据（如小黑板），正在自动回推 VPS 权威库...');
           this.scheduleCloudPush();
         }
 

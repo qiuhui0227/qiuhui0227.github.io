@@ -115,6 +115,68 @@ export default {
               const bodyDeleted = Array.isArray(body.deleted_note_ids) ? body.deleted_note_ids : [];
               body.deleted_note_ids = [...new Set([...existingDeleted, ...bodyDeleted])].slice(0, 500);
             }
+
+            // 合并小黑板日程/备忘（防空数组覆盖，按 ID 双向补全，按更新时间对比）
+            if (Array.isArray(existing.timetables) || Array.isArray(body.timetables)) {
+              const deletedNoteSet = new Set(body.deleted_note_ids || existing.deleted_note_ids || []);
+              const sampleIds = new Set(['sched_1', 'sched_2', 'sched_3', 'sched_4']);
+              const timetableMap = new Map();
+
+              (existing.timetables || []).forEach(t => {
+                if (t && t.id && !deletedNoteSet.has(t.id) && !sampleIds.has(t.id)) {
+                  timetableMap.set(t.id, t);
+                }
+              });
+
+              (body.timetables || []).forEach(t => {
+                if (t && t.id && !deletedNoteSet.has(t.id) && !sampleIds.has(t.id)) {
+                  const prev = timetableMap.get(t.id);
+                  if (!prev) {
+                    timetableMap.set(t.id, t);
+                  } else {
+                    const tNew = new Date(t.updatedAt || t.createdAt || 0).getTime();
+                    const tOld = new Date(prev.updatedAt || prev.createdAt || 0).getTime();
+                    timetableMap.set(t.id, tNew >= tOld ? { ...prev, ...t } : prev);
+                  }
+                }
+              });
+
+              body.timetables = Array.from(timetableMap.values()).sort((a, b) => {
+                const cmp = (a.date || '').localeCompare(b.date || '');
+                if (cmp !== 0) return cmp;
+                return (a.createdAt || '').localeCompare(b.createdAt || '');
+              });
+            }
+
+            // 合并人生愿望清单 (Todos)
+            if (Array.isArray(existing.todos) || Array.isArray(body.todos)) {
+              const deletedTodoSet = new Set(body.deleted_todo_ids || existing.deleted_todo_ids || []);
+              const todoMap = new Map();
+              (existing.todos || []).forEach(t => {
+                if (t && t.id && !deletedTodoSet.has(t.id)) todoMap.set(t.id, t);
+              });
+              (body.todos || []).forEach(t => {
+                if (t && t.id && !deletedTodoSet.has(t.id)) {
+                  const prev = todoMap.get(t.id);
+                  if (!prev) {
+                    todoMap.set(t.id, t);
+                  } else {
+                    const tNew = new Date(t.updatedAt || t.createdAt || 0).getTime();
+                    const tOld = new Date(prev.updatedAt || prev.createdAt || 0).getTime();
+                    todoMap.set(t.id, tNew >= tOld ? { ...prev, ...t } : prev);
+                  }
+                }
+              });
+              body.todos = Array.from(todoMap.values());
+            }
+
+            // 履历与相册容错
+            if ((!body.resume_books || !body.resume_books.yan) && existing.resume_books && existing.resume_books.yan) {
+              body.resume_books = existing.resume_books;
+            }
+            if ((!body.albums || body.albums.length === 0) && Array.isArray(existing.albums) && existing.albums.length > 0) {
+              body.albums = existing.albums;
+            }
           }
         } catch (_) {}
 
