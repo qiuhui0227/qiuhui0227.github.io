@@ -64,17 +64,48 @@ class SpaceStore {
 
   async savePhoto(photoObj) {
     await this.dbReady;
-    if (!this.db) return false;
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction([PHOTO_STORE], 'readwrite');
-      const store = tx.objectStore(PHOTO_STORE);
-      const req = store.put(photoObj);
-      req.onsuccess = () => resolve(true);
-      req.onerror = (e) => reject(e);
-    });
+    if (this.db) {
+      try {
+        const tx = this.db.transaction([PHOTO_STORE], 'readwrite');
+        const store = tx.objectStore(PHOTO_STORE);
+        store.put(photoObj);
+      } catch (_) {}
+    }
+
+    // 同时将轻量照片元数据绑定在相册中，随 albums 一同跨端双向实时云同步
+    if (photoObj && photoObj.albumId) {
+      const albums = this.getAlbums();
+      const album = albums.find(a => a.id === photoObj.albumId);
+      if (album) {
+        album.photos = Array.isArray(album.photos) ? album.photos : [];
+        const cleanPhoto = {
+          id: photoObj.id,
+          albumId: photoObj.albumId,
+          title: photoObj.title || '美好瞬间',
+          date: photoObj.date || new Date().toISOString().split('T')[0],
+          thumbUrl: photoObj.cloudUrl || photoObj.thumbUrl || '',
+          dataUrl: photoObj.cloudUrl || photoObj.dataUrl || '',
+          cloudUrl: photoObj.cloudUrl || ''
+        };
+        const idx = album.photos.findIndex(p => p.id === cleanPhoto.id);
+        if (idx !== -1) {
+          album.photos[idx] = cleanPhoto;
+        } else {
+          album.photos.push(cleanPhoto);
+        }
+        album.count = album.photos.length;
+        this.saveAlbums(albums);
+      }
+    }
+    return true;
   }
 
   async getPhotosByAlbum(albumId) {
+    const albums = this.getAlbums();
+    const album = albums.find(a => a.id === albumId);
+    if (album && Array.isArray(album.photos) && album.photos.length > 0) {
+      return album.photos;
+    }
     await this.dbReady;
     if (!this.db) return [];
     return new Promise((resolve) => {
@@ -91,14 +122,29 @@ class SpaceStore {
 
   async deletePhoto(photoId) {
     await this.dbReady;
-    if (!this.db) return false;
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction([PHOTO_STORE], 'readwrite');
-      const store = tx.objectStore(PHOTO_STORE);
-      const req = store.delete(photoId);
-      req.onsuccess = () => resolve(true);
-      req.onerror = (e) => reject(e);
-    });
+    if (this.db) {
+      try {
+        const tx = this.db.transaction([PHOTO_STORE], 'readwrite');
+        const store = tx.objectStore(PHOTO_STORE);
+        store.delete(photoId);
+      } catch (_) {}
+    }
+    const albums = this.getAlbums();
+    let modified = false;
+    for (const a of albums) {
+      if (Array.isArray(a.photos)) {
+        const prevLen = a.photos.length;
+        a.photos = a.photos.filter(p => p.id !== photoId);
+        if (a.photos.length !== prevLen) {
+          a.count = a.photos.length;
+          modified = true;
+        }
+      }
+    }
+    if (modified) {
+      this.saveAlbums(albums);
+    }
+    return true;
   }
 
   // --- 标准普适化简历多书本模板生成器 ---
@@ -575,7 +621,7 @@ class SpaceStore {
     } else {
       try {
         const parsed = JSON.parse(existingAlbums);
-        const sampleIds = new Set(['album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+        const sampleIds = new Set(['album_first_sight', 'album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
         const cleaned = (Array.isArray(parsed) ? parsed : []).filter(a => a && !sampleIds.has(a.id));
         localStorage.setItem('oasis_albums', JSON.stringify(cleaned));
       } catch (e) {
@@ -660,18 +706,21 @@ class SpaceStore {
   getAlbums() {
     try {
       const albums = JSON.parse(localStorage.getItem('oasis_albums')) || [];
-      return albums.map(a => {
-        if (!a.style) {
-          a.style = (a.id === 'album_sweet_life') ? 'scroll' : 'scrapbook';
-        }
-        if (a.cover && a.cover.includes('unsplash.com')) {
-          a.cover = './images/1001_1_thumb.jpg';
-        }
-        if (a.coverUrl && a.coverUrl.includes('unsplash.com')) {
-          a.coverUrl = './images/1001_1_thumb.jpg';
-        }
-        return a;
-      });
+      const sampleIds = new Set(['album_first_sight', 'album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+      return albums
+        .filter(a => a && a.id && !sampleIds.has(a.id))
+        .map(a => {
+          if (!a.style) {
+            a.style = 'scrapbook';
+          }
+          if (a.cover && a.cover.includes('unsplash.com')) {
+            a.cover = './images/1001_1_thumb.jpg';
+          }
+          if (a.coverUrl && a.coverUrl.includes('unsplash.com')) {
+            a.coverUrl = './images/1001_1_thumb.jpg';
+          }
+          return a;
+        });
     } catch (e) {
       return [];
     }
@@ -682,7 +731,27 @@ class SpaceStore {
     try { this.scheduleCloudPush(); } catch (_) {}
   }
 
+  getDeletedAlbumIds() {
+    try {
+      const list = JSON.parse(localStorage.getItem('oasis_deleted_album_ids')) || [];
+      return new Set(Array.isArray(list) ? list : []);
+    } catch (_) {
+      return new Set();
+    }
+  }
+
+  recordDeletedAlbumId(id) {
+    if (!id) return;
+    try {
+      const set = this.getDeletedAlbumIds();
+      set.add(id);
+      const list = [...set].slice(0, 500);
+      localStorage.setItem('oasis_deleted_album_ids', JSON.stringify(list));
+    } catch (_) {}
+  }
+
   async deleteAlbum(id) {
+    this.recordDeletedAlbumId(id);
     const list = this.getAlbums().filter(a => a.id !== id);
     this.saveAlbums(list);
     try {
@@ -1534,8 +1603,19 @@ class SpaceStore {
           hasUpdated = true;
         }
         if (cloud.albums && Array.isArray(cloud.albums)) {
-          const sampleIds = new Set(['album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
-          const cleanCloudAlbums = cloud.albums.filter(a => a && !sampleIds.has(a.id));
+          const sampleIds = new Set(['album_first_sight', 'album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+          const deletedAlbumIds = new Set([
+            ...this.getDeletedAlbumIds(),
+            ...(cloud.deleted_album_ids || [])
+          ]);
+          if (cloud.deleted_album_ids && cloud.deleted_album_ids.length > 0) {
+            try {
+              const local = JSON.parse(localStorage.getItem('oasis_deleted_album_ids') || '[]');
+              const merged = [...new Set([...local, ...cloud.deleted_album_ids])].slice(0, 500);
+              localStorage.setItem('oasis_deleted_album_ids', JSON.stringify(merged));
+            } catch (_) {}
+          }
+          const cleanCloudAlbums = cloud.albums.filter(a => a && !sampleIds.has(a.id) && !deletedAlbumIds.has(a.id));
           localStorage.setItem('oasis_albums', JSON.stringify(cleanCloudAlbums));
           hasUpdated = true;
         }
@@ -1565,7 +1645,11 @@ class SpaceStore {
         const cloudDeletedNotes = Array.isArray(cloud.deleted_note_ids) ? cloud.deleted_note_ids : [];
         const hasUnsyncedDeletedNotes = localDeletedNotes.some(id => !cloudDeletedNotes.includes(id));
 
-        if (hasUnsyncedTimetables || hasUnsyncedTodos || hasUnsyncedMeals || hasUnsyncedDeletedTodos || hasUnsyncedDeletedNotes) {
+        const localDeletedAlbums = [...this.getDeletedAlbumIds()];
+        const cloudDeletedAlbums = Array.isArray(cloud.deleted_album_ids) ? cloud.deleted_album_ids : [];
+        const hasUnsyncedDeletedAlbums = localDeletedAlbums.some(id => !cloudDeletedAlbums.includes(id));
+
+        if (hasUnsyncedTimetables || hasUnsyncedTodos || hasUnsyncedMeals || hasUnsyncedDeletedTodos || hasUnsyncedDeletedNotes || hasUnsyncedDeletedAlbums) {
           console.log('[OASIS] 本地发现未同步至服务端的离线/历史数据（如小黑板），正在自动回推 VPS 权威库...');
           this.scheduleCloudPush();
         }
@@ -1619,6 +1703,8 @@ class SpaceStore {
         deleted_todo_ids: [...this.getDeletedTodoIds()].slice(0, 500),
         // 携带本地已删除的 note/日程 ID
         deleted_note_ids: [...this.getDeletedNoteIds()].slice(0, 500),
+        // 携带本地已删除的相册 ID
+        deleted_album_ids: [...this.getDeletedAlbumIds()].slice(0, 500),
         clientTimestamp: Date.now()
       };
 

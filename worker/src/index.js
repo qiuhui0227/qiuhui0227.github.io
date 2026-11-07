@@ -170,12 +170,31 @@ export default {
               body.todos = Array.from(todoMap.values());
             }
 
-            // 履历与相册容错
+            // 合并 deleted_album_ids
+            if (Array.isArray(existing.deleted_album_ids) || Array.isArray(body.deleted_album_ids)) {
+              const existingDeleted = Array.isArray(existing.deleted_album_ids) ? existing.deleted_album_ids : [];
+              const bodyDeleted = Array.isArray(body.deleted_album_ids) ? body.deleted_album_ids : [];
+              body.deleted_album_ids = [...new Set([...existingDeleted, ...bodyDeleted])].slice(0, 500);
+            }
+
+            // 合并相册 (albums)，排除样例相册与已删除相册
+            const sampleAlbumIds = new Set(['album_first_sight', 'album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+            const delAlbumSet = new Set(body.deleted_album_ids || existing.deleted_album_ids || []);
+            const existingAlbums = (Array.isArray(existing.albums) ? existing.albums : []).filter(a => a && a.id && !sampleAlbumIds.has(a.id) && !delAlbumSet.has(a.id));
+            const bodyAlbums = (Array.isArray(body.albums) ? body.albums : []).filter(a => a && a.id && !sampleAlbumIds.has(a.id) && !delAlbumSet.has(a.id));
+            const albumMap = new Map();
+            existingAlbums.forEach(a => { if (a && a.id) albumMap.set(a.id, a); });
+            bodyAlbums.forEach(a => {
+              if (a && a.id) {
+                const prev = albumMap.get(a.id);
+                albumMap.set(a.id, prev ? { ...prev, ...a } : a);
+              }
+            });
+            body.albums = Array.from(albumMap.values());
+
+            // 履历容错
             if ((!body.resume_books || !body.resume_books.yan) && existing.resume_books && existing.resume_books.yan) {
               body.resume_books = existing.resume_books;
-            }
-            if ((!body.albums || body.albums.length === 0) && Array.isArray(existing.albums) && existing.albums.length > 0) {
-              body.albums = existing.albums;
             }
           }
         } catch (_) {}

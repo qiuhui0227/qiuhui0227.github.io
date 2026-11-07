@@ -55,11 +55,11 @@ class AlbumsModule {
   async renderAlbumsList(container, isMaster) {
     const allAlbums = window.spaceStore.getAlbums();
     // 严格过滤掉旧样例虚假相册，仅展示用户真实相册
-    const fakeAlbumIds = new Set(['album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
+    const fakeAlbumIds = new Set(['album_first_sight', 'album_sweet_life', 'album_travel_notes', 'album_accordion_memories']);
     const realAlbums = allAlbums.filter(a => a && !fakeAlbumIds.has(a.id));
     const visibleAlbums = realAlbums.filter(a => isMaster || a.visibility === 'living_room');
-    // 书架图书总数：三餐手帐(1) + 杜秋慧找导师简历(1) + 王岩求职简历(1) + 真实自建相册数
-    const totalCount = visibleAlbums.length + 3;
+    // 书架图书总数：三餐手帐(1) + 真实自建相册数
+    const totalCount = visibleAlbums.length + 1;
 
     container.innerHTML = `
       <div class="oasis-bookshelf-zone">
@@ -470,15 +470,6 @@ class AlbumsModule {
     const styleMeta = this.getStyleMeta(currentStyle);
 
     this.currentPhotos = await window.spaceStore.getPhotosByAlbum(album.id);
-    if (this.currentPhotos.length === 0 && album.id === 'album_first_sight') {
-      this.currentPhotos.push({
-        id: 'photo_init_01',
-        albumId: 'album_first_sight',
-        title: '初遇时光 · 满怀欢喜',
-        date: '2024-02-14',
-        dataUrl: './images/1001_1.jpg'
-      });
-    }
 
     let guideHtml = '';
     if (styleMeta.type === 'v') {
@@ -882,11 +873,11 @@ class AlbumsModule {
           };
           await window.spaceStore.savePhoto(photoData);
 
-          // 若相册尚无封面，将本张微缩图设为封面
+          // 若相册尚无封面，将本张轻量照片设为封面
           if (!album.cover || album.cover.includes('unsplash') || album.cover === './images/1001_1_thumb.jpg') {
-            album.cover = thumbObj.dataUrl;
-            album.coverThumb = thumbObj.dataUrl;
-            album.coverUrl = thumbObj.dataUrl;
+            album.cover = cloudUrl || thumbObj.dataUrl;
+            album.coverThumb = cloudUrl || thumbObj.dataUrl;
+            album.coverUrl = cloudUrl || thumbObj.dataUrl;
           }
         } catch (err) {
           console.error('上传处理失败:', err);
